@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8131678a24b48a449ad376455e36237c, type: 3}
+  m_Name: Child Audio 1
+  m_EditorClassIdentifier: 
+  _audioGroup: Zombies
+  _volume: 0.466
+  _spatialBlend: 1
+  _priority: 128
+  _audioClipBanks:
+  - Clips:
+    - {fileID: 8300000, guid: a91d8f58df3a3a24a9651fc0b468692b, type: 3}
+  - Clips:
+    - {fileID: 8300000, guid: ca7409f5e39010147966ce5d594fb9bb, type: 3}
+  - Clips:
+    - {fileID: 8300000, guid: e90910fc0089bef45879693f78ac6087, type: 3}
+  - Clips:
+    - {fileID: 8300000, guid: 3c10f38edc04cce439c520d971863165, type: 3}
+    - {fileID: 8300000, guid: 3a70d345fe35a524dbeaa2e9d2575ac3, type: 3}
+    - {fileID: 8300000, guid: c768a086d1b08834ca35eba59a5b105f, type: 3}
+    - {fileID: 8300000, guid: 901203bfb6854384c893c28e6d58b612, type: 3}
+    - {fileID: 8300000, guid: 3119fecb9298faf4e9ed9547d454f50c, type: 3}
+  - Clips:
+    - {fileID: 8300000, guid: a91d8f58df3a3a24a9651fc0b468692b, type: 3}
