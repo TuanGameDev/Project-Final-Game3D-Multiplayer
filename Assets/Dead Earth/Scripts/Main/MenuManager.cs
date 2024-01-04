@@ -21,7 +21,6 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     [SerializeField] private Button createRoomButton;
     [SerializeField] private Button findRoomButton;
     [SerializeField] private Button selectChar;
-    [SerializeField] private Button changeChar;
     [Header("Lobby")]
     [SerializeField] private TextMeshProUGUI playerListText;
     [SerializeField] private TextMeshProUGUI roomInfoText;
@@ -36,7 +35,6 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         createRoomButton.interactable = false;
         findRoomButton.interactable = false;
         selectChar.interactable = false;
-        changeChar.interactable = false;
         Cursor.lockState = CursorLockMode.None;
         if (PhotonNetwork.InRoom)
         {
@@ -132,7 +130,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         PhotonNetwork.CurrentRoom.IsOpen = false;
         PhotonNetwork.CurrentRoom.IsVisible = false;
-        NetWorkManager._networkmanager.photonView.RPC("ChangeScene", RpcTarget.All,(object) "Khu0");
+        NetWorkManager._networkmanager.photonView.RPC("ChangeScene", RpcTarget.All,(object) "Map_1");
         PlayerSelection.playerselection.SelectChar();
 
     }
@@ -184,12 +182,5 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         createRoomButton.interactable = true;
         findRoomButton.interactable = true;
         selectChar.interactable = true;
-        changeChar.interactable = true;
-    }
-    public void DeleteSave()
-    {
-        PlayerPrefs.DeleteKey("Name");
-        playerNameText.gameObject.SetActive(false);
-        nameInput.SetActive(true);
     }
 }
