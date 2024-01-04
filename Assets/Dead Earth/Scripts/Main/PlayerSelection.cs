@@ -10,7 +10,6 @@ public class PlayerSelection : MonoBehaviour
     public GameObject selectButton;
     public GameObject creatRoomButton;
     public GameObject findRoomButton;
-    public GameObject changeButton;
     public GameObject iconPlayer;
     public string playerPrefabName;
     public GameObject[] playerModel;
@@ -70,7 +69,6 @@ public class PlayerSelection : MonoBehaviour
     public void ShowuiRoom()
     {
         selectButton.SetActive(false);
-        changeButton.SetActive(false);
         creatRoomButton.SetActive(true);
         findRoomButton.SetActive(true);
     }
