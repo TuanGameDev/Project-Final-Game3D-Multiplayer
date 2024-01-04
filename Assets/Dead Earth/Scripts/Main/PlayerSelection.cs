@@ -29,23 +29,6 @@ public class PlayerSelection : MonoBehaviour
         selectButton.SetActive(true);
         creatRoomButton.SetActive(false);
         findRoomButton.SetActive(false);
-        if (PlayerPrefs.HasKey("SelectedCharacter"))
-        {
-            selectedCharacter = PlayerPrefs.GetInt("SelectedCharacter");
-            playerPrefabName = playerModel[selectedCharacter].GetComponent<PlayerModelName>().playerName;
-            selectButton.SetActive(true);
-            iconPlayer.SetActive(false);
-        }
-        else
-        {
-            selectedCharacter = 0;
-            playerPrefabName = playerModel[selectedCharacter].GetComponent<PlayerModelName>().playerName;
-        }
-        foreach (GameObject player in playerModel)
-        {
-            player.SetActive(false);
-        }
-        playerModel[selectedCharacter].SetActive(true);
     }
     public void IconClick(int characterIndex)
     {

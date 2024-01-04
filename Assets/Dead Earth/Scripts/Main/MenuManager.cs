@@ -41,17 +41,6 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
             PhotonNetwork.CurrentRoom.IsVisible = true;
             PhotonNetwork.CurrentRoom.IsOpen = true;
         }
-        if (PlayerPrefs.HasKey("Name"))
-        {
-            playerName = PlayerPrefs.GetString("Name");
-            PhotonNetwork.NickName = playerName;
-            nameInput.SetActive(false);
-            playerNameText.text = playerName;
-        }
-        else
-        {
-            nameInput.SetActive(true);
-        }
     }
     public void SetScreen(GameObject screen)
     {
@@ -76,7 +65,6 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
             playerName = playerName.Substring(0, maxNameLength);
             playerNameInput.text = playerName;
         }
-        PlayerPrefs.SetString("Name", playerName);
         PhotonNetwork.NickName = playerName;
     }
     public void OnScreenRoomButton()
