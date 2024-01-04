@@ -26,7 +26,7 @@ public class PlayerController : MonoBehaviourPun
     [Header("Text UI")]
     public TextMeshProUGUI hpText;
     public TextMeshProUGUI messageText;
-   [SerializeField] private Slider healthSlider;
+    public Slider healthSlider;
     private float maxHealthValue;
     public Canvas canvas;
     [PunRPC]
