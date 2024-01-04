@@ -34,17 +34,24 @@ MonoBehaviour:
   RunInBackground: 1
   StartInOfflineMode: 0
   RpcList:
-  - ChangeScene
   - ClickRpc
   - DestroyRpc
   - DestroySpaceship
   - Fire
+  - RespawnSpaceship
+  - ChangeScene
+  - UpdateLobbyUI
+  - Diamond
+  - EarnExp
+  - FlasDamage
+  - GetGold
   - Heal
   - ImInGame
   - Initialized
-  - RespawnSpaceship
+  - ShowBossAppearText
+  - ShowBossDeathText
   - TakeDamage
-  - UpdateLobbyUI
+  - UpdatePlayerLevel
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

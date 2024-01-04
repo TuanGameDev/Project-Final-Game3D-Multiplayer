@@ -93,11 +93,17 @@ public class PlayerController : MonoBehaviourPun
         StartCoroutine(Spawn(spawnPos, GameManager.gamemanager.respawnTime));
         StartCoroutine(CountdownDie(10f));
     }
-    IEnumerator Spawn(Vector3 spawnPos,float timeToSpawn)
+    public void SpawnerPlayer()
+    {
+        Vector3 spawnPos = GameManager.gamemanager.spawnPoint[Random.Range(0, GameManager.gamemanager.spawnPoint.Length)].position;
+        StartCoroutine(Spawn(spawnPos, GameManager.gamemanager.respawnTime));
+    }
+    IEnumerator Spawn(Vector3 spawnPos, float timeToSpawn)
     {
         yield return new WaitForSeconds(timeToSpawn);
         dead = false;
         transform.position = spawnPos;
+        currentHP = maxHP;
         rb.isKinematic = false;
         UpdateHpText(currentHP, maxHP, currentHP);
     }

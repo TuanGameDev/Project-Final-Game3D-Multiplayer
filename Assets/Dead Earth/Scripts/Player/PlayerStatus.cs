@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class PlayerStatus : MonoBehaviourPun
+public class PlayerStatus : MonoBehaviour
 {
     [Header("UI")]
     public TextMeshProUGUI playerName;
