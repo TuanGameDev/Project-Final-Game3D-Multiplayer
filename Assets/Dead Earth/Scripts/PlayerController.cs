@@ -69,7 +69,7 @@ public class PlayerController : MonoBehaviourPun
             }
 
             Vector3 movement = new Vector3(x, 0f, y);
-            movement = movement.normalized * moveSpeed * Time.deltaTime; // Thay movementSpeed bằng tốc độ di chuyển mong muốn
+            movement = movement.normalized * moveSpeed * Time.deltaTime;
 
             transform.Translate(movement);
         }
