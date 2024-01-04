@@ -11,8 +11,6 @@ public class PlayerController : MonoBehaviourPun
     [HideInInspector]
     public Animator playerAnim;
     public Rigidbody rb;
-    public static PlayerController me;
-    public PlayerStatus playerstatus;
     [Header("Player Status")]
     public int id;
     public float moveSpeed;
@@ -20,7 +18,6 @@ public class PlayerController : MonoBehaviourPun
     public int maxHP;
     public int def;
     public bool dead;
-    public Player photonPlayer;
     public bool faceRight;
 
     [Header("Text UI")]
@@ -29,6 +26,9 @@ public class PlayerController : MonoBehaviourPun
     public Slider healthSlider;
     private float maxHealthValue;
     public Canvas canvas;
+    public static PlayerController me;
+    public PlayerStatus playerstatus;
+    public Player photonPlayer;
     [PunRPC]
     public void Initialized(Player player)
     {
@@ -37,7 +37,7 @@ public class PlayerController : MonoBehaviourPun
         GameManager.gamemanager.players[id - 1] = this;
         playerstatus.InitializedPlayer(player.NickName);
         PlayerStatusInfo(maxHP);
-        UpdateHpText(currentHP, maxHP);
+        UpdateHpText(currentHP, maxHP, currentHP);
         if (player.IsLocal)
             me = this;
         else
@@ -52,7 +52,6 @@ public class PlayerController : MonoBehaviourPun
     }
     private void Update()
     {
-        UpdateHpText(currentHP, maxHP);
         if (!photonView.IsMine)
             return;
         MoveCharacter();
@@ -83,9 +82,7 @@ public class PlayerController : MonoBehaviourPun
             damageValue = 1;
         }
         currentHP -= damageValue;
-        UpdateHealthSlider(currentHP);
-        UpdateHpText(currentHP, maxHP);
-
+        UpdateHpText(currentHP, maxHP, currentHP);
     }
     void Die()
     {
@@ -94,7 +91,7 @@ public class PlayerController : MonoBehaviourPun
         transform.position = new Vector3(0, 90, 0);
         Vector3 spawnPos = GameManager.gamemanager.spawnPoint[Random.Range(0, GameManager.gamemanager.spawnPoint.Length)].position;
         StartCoroutine(Spawn(spawnPos, GameManager.gamemanager.respawnTime));
-        StartCoroutine(CountdownAndHideMessage(10f));
+        StartCoroutine(CountdownDie(10f));
     }
     IEnumerator Spawn(Vector3 spawnPos,float timeToSpawn)
     {
@@ -102,8 +99,7 @@ public class PlayerController : MonoBehaviourPun
         dead = false;
         transform.position = spawnPos;
         rb.isKinematic = false;
-        UpdateHealthSlider(currentHP);
-        UpdateHpText(currentHP, maxHP);
+        UpdateHpText(currentHP, maxHP, currentHP);
     }
     [PunRPC]
     void Heal(int amountToHeal)
@@ -112,20 +108,16 @@ public class PlayerController : MonoBehaviourPun
         messageText.text = " You have picked up the chicken thighs " +"+"+ amountToHeal.ToString("N0")+" HP ";
         messageText.color = Color.yellow;
         StartCoroutine(HideMessageAfterDelay(2f));
-        UpdateHealthSlider(currentHP);
-        UpdateHpText(currentHP, maxHP);
+        UpdateHpText(currentHP, maxHP, currentHP);
     }
     public void PlayerStatusInfo(int maxVal)
     {
         maxHealthValue = maxVal;
         healthSlider.value = 1.0f;
     }
-    void UpdateHpText(int curHP, int maxHP)
+    void UpdateHpText(int curHP, int maxHP, int heal)
     {
         hpText.text = curHP + "/" + maxHP;
-    }
-    void UpdateHealthSlider(int heal)
-    {
         healthSlider.value = (float)heal / maxHealthValue;
     }
     private IEnumerator HideMessageAfterDelay(float delay)
@@ -133,7 +125,7 @@ public class PlayerController : MonoBehaviourPun
         yield return new WaitForSeconds(delay);
         messageText.text = string.Empty;
     }
-    IEnumerator CountdownAndHideMessage(float countdownTime)
+    IEnumerator CountdownDie(float countdownTime)
     {
         float timeRemaining = countdownTime;
         while (timeRemaining > 0)
