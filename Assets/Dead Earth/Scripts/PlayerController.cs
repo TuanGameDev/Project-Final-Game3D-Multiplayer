@@ -15,10 +15,7 @@ public class PlayerController : MonoBehaviourPun
     public PlayerStatus playerstatus;
     [Header("Player Status")]
     public int id;
-    public int damage;
     public float moveSpeed;
-    public int coin;
-    public int diamond;
     public int currentHP;
     public int maxHP;
     public int def;
@@ -39,22 +36,6 @@ public class PlayerController : MonoBehaviourPun
         photonPlayer = player;
         GameManager.gamemanager.players[id - 1] = this;
         playerstatus.InitializedPlayer(player.NickName);
-        if (PlayerPrefs.HasKey("Coin"))
-        {
-            coin = PlayerPrefs.GetInt("Coin");
-        }
-        else
-        {
-            coin = 0;
-        }
-        if (PlayerPrefs.HasKey("Diamond"))
-        {
-            diamond = PlayerPrefs.GetInt("Diamond");
-        }
-        else
-        {
-            diamond = 0;
-        }
         PlayerStatusInfo(maxHP);
         UpdateHpText(currentHP, maxHP);
         if (player.IsLocal)
@@ -105,8 +86,6 @@ public class PlayerController : MonoBehaviourPun
     {
         dead = true;
         rb.isKinematic = true;
-        coin -= 10;
-        PlayerPrefs.SetInt("Coin", coin);
         transform.position = new Vector3(0, 90, 0);
         Vector3 spawnPos = GameManager.gamemanager.spawnPoint[Random.Range(0, GameManager.gamemanager.spawnPoint.Length)].position;
         StartCoroutine(Spawn(spawnPos, GameManager.gamemanager.respawnTime));
@@ -130,24 +109,6 @@ public class PlayerController : MonoBehaviourPun
         StartCoroutine(HideMessageAfterDelay(2f));
         UpdateHealthSlider(currentHP);
         UpdateHpText(currentHP, maxHP);
-    }
-    [PunRPC]
-    void GetGold(int goldToGive)
-    {
-        coin += goldToGive;
-        PlayerPrefs.SetInt("Coin", coin);
-        messageText.text = " You have picked up the coin "+ "+" + goldToGive.ToString("N0");
-        messageText.color = Color.yellow;
-        StartCoroutine(HideMessageAfterDelay(2f));
-    }
-    [PunRPC]
-    void Diamond(int diamondToGive)
-    {
-        diamond += diamondToGive;
-        PlayerPrefs.SetInt("Diamond", diamond);
-        messageText.text = " You have picked up the diamond " + diamondToGive.ToString("N0");
-        messageText.color = Color.yellow;
-        StartCoroutine(HideMessageAfterDelay(2f));
     }
     public void PlayerStatusInfo(int maxVal)
     {
