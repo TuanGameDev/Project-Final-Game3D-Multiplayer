@@ -61,12 +61,17 @@ public class PlayerController : MonoBehaviourPun
     {
         if (!dead)
         {
-            float x, y;
-            if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
+            float x = 0f, y = 0f;
+            if (Input.GetAxisRaw("Horizontal") != 0f || Input.GetAxisRaw("Vertical") != 0f)
             {
-                x = Input.GetAxis("Horizontal");
-                y = Input.GetAxis("Vertical");
+                x = Input.GetAxisRaw("Horizontal");
+                y = Input.GetAxisRaw("Vertical");
             }
+
+            Vector3 movement = new Vector3(x, 0f, y);
+            movement = movement.normalized * moveSpeed * Time.deltaTime; // Thay movementSpeed bằng tốc độ di chuyển mong muốn
+
+            transform.Translate(movement);
         }
     }
     [PunRPC]
