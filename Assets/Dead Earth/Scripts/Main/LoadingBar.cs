@@ -10,9 +10,8 @@ public class LoadingBar : MonoBehaviour
     public Slider loadingSlider;
     public float loadSpeed = 0.5f;
     private float targetProgress = 0f;
-    public GameObject loginPopup;
+    public GameObject mainPopup;
     public GameObject loadingbarPopup;
-    public GameObject notificationPopup;
 
     private void Start()
     {
@@ -32,8 +31,7 @@ public class LoadingBar : MonoBehaviour
         loadingText.text = "Loading:... " + (loadingSlider.value * 100f).ToString("F0") + "%";
         if (loadingSlider.value >= 1f)
         {
-            loginPopup.SetActive(true);
-            notificationPopup.SetActive(true);
+            mainPopup.SetActive(true);
             loadingbarPopup.SetActive(false);
         };
     }
