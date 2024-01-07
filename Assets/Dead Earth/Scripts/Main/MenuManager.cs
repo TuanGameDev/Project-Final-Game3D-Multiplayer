@@ -118,7 +118,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         PhotonNetwork.CurrentRoom.IsOpen = false;
         PhotonNetwork.CurrentRoom.IsVisible = false;
-        NetWorkManager._networkmanager.photonView.RPC("ChangeScene", RpcTarget.All,(object) "Map_1");
+        NetWorkManager._networkmanager.photonView.RPC("ChangeScene", RpcTarget.All,(object) "Hospital");
         PlayerSelection.playerselection.SelectChar();
 
     }
