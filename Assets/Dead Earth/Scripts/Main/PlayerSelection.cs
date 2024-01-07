@@ -26,7 +26,6 @@ public class PlayerSelection : MonoBehaviour
 
     void Start()
     {
-        selectButton.SetActive(true);
         creatRoomButton.SetActive(false);
         findRoomButton.SetActive(false);
     }
@@ -36,6 +35,7 @@ public class PlayerSelection : MonoBehaviour
         {
             player.SetActive(false);
         }
+        selectButton.SetActive(true);
         selectedCharacter = characterIndex;
         playerPrefabName = playerModel[selectedCharacter].GetComponent<PlayerModelName>().playerName;
         playerModel[selectedCharacter].SetActive(true);
