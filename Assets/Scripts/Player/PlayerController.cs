@@ -13,7 +13,6 @@ public class PlayerController : MonoBehaviourPun
 {
     [HideInInspector]
     public Animator playerAnim;
-    public Rigidbody rb;
     [Header("Player HUD")]
     [SerializeField] private float _walkSpeed = 1.0f;
     [SerializeField] private float _runSpeed = 4.5f;
@@ -23,7 +22,7 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] private UnityStandardAssets.Characters.FirstPerson.MouseLook _mouseLook = new UnityStandardAssets.Characters.FirstPerson.MouseLook();
 
     // Private internals
-    private Camera _camera = null;
+    private Camera _camera;
     private bool _jumpButtonPressed = false;
     private Vector2 _inputVector = Vector2.zero;
     private Vector3 _moveDirection = Vector3.zero;
@@ -68,16 +67,17 @@ public class PlayerController : MonoBehaviourPun
         UpdateHpText(currentHP, maxHP, currentHP);
         if (player.IsLocal)
             me = this;
-        else
-            rb.isKinematic = false;
     }
     protected void Start()
     {
         _characterController = GetComponent<CharacterController>();
-        _camera = Camera.main;
         _movementStatus = PlayerMoveStatus.NotMoving;
         _fallingTimer = 0.0f;
         _mouseLook.Init(transform, _camera.transform);
+        if(!photonView.IsMine)
+        {
+            Destroy(GetComponentInChildren<Camera>().gameObject);
+        }
     }
 
     protected void Update()
@@ -118,6 +118,8 @@ public class PlayerController : MonoBehaviourPun
 
     protected void FixedUpdate()
     {
+        if (!photonView.IsMine)
+            return;
         float horizontal = Input.GetAxis("Horizontal");
         float vertical = Input.GetAxis("Vertical");
         bool waswalking = _isWalking;
@@ -163,7 +165,6 @@ public class PlayerController : MonoBehaviourPun
     void Die()
     {
         dead = true;
-        rb.isKinematic = true;
         transform.position = new Vector3(0, 90, 0);
         Vector3 spawnPos = GameManager.gamemanager.spawnPoint[Random.Range(0, GameManager.gamemanager.spawnPoint.Length)].position;
         StartCoroutine(Spawn(spawnPos, GameManager.gamemanager.respawnTime));
@@ -180,7 +181,6 @@ public class PlayerController : MonoBehaviourPun
         dead = false;
         transform.position = spawnPos;
         currentHP = maxHP;
-        rb.isKinematic = false;
         UpdateHpText(currentHP, maxHP, currentHP);
     }
     [PunRPC]
