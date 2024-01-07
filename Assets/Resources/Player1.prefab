@@ -1997,8 +1997,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7620753849068958153}
-  - component: {fileID: 562628557960236460}
   - component: {fileID: 5996995094082433779}
+  - component: {fileID: 9148887343654393337}
   - component: {fileID: 151341840869681786}
   - component: {fileID: 751352736451946868}
   - component: {fileID: 5165806875988673631}
@@ -2029,29 +2029,6 @@ Transform:
   - {fileID: 3792410242919676}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!136 &562628557960236460
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6258475510830463129}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.17
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &5996995094082433779
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2079,6 +2056,32 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!143 &9148887343654393337
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6258475510830463129}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &151341840869681786
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2093,13 +2096,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerAnim: {fileID: 0}
   rb: {fileID: 5996995094082433779}
+  _walkSpeed: 1
+  _runSpeed: 4.5
+  _jumpSpeed: 7.5
+  _stickToGroundForce: 5
+  _gravityMultiplier: 2.5
+  _mouseLook:
+    XSensitivity: 2
+    YSensitivity: 2
+    clampVerticalRotation: 1
+    MinimumX: -90
+    MaximumX: 90
+    smooth: 0
+    smoothTime: 5
   id: 0
-  moveSpeed: 5
   currentHP: 100
   maxHP: 100
   def: 10
   dead: 0
-  faceRight: 0
   hpText: {fileID: 2314969333351324122}
   messageText: {fileID: 1154070388739014990}
   healthSlider: {fileID: 5417307367138578633}
