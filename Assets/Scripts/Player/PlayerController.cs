@@ -5,20 +5,23 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-
+using UnityStandardAssets.Characters.FirstPerson;
+public enum PlayerMoveStatus { NotMoving, Crouching, Walking, Running, NotGrounded, Landing }
+public enum CurveControlledBobCallbackType { Horizontal, Vertical }
+[RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviourPun
 {
     [HideInInspector]
     public Animator playerAnim;
     public Rigidbody rb;
-    [Header("Player Status")]
+    [Header("Player HUD")]
+
+    //
     public int id;
-    public float moveSpeed;
     public int currentHP;
     public int maxHP;
     public int def;
     public bool dead;
-    public bool faceRight;
 
     [Header("Text UI")]
     public TextMeshProUGUI hpText;
@@ -42,36 +45,6 @@ public class PlayerController : MonoBehaviourPun
             me = this;
         else
             rb.isKinematic = false;
-    }
-    private void Start()
-    {
-        if (!photonView.IsMine)
-        {
-            canvas.enabled = false;
-        }
-    }
-    private void Update()
-    {
-        if (!photonView.IsMine)
-            return;
-        MoveCharacter();
-    }
-    void MoveCharacter()
-    {
-        if (!dead)
-        {
-            float x = 0f, y = 0f;
-            if (Input.GetAxisRaw("Horizontal") != 0f || Input.GetAxisRaw("Vertical") != 0f)
-            {
-                x = Input.GetAxisRaw("Horizontal");
-                y = Input.GetAxisRaw("Vertical");
-            }
-
-            Vector3 movement = new Vector3(x, 0f, y);
-            movement = movement.normalized * moveSpeed * Time.deltaTime;
-
-            transform.Translate(movement);
-        }
     }
     [PunRPC]
     public void TakeDamage(int damageAmount)
