@@ -25,7 +25,12 @@ public class CurveControlledBob
 	[SerializeField] float 			_verticalMultiplier 				= 0.02f;
 	[SerializeField] float 			_verticaltoHorizontalSpeedRatio 	= 2.0f;
 	[SerializeField] float 			_baseInterval						= 1.0f;
+<<<<<<< HEAD
 	private float _prevXPlayHead;
+=======
+    // Internals
+    private float _prevXPlayHead;
+>>>>>>> a591e34e504f3c0a2fb4acdc143ca6ec48c05ec7
 	private float _prevYPlayHead;
 	private float _xPlayHead;
 	private float _yPlayHead;
@@ -105,7 +110,16 @@ public class FPSController : MonoBehaviour
 	[SerializeField] private float  _runStepLengthen	= 0.75f;
 	[SerializeField] private CurveControlledBob _headBob= new CurveControlledBob();
 	[SerializeField] private GameObject _flashLight 	= null;
+<<<<<<< HEAD
 	[SerializeField] private UnityStandardAssets.Characters.FirstPerson.MouseLook _mouseLook = new UnityStandardAssets.Characters.FirstPerson.MouseLook();
+=======
+    [SerializeField] public GameObject aimingObject;
+
+    // Use Standard Assets Mouse Look class for mouse input -> Camera Look Control
+    [SerializeField] private UnityStandardAssets.Characters.FirstPerson.MouseLook _mouseLook = new UnityStandardAssets.Characters.FirstPerson.MouseLook();
+
+	// Private internals
+>>>>>>> a591e34e504f3c0a2fb4acdc143ca6ec48c05ec7
 	private Camera 		_camera							= null;
 	private bool 		_jumpButtonPressed 				= false;
 	private Vector2 	_inputVector					= Vector2.zero;
@@ -248,4 +262,33 @@ public class FPSController : MonoBehaviour
 		AudioSources [_audioToUse].Play ();
 		_audioToUse = (_audioToUse == 0) ? 1 : 0;
 	}
+    //AimTarget
+    public void CheckAiming()
+    {
+        Ray ray = _camera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit))
+        {
+            if (hit.transform.gameObject.name == aimingObject.name || hit.transform.gameObject.layer == LayerMask.NameToLayer("Player"))
+                return;
+            Vector3 hitPoint = hit.point;
+            if (aimingObject != null)
+            {
+                MoveObjectToPosition(hitPoint);
+            }
+        }
+        else
+        {
+            Vector3 endPoint = ray.GetPoint(200f);
+            if (aimingObject != null)
+            {
+                MoveObjectToPosition(endPoint);
+            }
+        }
+    }
+    private void MoveObjectToPosition(Vector3 targetPosition)
+    {
+        Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
+        aimingObject.transform.position = newPosition;
+    }
 }
