@@ -17,9 +17,9 @@ MonoBehaviour:
   materialHashCode: 1913266420
   m_Version: 1.1.0
   m_SourceFontFileGUID: c8f8d96c1664b144f8fbe37f897dade7
-  m_SourceFontFile_EditorRef: {fileID: 0}
-  m_SourceFontFile: {fileID: 0}
-  m_AtlasPopulationMode: 0
+  m_SourceFontFile_EditorRef: {fileID: 12800000, guid: c8f8d96c1664b144f8fbe37f897dade7, type: 3}
+  m_SourceFontFile: {fileID: 12800000, guid: c8f8d96c1664b144f8fbe37f897dade7, type: 3}
+  m_AtlasPopulationMode: 1
   m_FaceInfo:
     m_FaceIndex: 0
     m_FamilyName: The Battle Continuez
@@ -2948,6 +2948,7 @@ Material:
     - _BumpFace: 0
     - _BumpOutline: 0
     - _ColorMask: 15
+    - _CullMode: 0
     - _Diffuse: 0.5
     - _FaceDilate: 0
     - _FaceShininess: 0.506
@@ -2974,6 +2975,7 @@ Material:
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 1
+    - _Sharpness: 0
     - _SpecularPower: 2
     - _Stencil: 0
     - _StencilComp: 8
@@ -3025,7 +3027,7 @@ Texture2D:
   m_MipsStripped: 0
   m_TextureFormat: 1
   m_MipCount: 1
-  m_IsReadable: 0
+  m_IsReadable: 1
   m_IsPreProcessed: 0
   m_IgnoreMipmapLimit: 0
   m_MipmapLimitGroupName: 

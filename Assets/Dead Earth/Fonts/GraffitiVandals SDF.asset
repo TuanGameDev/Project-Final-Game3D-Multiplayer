@@ -17,9 +17,9 @@ MonoBehaviour:
   materialHashCode: 1453697362
   m_Version: 1.1.0
   m_SourceFontFileGUID: abc8aae9dce0f3b4c94182cf5c1703f8
-  m_SourceFontFile_EditorRef: {fileID: 0}
-  m_SourceFontFile: {fileID: 0}
-  m_AtlasPopulationMode: 0
+  m_SourceFontFile_EditorRef: {fileID: 12800000, guid: abc8aae9dce0f3b4c94182cf5c1703f8, type: 3}
+  m_SourceFontFile: {fileID: 12800000, guid: abc8aae9dce0f3b4c94182cf5c1703f8, type: 3}
+  m_AtlasPopulationMode: 1
   m_FaceInfo:
     m_FaceIndex: 0
     m_FamilyName: GraffitiVandals
@@ -2949,6 +2949,7 @@ Material:
     - _BumpOutline: 0
     - _BumpScale: 1
     - _ColorMask: 15
+    - _CullMode: 0
     - _Cutoff: 0.5
     - _DetailNormalMapScale: 1
     - _Diffuse: 0.5
@@ -2985,6 +2986,7 @@ Material:
     - _ScaleX: 1
     - _ScaleY: 1
     - _ShaderFlags: 0
+    - _Sharpness: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SpecularPower: 2
@@ -3041,7 +3043,7 @@ Texture2D:
   m_MipsStripped: 0
   m_TextureFormat: 1
   m_MipCount: 1
-  m_IsReadable: 0
+  m_IsReadable: 1
   m_IsPreProcessed: 0
   m_IgnoreMipmapLimit: 0
   m_MipmapLimitGroupName: 
