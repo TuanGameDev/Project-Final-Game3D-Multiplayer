@@ -6,11 +6,43 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+public enum PlayerMoveStatus { NotMoving, Walking, Running, NotGrounded, Landing }
+
+
 public class FPSController : MonoBehaviourPun
 {
     [HideInInspector]
     public Animator playerAnim;
     [Header("Player HUD")]
+    [SerializeField] private float _walkSpeed = 1.0f;
+    [SerializeField] private float _runSpeed = 4.5f;
+    [SerializeField] private float _jumpSpeed = 7.5f;
+    [SerializeField] private float _stickToGroundForce = 5.0f;
+    [SerializeField] private float _gravityMultiplier = 2.5f;
+
+    // Use Standard Assets Mouse Look class for mouse input -> Camera Look Control
+    //[SerializeField] private UnityStandardAssets.Characters.FirstPerson.MouseLook _mouseLook = new UnityStandardAssets.Characters.FirstPerson.MouseLook();
+
+    // Private internals
+    private Camera _camera = null;
+    private bool _jumpButtonPressed = false;
+    private Vector2 _inputVector = Vector2.zero;
+    private Vector3 _moveDirection = Vector3.zero;
+    private bool _previouslyGrounded = false;
+    private bool _isWalking = true;
+    private bool _isJumping = false;
+
+    // Timers
+    private float _fallingTimer = 0.0f;
+
+    private CharacterController _characterController = null;
+    private PlayerMoveStatus _movementStatus = PlayerMoveStatus.NotMoving;
+
+    // Public Properties
+    public PlayerMoveStatus movementStatus { get { return _movementStatus; } }
+    public float walkSpeed { get { return _walkSpeed; } }
+    public float runSpeed { get { return _runSpeed; } }
+
     PhotonView PV;
     Rigidbody rb;
     Animator ani;
