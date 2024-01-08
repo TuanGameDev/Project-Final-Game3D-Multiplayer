@@ -78,7 +78,6 @@ public class CurveControlledBob
         if (_yPlayHead > _curveEndTime)
             _yPlayHead -= _curveEndTime;
 
-        // Process Events
         for (int i = 0; i < _events.Count; i++)
         {
             CurveControlledBobEvent ev = _events[i];
@@ -117,11 +116,8 @@ public class CurveControlledBob
 [RequireComponent(typeof(CharacterController))]
 public class FPSController : MonoBehaviourPun
 {
-    [HideInInspector]
     public List<AudioSource> AudioSources = new List<AudioSource>();
     private int _audioToUse = 0;
-
-    // Inspector Assigned Locomotion Settings
     [SerializeField] private float _walkSpeed = 2.0f;
     [SerializeField] private float _runSpeed = 4.5f;
     [SerializeField] private float _jumpSpeed = 7.5f;
@@ -131,11 +127,7 @@ public class FPSController : MonoBehaviourPun
     [SerializeField] private float _runStepLengthen = 0.75f;
     [SerializeField] private CurveControlledBob _headBob = new CurveControlledBob();
     [SerializeField] private GameObject _flashLight = null;
-
-    // Use Standard Assets Mouse Look class for mouse input -> Camera Look Control
     [SerializeField] private UnityStandardAssets.Characters.FirstPerson.MouseLook _mouseLook = new UnityStandardAssets.Characters.FirstPerson.MouseLook();
-
-    // Private internals
     private Camera _camera = null;
     private bool _jumpButtonPressed = false;
     private Vector2 _inputVector = Vector2.zero;
@@ -146,14 +138,10 @@ public class FPSController : MonoBehaviourPun
     private bool _isCrouching = false;
     private Vector3 _localSpaceCameraPos = Vector3.zero;
     private float _controllerHeight = 0.0f;
-
-    // Timers
     private float _fallingTimer = 0.0f;
 
     private CharacterController _characterController = null;
     private PlayerMoveStatus _movementStatus = PlayerMoveStatus.NotMoving;
-
-    // Public Properties
     public PlayerMoveStatus movementStatus { get { return _movementStatus; } }
     public float walkSpeed { get { return _walkSpeed; } }
     public float runSpeed { get { return _runSpeed; } }
