@@ -10,7 +10,7 @@ public class GameManager : MonoBehaviourPun
 {
     [Header("Players")]
     public string playerPrefabPath;
-    public PlayerController[] players;
+    public FPSController[] players;
     public Transform[] spawnPoint;
     public float respawnTime;
     private int playersInGame;
@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviourPun
 
     void Start()
     {
-        players = new PlayerController[PhotonNetwork.PlayerList.Length];
+        players = new FPSController[PhotonNetwork.PlayerList.Length];
         photonView.RPC("ImInGame", RpcTarget.AllBuffered);
     }
     [PunRPC]
@@ -39,12 +39,12 @@ public class GameManager : MonoBehaviourPun
         GameObject playerObject = PhotonNetwork.Instantiate(PlayerSelection.playerselection.playerPrefabName, spawnPoint[Random.Range(0, spawnPoint.Length)].position, Quaternion.identity);
         playerObject.GetComponent<PhotonView>().RPC("Initialized", RpcTarget.All, PhotonNetwork.LocalPlayer);
     }
-    public PlayerController GetPlayer(int playerId)
+    public FPSController GetPlayer(int playerId)
     {
         return players.First(x => x.id == playerId); 
     }
 
-    public PlayerController GetPlayer(GameObject playerObject)
+    public FPSController GetPlayer(GameObject playerObject)
     {
         return players.First(x => x.gameObject == playerObject);
     }

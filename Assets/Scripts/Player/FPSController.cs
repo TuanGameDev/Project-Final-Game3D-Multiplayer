@@ -6,38 +6,27 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEditor.Progress;
-public class PlayerController : MonoBehaviourPun
+public class FPSController : MonoBehaviourPun
 {
     [HideInInspector]
     public Animator playerAnim;
     [Header("Player HUD")]
-    [SerializeField] GameObject cameraHolder;
-
-    [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
-    float verticalLookRotation;
-    bool grounded;
-    public CharacterController Ctrler;
+    PhotonView PV;
     Rigidbody rb;
     Animator ani;
-    PhotonView PV;
     //
     public int id;
     public int currentHP;
     public int maxHP;
     public int def;
     public bool dead;
-    public float Tourque = 0.5f;
-    public float CurrentSpeed = 0.5f;
-    public float MaxSpeed = 10;
-    public float WalkSpeed = 10f;
     [Header("Text UI")]
     public TextMeshProUGUI hpText;
     public TextMeshProUGUI messageText;
     public Slider healthSlider;
     private float maxHealthValue;
     public Canvas canvas;
-    public static PlayerController me;
+    public static FPSController me;
     public PlayerStatus playerstatus;
     public Player photonPlayer;
     [PunRPC]
@@ -78,36 +67,13 @@ public class PlayerController : MonoBehaviourPun
     {
         if (!PV.IsMine)
             return;
-
-        Look();
         Move();
-        Jump();
     }
     #region di chuyển và nhảy và shoot
-    void Look()
-    {
-        transform.Rotate(Vector3.up * Input.GetAxisRaw("Mouse X") * mouseSensitivity);
-
-        verticalLookRotation += Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
-        verticalLookRotation = Mathf.Clamp(verticalLookRotation, -90f, 30f);
-
-        cameraHolder.transform.localEulerAngles = Vector3.left * verticalLookRotation;
-    }
+   
     void Move()
     {
        
-    }
-
-    void Jump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space) && grounded)
-        {
-            rb.AddForce(transform.up * jumpForce);
-        }
-    }
-    public void SetGroundedState(bool _grounded)
-    {
-        grounded = _grounded;
     }
     #endregion
     [PunRPC]
