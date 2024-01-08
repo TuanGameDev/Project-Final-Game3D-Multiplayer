@@ -17,11 +17,9 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
     float verticalLookRotation;
     bool grounded;
-    Vector3 smoothMoveVelocity;
-    Vector3 moveAmount;
-
+    public CharacterController Ctrler;
     Rigidbody rb;
-
+    Animator ani;
     PhotonView PV;
     //
     public int id;
@@ -29,7 +27,10 @@ public class PlayerController : MonoBehaviourPun
     public int maxHP;
     public int def;
     public bool dead;
-
+    public float Tourque = 0.5f;
+    public float CurrentSpeed = 0.5f;
+    public float MaxSpeed = 10;
+    public float WalkSpeed = 10f;
     [Header("Text UI")]
     public TextMeshProUGUI hpText;
     public TextMeshProUGUI messageText;
@@ -55,6 +56,7 @@ public class PlayerController : MonoBehaviourPun
     {
         rb = GetComponent<Rigidbody>();
         PV = GetComponent<PhotonView>();
+        ani = GetComponent<Animator>();
     }
     void Start()
     {
@@ -93,9 +95,7 @@ public class PlayerController : MonoBehaviourPun
     }
     void Move()
     {
-        Vector3 moveDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical")).normalized;
-
-        moveAmount = Vector3.SmoothDamp(moveAmount, moveDir * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed), ref smoothMoveVelocity, smoothTime);
+       
     }
 
     void Jump()
@@ -108,14 +108,6 @@ public class PlayerController : MonoBehaviourPun
     public void SetGroundedState(bool _grounded)
     {
         grounded = _grounded;
-    }
-
-    void FixedUpdate()
-    {
-        if (!PV.IsMine)
-            return;
-
-        rb.MovePosition(rb.position + transform.TransformDirection(moveAmount) * Time.fixedDeltaTime);
     }
     #endregion
     [PunRPC]
