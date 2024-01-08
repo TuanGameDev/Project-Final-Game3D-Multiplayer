@@ -3,8 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
+
+// Enumerations
 public enum  PlayerMoveStatus 				{ NotMoving, Crouching, Walking, Running, NotGrounded, Landing }
 public enum  CurveControlledBobCallbackType { Horizontal, Vertical }
+
+// Delegates
 public delegate void CurveControlledBobCallback ();
 
 [System.Serializable]
@@ -25,17 +29,22 @@ public class CurveControlledBob
 	[SerializeField] float 			_verticalMultiplier 				= 0.02f;
 	[SerializeField] float 			_verticaltoHorizontalSpeedRatio 	= 2.0f;
 	[SerializeField] float 			_baseInterval						= 1.0f;
-<<<<<<< HEAD
-	private float _prevXPlayHead;
-=======
     // Internals
     private float _prevXPlayHead;
->>>>>>> a591e34e504f3c0a2fb4acdc143ca6ec48c05ec7
 	private float _prevYPlayHead;
 	private float _xPlayHead;
 	private float _yPlayHead;
 	private float _curveEndTime;
 	private List<CurveControlledBobEvent> _events = new List<CurveControlledBobEvent> ();
+
+	public void Initialize()
+	{
+		_curveEndTime 	= _bobcurve[_bobcurve.length - 1].time;
+		_xPlayHead 		= 0.0f;
+		_yPlayHead 		= 0.0f;
+		_prevXPlayHead	= 0.0f;
+		_prevYPlayHead	= 0.0f;
+	}
 
 	public void RegisterEventCallback( float time, CurveControlledBobCallback function, CurveControlledBobCallbackType type )
 	{
@@ -51,6 +60,7 @@ public class CurveControlledBob
 			}
 		);
 	}
+
 	public Vector3 GetVectorOffset(float speed)
 	{
 		_xPlayHead += (speed*Time.deltaTime)/_baseInterval;
@@ -110,16 +120,8 @@ public class FPSController : MonoBehaviour
 	[SerializeField] private float  _runStepLengthen	= 0.75f;
 	[SerializeField] private CurveControlledBob _headBob= new CurveControlledBob();
 	[SerializeField] private GameObject _flashLight 	= null;
-<<<<<<< HEAD
-	[SerializeField] private UnityStandardAssets.Characters.FirstPerson.MouseLook _mouseLook = new UnityStandardAssets.Characters.FirstPerson.MouseLook();
-=======
     [SerializeField] public GameObject aimingObject;
-
-    // Use Standard Assets Mouse Look class for mouse input -> Camera Look Control
     [SerializeField] private UnityStandardAssets.Characters.FirstPerson.MouseLook _mouseLook = new UnityStandardAssets.Characters.FirstPerson.MouseLook();
-
-	// Private internals
->>>>>>> a591e34e504f3c0a2fb4acdc143ca6ec48c05ec7
 	private Camera 		_camera							= null;
 	private bool 		_jumpButtonPressed 				= false;
 	private Vector2 	_inputVector					= Vector2.zero;
@@ -134,7 +136,6 @@ public class FPSController : MonoBehaviour
 
 	private CharacterController _characterController	= null;
 	private PlayerMoveStatus	_movementStatus 		=	PlayerMoveStatus.NotMoving;
-
 	public PlayerMoveStatus movementStatus	{ get{ return _movementStatus; }}
 	public float walkSpeed	 				{ get{ return _walkSpeed;}}
 	public float runSpeed  					{ get{ return _runSpeed;}}
@@ -159,6 +160,7 @@ public class FPSController : MonoBehaviour
 		_movementStatus = PlayerMoveStatus.NotMoving;
 		_fallingTimer 			= 0.0f;
 		_mouseLook.Init(transform , _camera.transform);
+		_headBob.Initialize();
 		_headBob.RegisterEventCallback (1.5f, PlayFootStepSound, CurveControlledBobCallbackType.Vertical); 
 
 		if (_flashLight)
@@ -262,7 +264,6 @@ public class FPSController : MonoBehaviour
 		AudioSources [_audioToUse].Play ();
 		_audioToUse = (_audioToUse == 0) ? 1 : 0;
 	}
-    //AimTarget
     public void CheckAiming()
     {
         Ray ray = _camera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
