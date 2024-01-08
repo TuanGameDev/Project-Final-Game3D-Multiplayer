@@ -58,9 +58,13 @@ public class PlayerController : MonoBehaviourPun
     }
     void Start()
     {
+        if(!PV.IsMine)
+        {
+            canvas.enabled = false;
+        }
         if (PV.IsMine)
         {
-
+            Debug.Log("...");
         }
         else
         {
@@ -83,7 +87,7 @@ public class PlayerController : MonoBehaviourPun
         transform.Rotate(Vector3.up * Input.GetAxisRaw("Mouse X") * mouseSensitivity);
 
         verticalLookRotation += Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
-        verticalLookRotation = Mathf.Clamp(verticalLookRotation, -30f, 90f);
+        verticalLookRotation = Mathf.Clamp(verticalLookRotation, -90f, 30f);
 
         cameraHolder.transform.localEulerAngles = Vector3.left * verticalLookRotation;
     }
