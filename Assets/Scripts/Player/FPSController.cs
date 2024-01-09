@@ -21,6 +21,9 @@ public class FPSController : MonoBehaviourPun
     public PlayerHUD playerHUD;
     [Header("Gun")]
     public GameObject aimingObject;
+    public GameObject rifle;
+    public GameObject pistol;
+    private GameObject currentGun;
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -41,7 +44,7 @@ public class FPSController : MonoBehaviourPun
     {
         if (PV.IsMine)
         {
-
+            EquipGun(rifle);
         }
         else
         {
@@ -59,6 +62,14 @@ public class FPSController : MonoBehaviourPun
         Jump();
         CheckAiming();
 
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            EquipGun(rifle);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            EquipGun(pistol);
+        }
     }
     void Look()
     {
@@ -141,4 +152,15 @@ public class FPSController : MonoBehaviourPun
         Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
         aimingObject.transform.position = newPosition;
     }
+    void EquipGun(GameObject gun)
+    {
+        if (currentGun != null)
+        {
+            currentGun.SetActive(false);
+        }
+
+        gun.SetActive(true);
+        currentGun = gun;
+    }
+
 }
