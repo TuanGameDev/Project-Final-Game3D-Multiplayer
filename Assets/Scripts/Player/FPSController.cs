@@ -10,7 +10,7 @@ public class FPSController : MonoBehaviourPun
     Animator ani;
     PhotonView PV;
     public int id;
-    [SerializeField] GameObject cameraHolder;
+    [SerializeField] Camera cameraHolder;
     [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
     float verticalLookRotation;
     bool grounded;
@@ -19,9 +19,8 @@ public class FPSController : MonoBehaviourPun
     public static FPSController me;
     public Player photonPlayer;
     public PlayerHUD playerHUD;
-    /* [Header("Gun")]
-     [SerializeField] Camera cameraHolder;
-     public GameObject aimingObject;*/
+    [Header("Gun")]
+    public GameObject aimingObject;
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -58,7 +57,7 @@ public class FPSController : MonoBehaviourPun
         Look();
         Move();
         Jump();
-        // CheckAiming();
+        CheckAiming();
 
     }
     void Look()
@@ -114,32 +113,32 @@ public class FPSController : MonoBehaviourPun
 
         rb.MovePosition(rb.position + transform.TransformDirection(moveAmount) * Time.fixedDeltaTime);
     }
-    /*  public void CheckAiming()
-      {
-          Ray ray = cameraHolder.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
-          RaycastHit hit;
-          if (Physics.Raycast(ray, out hit))
-          {
-              if (hit.transform.gameObject.name == aimingObject.name || hit.transform.gameObject.layer == LayerMask.NameToLayer("Player"))
-                  return;
-              Vector3 hitPoint = hit.point;
-              if (aimingObject != null)
-              {
-                  MoveObjectToPosition(hitPoint);
-              }
-          }
-          else
-          {
-              Vector3 endPoint = ray.GetPoint(200f);
-              if (aimingObject != null)
-              {
-                  MoveObjectToPosition(endPoint);
-              }
-          }
-      }
-      private void MoveObjectToPosition(Vector3 targetPosition)
-      {
-          Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
-          aimingObject.transform.position = newPosition;
-      }*/
+    public void CheckAiming()
+    {
+        Ray ray = cameraHolder.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit))
+        {
+            if (hit.transform.gameObject.name == aimingObject.name || hit.transform.gameObject.layer == LayerMask.NameToLayer("Player"))
+                return;
+            Vector3 hitPoint = hit.point;
+            if (aimingObject != null)
+            {
+                MoveObjectToPosition(hitPoint);
+            }
+        }
+        else
+        {
+            Vector3 endPoint = ray.GetPoint(200f);
+            if (aimingObject != null)
+            {
+                MoveObjectToPosition(endPoint);
+            }
+        }
+    }
+    private void MoveObjectToPosition(Vector3 targetPosition)
+    {
+        Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
+        aimingObject.transform.position = newPosition;
+    }
 }

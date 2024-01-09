@@ -6,7 +6,7 @@ public class Gun_Pistol : MonoBehaviourPun
 {
     public float damage = 10f;
     public float fireRate = 1f;
-    public float zoomFOV = 20f;
+    public float zoomFOV = 40f;
     public Camera playerCamera;
     public Transform bulletTransForms;
     public GameObject MuzzleGun;
@@ -17,6 +17,7 @@ public class Gun_Pistol : MonoBehaviourPun
 
     void Start()
     {
+        playerCamera = GameObject.FindWithTag("CameraFPS").GetComponent<Camera>();
         originalFOV = playerCamera.fieldOfView;
     }
 
@@ -38,12 +39,12 @@ public class Gun_Pistol : MonoBehaviourPun
 
             if (Input.GetMouseButtonDown(0) && !isDelayShootRunning)
             {
-               // StartCoroutine(Shoot());
+                StartCoroutine(Shoot());
             }
         }
     }
 
-   /* IEnumerator Shoot()
+    IEnumerator Shoot()
     {
         isDelayShootRunning = true;
 
@@ -58,5 +59,5 @@ public class Gun_Pistol : MonoBehaviourPun
         Destroy(bullet, 3f);
         yield return new WaitForSeconds(1f / fireRate);
         isDelayShootRunning = false;
-    }*/
+    }
 }
