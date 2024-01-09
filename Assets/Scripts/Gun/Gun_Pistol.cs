@@ -38,16 +38,16 @@ public class Gun_Pistol : MonoBehaviourPun
 
             if (Input.GetMouseButtonDown(0) && !isDelayShootRunning)
             {
-                StartCoroutine(Shoot());
+               // StartCoroutine(Shoot());
             }
         }
     }
 
-    IEnumerator Shoot()
+   /* IEnumerator Shoot()
     {
         isDelayShootRunning = true;
 
-        Vector3 shootDirection = (FPSController.instance.aimingObject.transform.position - bulletTransForms.position).normalized;
+        Vector3 shootDirection = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized;
 
         MuzzleGun.SetActive(true);
 
@@ -58,5 +58,5 @@ public class Gun_Pistol : MonoBehaviourPun
         Destroy(bullet, 3f);
         yield return new WaitForSeconds(1f / fireRate);
         isDelayShootRunning = false;
-    }
+    }*/
 }

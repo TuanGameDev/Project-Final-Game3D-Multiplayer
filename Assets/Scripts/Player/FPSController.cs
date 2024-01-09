@@ -3,24 +3,28 @@ using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
+using Photon.Pun.Demo.PunBasics;
 public class FPSController : MonoBehaviourPun
 {
-    public static FPSController instance;
-	public int id;
-	public static FPSController me;
-    public Player photonPlayer;
+    Rigidbody rb;
+    Animator ani;
     PhotonView PV;
-
-    [Header("Gun")]
-    [SerializeField] Camera cameraHolder;
-    public GameObject aimingObject;
-
-    private void Awake()
+    public int id;
+    [SerializeField] GameObject cameraHolder;
+    [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
+    float verticalLookRotation;
+    bool grounded;
+    Vector3 smoothMoveVelocity;
+    Vector3 moveAmount;
+    public static FPSController me;
+    public Player photonPlayer;
+    /* [Header("Gun")]
+     [SerializeField] Camera cameraHolder;
+     public GameObject aimingObject;*/
+    void Awake()
     {
-        if(instance == null)
-        {
-            instance = this;
-        }
+        rb = GetComponent<Rigidbody>();
+        PV = GetComponent<PhotonView>();
     }
     [PunRPC]
     public void Initialized(Player player)
@@ -31,42 +35,91 @@ public class FPSController : MonoBehaviourPun
         if (player.IsLocal)
             me = this;
     }
-    private void Start()
-	{
-
-	}
-	private void Update()
-	{
-
-        /*CheckAiming();*/
-
-    }
-/*    public void CheckAiming()
+    void Start()
     {
-        Ray ray = cameraHolder.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit))
+        if (PV.IsMine)
         {
-            if (hit.transform.gameObject.name == aimingObject.name || hit.transform.gameObject.layer == LayerMask.NameToLayer("Player"))
-                return;
-            Vector3 hitPoint = hit.point;
-            if (aimingObject != null)
-            {
-                MoveObjectToPosition(hitPoint);
-            }
+
         }
         else
         {
-            Vector3 endPoint = ray.GetPoint(200f);
-            if (aimingObject != null)
-            {
-                MoveObjectToPosition(endPoint);
-            }
+            Destroy(GetComponentInChildren<Camera>().gameObject);
+            Destroy(rb);
         }
     }
-    private void MoveObjectToPosition(Vector3 targetPosition)
+     void Update()
+	{
+        if (!PV.IsMine)
+            return;
+
+        Look();
+        Move();
+        Jump();
+        // CheckAiming();
+
+    }
+    void Look()
     {
-        Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
-        aimingObject.transform.position = newPosition;
-    }*/
+        transform.Rotate(Vector3.up * Input.GetAxisRaw("Mouse X") * mouseSensitivity);
+
+        verticalLookRotation += Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
+        verticalLookRotation = Mathf.Clamp(verticalLookRotation, -90f, 30f);
+
+        cameraHolder.transform.localEulerAngles = Vector3.left * verticalLookRotation;
+    }
+
+    void Move()
+    {
+        Vector3 moveDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical")).normalized;
+
+        moveAmount = Vector3.SmoothDamp(moveAmount, moveDir * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed), ref smoothMoveVelocity, smoothTime);
+    }
+
+    void Jump()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) && grounded)
+        {
+            rb.AddForce(transform.up * jumpForce);
+        }
+    }
+    public void SetGroundedState(bool _grounded)
+    {
+        grounded = _grounded;
+    }
+
+    void FixedUpdate()
+    {
+        if (!PV.IsMine)
+            return;
+
+        rb.MovePosition(rb.position + transform.TransformDirection(moveAmount) * Time.fixedDeltaTime);
+    }
+    /*  public void CheckAiming()
+      {
+          Ray ray = cameraHolder.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+          RaycastHit hit;
+          if (Physics.Raycast(ray, out hit))
+          {
+              if (hit.transform.gameObject.name == aimingObject.name || hit.transform.gameObject.layer == LayerMask.NameToLayer("Player"))
+                  return;
+              Vector3 hitPoint = hit.point;
+              if (aimingObject != null)
+              {
+                  MoveObjectToPosition(hitPoint);
+              }
+          }
+          else
+          {
+              Vector3 endPoint = ray.GetPoint(200f);
+              if (aimingObject != null)
+              {
+                  MoveObjectToPosition(endPoint);
+              }
+          }
+      }
+      private void MoveObjectToPosition(Vector3 targetPosition)
+      {
+          Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
+          aimingObject.transform.position = newPosition;
+      }*/
 }
