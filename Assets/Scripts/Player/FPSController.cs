@@ -18,6 +18,7 @@ public class FPSController : MonoBehaviourPun
     Vector3 moveAmount;
     public static FPSController me;
     public Player photonPlayer;
+    public PlayerHUD playerHUD;
     /* [Header("Gun")]
      [SerializeField] Camera cameraHolder;
      public GameObject aimingObject;*/
@@ -31,6 +32,7 @@ public class FPSController : MonoBehaviourPun
     {
         id = player.ActorNumber;
         photonPlayer = player;
+        playerHUD.UpdateNameTag(player.NickName);
         GameManager.gamemanager.players[id - 1] = this;
         if (player.IsLocal)
             me = this;
