@@ -44,7 +44,7 @@ public class FPSController : MonoBehaviourPun
     {
         if (PV.IsMine)
         {
-            EquipGun(rifle);
+            //EquipGun(rifle);
         }
         else
         {
@@ -61,7 +61,7 @@ public class FPSController : MonoBehaviourPun
         Move();
         Jump();
         CheckAiming();
-
+/*
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             EquipGun(rifle);
@@ -69,7 +69,7 @@ public class FPSController : MonoBehaviourPun
         else if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             EquipGun(pistol);
-        }
+        }*/
     }
     void Look()
     {
