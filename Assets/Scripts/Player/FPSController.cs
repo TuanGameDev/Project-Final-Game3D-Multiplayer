@@ -3,13 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
-
-public class FPSController : MonoBehaviour 
+public class FPSController : MonoBehaviourPun
 {
 	
 	public int id;
 	public static FPSController me;
     public Player photonPlayer;
+	PhotonView PV; 
     [PunRPC]
     public void Initialized(Player player)
     {
@@ -19,23 +19,16 @@ public class FPSController : MonoBehaviour
         if (player.IsLocal)
             me = this;
     }
-    protected void Start()
+    private void Start()
 	{
-		
-	}
 
-	protected void Update()
+	}
+	private void Update()
 	{
 		
 		//CheckAiming();
 		       
 	}
-
-	protected void FixedUpdate()
-	{
-		
-	}
-
    /* public void CheckAiming()
     {
         Ray ray = _camera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
