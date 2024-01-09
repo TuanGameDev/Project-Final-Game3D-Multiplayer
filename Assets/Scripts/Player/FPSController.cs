@@ -214,8 +214,8 @@ public class FPSController : MonoBehaviour
 			_movementStatus = PlayerMoveStatus.Running;
 	
 		_previouslyGrounded = _characterController.isGrounded;
-
-			       
+		CheckAiming();
+		       
 	}
 
 	protected void FixedUpdate()
