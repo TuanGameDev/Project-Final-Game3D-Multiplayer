@@ -5,11 +5,23 @@ using Photon.Pun;
 using Photon.Realtime;
 public class FPSController : MonoBehaviourPun
 {
-	
+    public static FPSController instance;
 	public int id;
 	public static FPSController me;
     public Player photonPlayer;
-	PhotonView PV; 
+    PhotonView PV;
+
+    [Header("Gun")]
+    [SerializeField] Camera cameraHolder;
+    public GameObject aimingObject;
+
+    private void Awake()
+    {
+        if(instance == null)
+        {
+            instance = this;
+        }
+    }
     [PunRPC]
     public void Initialized(Player player)
     {
@@ -25,13 +37,13 @@ public class FPSController : MonoBehaviourPun
 	}
 	private void Update()
 	{
-		
-		//CheckAiming();
-		       
-	}
-   /* public void CheckAiming()
+
+        /*CheckAiming();*/
+
+    }
+/*    public void CheckAiming()
     {
-        Ray ray = _camera.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
+        Ray ray = cameraHolder.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit))
         {
