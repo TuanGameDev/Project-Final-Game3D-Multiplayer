@@ -9,21 +9,21 @@ public class FPSController : MonoBehaviourPun
     Rigidbody rb;
     Animator ani;
     PhotonView PV;
-    public int id;
+    [SerializeField] public int id;
     [SerializeField] Camera cameraHolder;
     [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
     float verticalLookRotation;
     bool grounded;
     Vector3 smoothMoveVelocity;
     Vector3 moveAmount;
-    public static FPSController me;
-    public Player photonPlayer;
-    public PlayerHUD playerHUD;
+    [SerializeField] public static FPSController me;
+    [SerializeField] public Player photonPlayer;
+    [SerializeField] public PlayerHUD playerHUD;
     [Header("Gun")]
-    public GameObject aimingObject;
-    public GameObject rifle;
-    public GameObject pistol;
-    private GameObject currentGun;
+    [SerializeField] public GameObject aimingObject;
+    [SerializeField] public GameObject rifle;
+    [SerializeField] public GameObject pistol;
+    [SerializeField] private GameObject currentGun;
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
