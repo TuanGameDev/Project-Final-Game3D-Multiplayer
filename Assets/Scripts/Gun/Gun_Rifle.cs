@@ -14,7 +14,6 @@ public class Gun_Rifle : MonoBehaviourPun
     private bool isZoomed = false;
     bool isDelayShootRunning = false;
     private float originalFOV;
-
     void Start()
     {
         playerCamera = GameObject.FindWithTag("CameraFPS").GetComponent<Camera>();
@@ -58,7 +57,6 @@ public class Gun_Rifle : MonoBehaviourPun
             Destroy(bullet, 3f);
             yield return new WaitForSeconds(1f / fireRate);
         }
-
         MuzzleGun.SetActive(false);
         isDelayShootRunning = false;
     }
