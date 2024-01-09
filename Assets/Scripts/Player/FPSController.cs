@@ -26,6 +26,7 @@ public class FPSController : MonoBehaviourPun
     {
         rb = GetComponent<Rigidbody>();
         PV = GetComponent<PhotonView>();
+        ani = GetComponent<Animator>();
     }
     [PunRPC]
     public void Initialized(Player player)
@@ -72,9 +73,26 @@ public class FPSController : MonoBehaviourPun
 
     void Move()
     {
-        Vector3 moveDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical")).normalized;
+        float horizontalInput = Input.GetAxis("Horizontal");
+        float verticalInput = Input.GetAxis("Vertical");
 
-        moveAmount = Vector3.SmoothDamp(moveAmount, moveDir * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed), ref smoothMoveVelocity, smoothTime);
+        Vector3 movement = new Vector3(horizontalInput, 0f, verticalInput).normalized;
+
+        if (movement.magnitude <= 0.01f)
+        {
+            ani.SetFloat("X", 0f);
+            ani.SetFloat("Y", 0f);
+            ani.SetFloat("Speed", 0f);
+        }
+        else
+        {
+            ani.SetFloat("X", horizontalInput * walkSpeed);
+            ani.SetFloat("Y", verticalInput * walkSpeed);
+
+            float targetSpeed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed;
+            transform.Translate(movement * targetSpeed * Time.deltaTime, Space.Self);
+            ani.SetFloat("Speed", targetSpeed);
+        }
     }
 
     void Jump()
