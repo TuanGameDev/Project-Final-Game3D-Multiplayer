@@ -14,7 +14,6 @@ public class FPSController : MonoBehaviourPun
     [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
     float verticalLookRotation;
     bool grounded;
-    Vector3 smoothMoveVelocity;
     Vector3 moveAmount;
     [SerializeField] public static FPSController me;
     [SerializeField] public Player photonPlayer;
