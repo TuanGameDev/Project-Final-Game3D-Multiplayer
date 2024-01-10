@@ -41,7 +41,6 @@ public class SwitchGun : MonoBehaviour
     {
         int previousSelectedWeapon = selectedWeapon;
 
-        // Check if MuzzleGun is active, if true, return and do not switch weapons
         if (Gun_Shoot.instance.MuzzleGun.activeSelf)
             return;
 

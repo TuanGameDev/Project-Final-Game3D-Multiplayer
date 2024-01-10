@@ -23,9 +23,11 @@ public class FPSController : MonoBehaviourPun
     [SerializeField] public GameObject aimingObject;
     [SerializeField] private GameObject _flashLight;
     [Header("PickUp")]
-    [SerializeField] private Transform transformPickup;
+    [SerializeField] private Transform transformPickupRifle;
+    [SerializeField] private Transform transformPickupPistol;
     private bool isHoldingGun = false;
-    private GameObject pickedUpGun;
+    private GameObject pickedUpGunRifle;
+    private GameObject pickedUpGunPistol;
     [SerializeField] private Transform playerCameraTransform;
     [SerializeField] private GameObject pickUpUI;
     [SerializeField] [Min(1)] private float hitRange = 1.5f;
@@ -199,7 +201,7 @@ public class FPSController : MonoBehaviourPun
 
         if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out hit, hitRange))
         {
-            if (hit.collider.CompareTag("Pickable"))
+            if (hit.collider.CompareTag("Pickable") || hit.collider.CompareTag("Rifle") || hit.collider.CompareTag("Pistol"))
             {
                 hit.collider.GetComponent<Highlight>()?.ToggleHighlight(true);
                 pickUpUI.SetActive(true);
@@ -210,35 +212,79 @@ public class FPSController : MonoBehaviourPun
     {
         isHoldingGun = true;
         pickUpUI.SetActive(false);
-        pickedUpGun = hit.collider.gameObject;
-        pickedUpGun.transform.parent = transformPickup;
-        pickedUpGun.transform.localPosition = Vector3.zero;
-        pickedUpGun.transform.localRotation = Quaternion.identity;
-        pickedUpGun.GetComponent<Rigidbody>().useGravity = false;
-        pickedUpGun.GetComponent<BoxCollider>().isTrigger = true;
 
-        // Set isHand to true when picking up the gun
-        Gun_Shoot gunShoot = pickedUpGun.GetComponent<Gun_Shoot>();
+        if (hit.collider.CompareTag("Rifle"))
+        {
+            pickedUpGunRifle = hit.collider.gameObject;
+            EquipGun(pickedUpGunRifle);
+        }
+        else if (hit.collider.CompareTag("Pistol"))
+        {
+            pickedUpGunPistol = hit.collider.gameObject;
+            EquipGun(pickedUpGunPistol);
+        }
+    }
+
+    void DropGun()
+    {
+        isHoldingGun = false;
+
+        if (pickedUpGunRifle != null)
+        {
+            UnequipGun(pickedUpGunRifle);
+            pickedUpGunRifle = null;
+        }
+
+        if (pickedUpGunPistol != null)
+        {
+            UnequipGun(pickedUpGunPistol);
+            pickedUpGunPistol = null;
+        }
+    }
+    void EquipGun(GameObject gun)
+    {
+        if (gun.CompareTag("Rifle"))
+        {
+            gun.transform.parent = transformPickupRifle;
+        }
+        else if (gun.CompareTag("Pistol"))
+        {
+            gun.transform.parent = transformPickupPistol;
+        }
+
+        gun.transform.localPosition = Vector3.zero;
+        gun.transform.localRotation = Quaternion.identity;
+        gun.GetComponent<Rigidbody>().useGravity = false;
+        gun.GetComponent<BoxCollider>().isTrigger = true;
+
+        Gun_Shoot gunShoot = gun.GetComponent<Gun_Shoot>();
         if (gunShoot != null)
         {
             gunShoot.originalFOV = cameraHolder.fieldOfView;
             gunShoot.playerCamera = cameraHolder;
         }
     }
-    void DropGun()
+
+    void UnequipGun(GameObject gun)
     {
-        isHoldingGun = false;
-        pickedUpGun.transform.parent = null;
-        pickedUpGun.GetComponent<Rigidbody>().useGravity = true;
-        pickedUpGun.GetComponent<BoxCollider>().isTrigger = false;
-        pickedUpGun = null;
+        gun.transform.parent = null;
+        gun.GetComponent<Rigidbody>().useGravity = true;
+        gun.GetComponent<BoxCollider>().isTrigger = false;
     }
     void Shoot()
     {
-        if(pickedUpGun != null)
+        if (pickedUpGunRifle != null)
         {
-            IUsable usable = pickedUpGun.GetComponent<IUsable>();
-            if(usable != null)
+            IUsable usable = pickedUpGunRifle.GetComponent<IUsable>();
+            if (usable != null)
+            {
+                usable.Shoot(this.gameObject);
+            }
+        }
+         if (pickedUpGunPistol != null)
+        {
+            IUsable usable = pickedUpGunPistol.GetComponent<IUsable>();
+            if (usable != null)
             {
                 usable.Shoot(this.gameObject);
             }
@@ -246,9 +292,17 @@ public class FPSController : MonoBehaviourPun
     }
     void ZoomGun()
     {
-        if (pickedUpGun != null)
+        if (pickedUpGunRifle != null)
         {
-            IUsable usable = pickedUpGun.GetComponent<IUsable>();
+            IUsable usable = pickedUpGunRifle.GetComponent<IUsable>();
+            if (usable != null)
+            {
+                usable.Zoom(this.gameObject);
+            }
+        }
+        else if (pickedUpGunPistol != null)
+        {
+            IUsable usable = pickedUpGunPistol.GetComponent<IUsable>();
             if (usable != null)
             {
                 usable.Zoom(this.gameObject);
