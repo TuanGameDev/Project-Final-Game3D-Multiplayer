@@ -21,9 +21,6 @@ public class FPSController : MonoBehaviourPun
     [SerializeField] private PlayerName playerHUD;
     [Header("Gun")]
     [SerializeField] public GameObject aimingObject;
-    [SerializeField] private GameObject rifle;
-    [SerializeField] private GameObject pistol;
-    [SerializeField] private GameObject currentGun;
     [SerializeField] private GameObject _flashLight;
     void Awake()
     {
@@ -46,7 +43,6 @@ public class FPSController : MonoBehaviourPun
     {
         if (PV.IsMine)
         {
-            //EquipGun(rifle);
         }
         else
         {
@@ -71,15 +67,6 @@ public class FPSController : MonoBehaviourPun
             if (_flashLight)
                 _flashLight.SetActive(!_flashLight.activeSelf);
         }
-        /*
-                if (Input.GetKeyDown(KeyCode.Alpha1))
-                {
-                    EquipGun(rifle);
-                }
-                else if (Input.GetKeyDown(KeyCode.Alpha2))
-                {
-                    EquipGun(pistol);
-                }*/
     }
     void Look()
     {
@@ -161,16 +148,6 @@ public class FPSController : MonoBehaviourPun
     {
         Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
         aimingObject.transform.position = newPosition;
-    }
-    void EquipGun(GameObject gun)
-    {
-        if (currentGun != null)
-        {
-            currentGun.SetActive(false);
-        }
-
-        gun.SetActive(true);
-        currentGun = gun;
     }
 
 }
