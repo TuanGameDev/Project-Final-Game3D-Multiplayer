@@ -9,6 +9,7 @@ public class FPSController : MonoBehaviourPun
     Rigidbody rb;
     Animator ani;
     PhotonView PV;
+    CharacterController crl;
     [SerializeField] public int id;
     [SerializeField] Camera cameraHolder;
     [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
@@ -16,18 +17,20 @@ public class FPSController : MonoBehaviourPun
     bool grounded;
     Vector3 moveAmount;
     [SerializeField] public static FPSController me;
-    [SerializeField] public Player photonPlayer;
-    [SerializeField] public PlayerName playerHUD;
+    [SerializeField] private Player photonPlayer;
+    [SerializeField] private PlayerName playerHUD;
     [Header("Gun")]
     [SerializeField] public GameObject aimingObject;
-    [SerializeField] public GameObject rifle;
-    [SerializeField] public GameObject pistol;
+    [SerializeField] private GameObject rifle;
+    [SerializeField] private GameObject pistol;
     [SerializeField] private GameObject currentGun;
+    [SerializeField] private GameObject _flashLight;
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         PV = GetComponent<PhotonView>();
         ani = GetComponent<Animator>();
+        crl = GetComponent<CharacterController>();
     }
     [PunRPC]
     public void Initialized(Player player)
@@ -49,6 +52,9 @@ public class FPSController : MonoBehaviourPun
         {
             Destroy(GetComponentInChildren<Camera>().gameObject);
             Destroy(rb);
+            Destroy(crl);
+            if (_flashLight)
+                _flashLight.SetActive(false);
         }
     }
      void Update()
@@ -60,15 +66,20 @@ public class FPSController : MonoBehaviourPun
         Move();
         Jump();
         CheckAiming();
-/*
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (Input.GetButtonDown("Flashlight"))
         {
-            EquipGun(rifle);
+            if (_flashLight)
+                _flashLight.SetActive(!_flashLight.activeSelf);
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            EquipGun(pistol);
-        }*/
+        /*
+                if (Input.GetKeyDown(KeyCode.Alpha1))
+                {
+                    EquipGun(rifle);
+                }
+                else if (Input.GetKeyDown(KeyCode.Alpha2))
+                {
+                    EquipGun(pistol);
+                }*/
     }
     void Look()
     {
