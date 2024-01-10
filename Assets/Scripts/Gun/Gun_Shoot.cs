@@ -1,20 +1,28 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Photon.Pun;
 using System.Collections;
 
-public class Gun_Pistol : MonoBehaviourPun
+public class Gun_Shoot : MonoBehaviourPun
 {
+    public static Gun_Shoot instance;
     public float damage = 10f;
-    public float fireRate = 1f;
+    public float fireRate = 10f;
     public float zoomFOV = 40f;
+    private float nextTimeToFire = 0f;
     public Camera playerCamera;
     public Transform bulletTransForms;
     public GameObject MuzzleGun;
     public GameObject bulletPrefab;
     private bool isZoomed = false;
-    bool isDelayShootRunning = false;
     private float originalFOV;
 
+    private void Awake()
+    {
+        if(instance == null)
+        {
+            instance = this;
+        }
+    }
     void Start()
     {
         playerCamera = GameObject.FindWithTag("CameraFPS").GetComponent<Camera>();
@@ -37,27 +45,29 @@ public class Gun_Pistol : MonoBehaviourPun
                 playerCamera.fieldOfView = originalFOV;
             }
 
-            if (Input.GetMouseButtonDown(0) && !isDelayShootRunning)
+            if (Input.GetMouseButton(0) && Time.time >= nextTimeToFire)
             {
-                StartCoroutine(Shoot());
+                nextTimeToFire = Time.time + 1f / fireRate;
+                Shoot();
             }
         }
     }
 
-    IEnumerator Shoot()
+    void Shoot()
     {
-        isDelayShootRunning = true;
-
-        Vector3 shootDirection = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized;
-
         MuzzleGun.SetActive(true);
 
+        StartCoroutine(HideMuzzleGun());
+
+        Vector3 shootDirection = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized;
         GameObject bullet = Instantiate(bulletPrefab, bulletTransForms.position, Quaternion.LookRotation(shootDirection));
         bullet.GetComponent<Rigidbody>().velocity = shootDirection * 20f;
-        yield return new WaitForSeconds(0.2f);
-        MuzzleGun.SetActive(false);
         Destroy(bullet, 3f);
-        yield return new WaitForSeconds(1f / fireRate);
-        isDelayShootRunning = false;
+    }
+
+    IEnumerator HideMuzzleGun()
+    {
+        yield return new WaitForSeconds(0.1f);
+        MuzzleGun.SetActive(false);
     }
 }
