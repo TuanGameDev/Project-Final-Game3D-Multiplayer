@@ -22,6 +22,16 @@ public class FPSController : MonoBehaviourPun
     [Header("Gun")]
     [SerializeField] public GameObject aimingObject;
     [SerializeField] private GameObject _flashLight;
+    [Header("PickUp")]
+    [SerializeField] private Transform transformPickup;
+    private bool isHoldingGun = false;
+    private GameObject pickedUpGun;
+    [SerializeField] private Transform playerCameraTransform;
+    [SerializeField] private GameObject pickUpUI;
+    [SerializeField] [Min(1)] private float hitRange = 1.5f;
+    private RaycastHit hit;
+
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -62,6 +72,34 @@ public class FPSController : MonoBehaviourPun
         Move();
         Jump();
         CheckAiming();
+        PickUp();
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            if (!isHoldingGun && pickUpUI.activeSelf)
+            {
+                PickUpGun();
+            }
+        }
+        if (Input.GetMouseButton(0))
+        {
+            Shoot();
+        }
+        if (Input.GetKeyDown(KeyCode.Mouse1))
+        {
+            ZoomGun();
+        }
+        else
+        {
+            ZoomGun();
+        }
+
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            if (isHoldingGun)
+            {
+                DropGun();
+            }
+        }
         if (Input.GetButtonDown("Flashlight"))
         {
             if (_flashLight)
@@ -149,5 +187,72 @@ public class FPSController : MonoBehaviourPun
         Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
         aimingObject.transform.position = newPosition;
     }
+    public void PickUp()
+    {
+        Debug.DrawRay(playerCameraTransform.position, playerCameraTransform.forward * hitRange, Color.red);
 
+        if (hit.collider != null)
+        {
+            hit.collider.GetComponent<Highlight>()?.ToggleHighlight(false);
+            pickUpUI.SetActive(false);
+        }
+
+        if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out hit, hitRange))
+        {
+            if (hit.collider.CompareTag("Pickable"))
+            {
+                hit.collider.GetComponent<Highlight>()?.ToggleHighlight(true);
+                pickUpUI.SetActive(true);
+            }
+        }
+    }
+    void PickUpGun()
+    {
+        isHoldingGun = true;
+        pickUpUI.SetActive(false);
+        pickedUpGun = hit.collider.gameObject;
+        pickedUpGun.transform.parent = transformPickup;
+        pickedUpGun.transform.localPosition = Vector3.zero;
+        pickedUpGun.transform.localRotation = Quaternion.identity;
+        pickedUpGun.GetComponent<Rigidbody>().useGravity = false;
+        pickedUpGun.GetComponent<BoxCollider>().isTrigger = true;
+
+        // Set isHand to true when picking up the gun
+        Gun_Shoot gunShoot = pickedUpGun.GetComponent<Gun_Shoot>();
+        if (gunShoot != null)
+        {
+            gunShoot.originalFOV = cameraHolder.fieldOfView;
+            gunShoot.playerCamera = cameraHolder;
+        }
+    }
+    void DropGun()
+    {
+        isHoldingGun = false;
+        pickedUpGun.transform.parent = null;
+        pickedUpGun.GetComponent<Rigidbody>().useGravity = true;
+        pickedUpGun.GetComponent<BoxCollider>().isTrigger = false;
+        pickedUpGun = null;
+    }
+    void Shoot()
+    {
+        if(pickedUpGun != null)
+        {
+            IUsable usable = pickedUpGun.GetComponent<IUsable>();
+            if(usable != null)
+            {
+                usable.Shoot(this.gameObject);
+            }
+        }
+    }
+    void ZoomGun()
+    {
+        if (pickedUpGun != null)
+        {
+            IUsable usable = pickedUpGun.GetComponent<IUsable>();
+            if (usable != null)
+            {
+                usable.Zoom(this.gameObject);
+            }
+        }
+    }
 }
