@@ -14,11 +14,10 @@ public class FPSController : MonoBehaviourPun
     [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
     float verticalLookRotation;
     bool grounded;
-    Vector3 smoothMoveVelocity;
     Vector3 moveAmount;
     [SerializeField] public static FPSController me;
     [SerializeField] public Player photonPlayer;
-    [SerializeField] public PlayerHUD playerHUD;
+    [SerializeField] public PlayerName playerHUD;
     [Header("Gun")]
     [SerializeField] public GameObject aimingObject;
     [SerializeField] public GameObject rifle;
