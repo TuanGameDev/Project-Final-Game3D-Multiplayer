@@ -18,7 +18,7 @@ public class FPSController : MonoBehaviourPun
     Vector3 moveAmount;
     [SerializeField] public static FPSController me;
     [SerializeField] public Player photonPlayer;
-    [SerializeField] public PlayerHUD playerHUD;
+    [SerializeField] public PlayerName playerHUD;
     [Header("Gun")]
     [SerializeField] public GameObject aimingObject;
     [SerializeField] public GameObject rifle;
