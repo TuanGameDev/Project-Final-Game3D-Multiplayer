@@ -14,8 +14,7 @@ public class Gun_Shoot : MonoBehaviourPun
     public GameObject MuzzleGun;
     public GameObject bulletPrefab;
     private bool isZoomed = false;
-    private float originalFOV;
-
+    public float originalFOV;
     private void Awake()
     {
         if(instance == null)
@@ -23,42 +22,34 @@ public class Gun_Shoot : MonoBehaviourPun
             instance = this;
         }
     }
-    void Start()
-    {
-        playerCamera = GameObject.FindWithTag("CameraFPS").GetComponent<Camera>();
-        originalFOV = playerCamera.fieldOfView;
-    }
 
-    void Update()
+    public void Shooting()
     {
-        if (photonView.IsMine)
+       
+        if (Time.time >= nextTimeToFire)
         {
-            if (Input.GetMouseButtonDown(1))
-            {
-                isZoomed = true;
-                playerCamera.fieldOfView = zoomFOV;
-            }
-
-            if (Input.GetMouseButtonUp(1))
-            {
-                isZoomed = false;
-                playerCamera.fieldOfView = originalFOV;
-            }
-
-            if (Input.GetMouseButton(0) && Time.time >= nextTimeToFire)
-            {
-                nextTimeToFire = Time.time + 1f / fireRate;
-                Shoot();
-            }
+            nextTimeToFire = Time.time + 1f / fireRate;
+            Shoot();
         }
     }
+    public void ZoomGun()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            isZoomed = true;
+            playerCamera.fieldOfView = zoomFOV;
+        }
 
+        if (Input.GetMouseButtonUp(1))
+        {
+            isZoomed = false;
+            playerCamera.fieldOfView = originalFOV;
+        }
+    }
     void Shoot()
     {
         MuzzleGun.SetActive(true);
-
         StartCoroutine(HideMuzzleGun());
-
         Vector3 shootDirection = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized;
         GameObject bullet = Instantiate(bulletPrefab, bulletTransForms.position, Quaternion.LookRotation(shootDirection));
         bullet.GetComponent<Rigidbody>().velocity = shootDirection * 20f;
