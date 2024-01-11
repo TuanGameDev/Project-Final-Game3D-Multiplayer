@@ -4,35 +4,52 @@ using System.Collections.Generic;
 using Photon.Pun;
 using Photon.Realtime;
 using Photon.Pun.Demo.PunBasics;
+using TMPro;
+using UnityEngine.UI;
+using System;
 public class FPSController : MonoBehaviourPun
 {
+    [SerializeField] public int id;
+    [SerializeField] public int currentHP;
+    [SerializeField] public int maxHP;
+    [SerializeField] public int def;
+
+    [Header("UI")]
+    [SerializeField] public TextMeshProUGUI hpText;
+    [SerializeField] private Slider healthSlider;
+
+    [SerializeField] public static FPSController me;
+    [SerializeField] public Player photonPlayer;
+    [SerializeField] private PlayerName playerName;
+    [SerializeField] public Canvas canvashealth;
+
+    [Header("Gun")]
+    [SerializeField] public GameObject aimingObject;
+    [SerializeField] private GameObject _flashLight;
+    [SerializeField] Camera cameraHolder;
+    [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
+
+    [Header("PickUp")]
+    [SerializeField] private Transform transformPickupRifle;
+    [SerializeField] private Transform transformPickupPistol;
+
+    [SerializeField] private GameObject pickedUpGunRifle;
+    [SerializeField] private GameObject pickedUpGunPistol;
+
+    [SerializeField] private Transform playerCameraTransform;
+    [SerializeField] private GameObject pickUpUI;
+    [SerializeField] [Min(1)] private float hitRange = 1.5f;
+
     Rigidbody rb;
     Animator ani;
     PhotonView PV;
     CharacterController crl;
-    [SerializeField] public int id;
-    [SerializeField] Camera cameraHolder;
-    [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
+    Vector3 moveAmount;
     float verticalLookRotation;
     bool grounded;
-    Vector3 moveAmount;
-    [SerializeField] public static FPSController me;
-    [SerializeField] private Player photonPlayer;
-    [SerializeField] private PlayerName playerHUD;
-    [Header("Gun")]
-    [SerializeField] public GameObject aimingObject;
-    [SerializeField] private GameObject _flashLight;
-    [Header("PickUp")]
-    [SerializeField] private Transform transformPickupRifle;
-    [SerializeField] private Transform transformPickupPistol;
     private bool isHoldingGun = false;
-    private GameObject pickedUpGunRifle;
-    private GameObject pickedUpGunPistol;
-    [SerializeField] private Transform playerCameraTransform;
-    [SerializeField] private GameObject pickUpUI;
-    [SerializeField] [Min(1)] private float hitRange = 1.5f;
     private RaycastHit hit;
-
+    private float maxHealthValue;
 
     void Awake()
     {
@@ -46,13 +63,19 @@ public class FPSController : MonoBehaviourPun
     {
         id = player.ActorNumber;
         photonPlayer = player;
-        playerHUD.UpdateNameTag(player.NickName);
+        playerName.UpdateNameTag(player.NickName);
         GameManager.gamemanager.players[id - 1] = this;
+        UpdateHpText(currentHP, maxHP);
+        UpdateHealthSlider(maxHP);
         if (player.IsLocal)
             me = this;
     }
     void Start()
     {
+        if (!photonView.IsMine)
+        {
+            canvashealth.enabled = false;
+        }
         if (PV.IsMine)
         {
         }
@@ -108,6 +131,7 @@ public class FPSController : MonoBehaviourPun
                 _flashLight.SetActive(!_flashLight.activeSelf);
         }
     }
+    #region di chuyển,nhảy và máu
     void Look()
     {
         transform.Rotate(Vector3.up * Input.GetAxisRaw("Mouse X") * mouseSensitivity);
@@ -153,7 +177,6 @@ public class FPSController : MonoBehaviourPun
     {
         grounded = _grounded;
     }
-
     void FixedUpdate()
     {
         if (!PV.IsMine)
@@ -161,6 +184,32 @@ public class FPSController : MonoBehaviourPun
 
         rb.MovePosition(rb.position + transform.TransformDirection(moveAmount) * Time.fixedDeltaTime);
     }
+    [PunRPC]
+    public void TakeDamage(int amount)
+    {
+        int damageValue = amount - def;
+        if (damageValue < 1)
+        {
+            damageValue = 1;
+        }
+        currentHP -= damageValue;
+        UpdateHealthSlider(currentHP);
+        if (currentHP <= 0)
+        {
+            //Die();
+        }
+        UpdateHpText(currentHP, maxHP);
+    }
+    void UpdateHpText(int curHP, int maxHP)
+    {
+        hpText.text = curHP + "/" + maxHP;
+    }
+    void UpdateHealthSlider(int heal)
+    {
+        maxHealthValue = heal;
+        healthSlider.value = 1.0f;
+    }
+    #endregion
     public void CheckAiming()
     {
         Ray ray = cameraHolder.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
@@ -308,5 +357,10 @@ public class FPSController : MonoBehaviourPun
                 usable.Zoom(this.gameObject);
             }
         }
+    }
+
+    public static implicit operator FPSController(PlayerHUD v)
+    {
+        throw new NotImplementedException();
     }
 }

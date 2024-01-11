@@ -10,7 +10,6 @@ public class ZombieInfo
 {
     public string prefabPath;
     public float maxEnemies;
-    public float spawnCheckRadius;
     public List<Transform> spawnCheckRadiusPirate = new List<Transform>();
     public List<GameObject> currentEnemies = new List<GameObject>();
 }
@@ -23,7 +22,7 @@ public class GameManager : MonoBehaviourPun
     public float respawnTime;
     private int playersInGame;
 
-    [Header("Spawn Enemy - Naval")]
+    [Header("Spawn Zombie")]
     public ZombieInfo zombieSpawnInfo;
     public float spawnCheckTime;
     private float lastSpawnCheckTime;
@@ -75,18 +74,10 @@ public class GameManager : MonoBehaviourPun
 
         if (zombieSpawnInfo.currentEnemies.Count >= zombieSpawnInfo.maxEnemies)
             return;
-
-        if (zombieSpawnInfo == this.zombieSpawnInfo)
-        {
-            Vector3 randomIncircle = Random.insideUnitCircle * zombieSpawnInfo.spawnCheckRadius;
-            GameObject enemy = PhotonNetwork.Instantiate(zombieSpawnInfo.prefabPath, transform.position + randomIncircle, Quaternion.identity);
-            zombieSpawnInfo.currentEnemies.Add(enemy);
-        }
         else if (zombieSpawnInfo == this.zombieSpawnInfo)
         {
             if (zombieSpawnInfo.spawnCheckRadiusPirate.Count == 0)
             {
-                // Thực hiện xử lý khi danh sách spawnCheckRadiusPirate rỗng
                 return;
             }
 
