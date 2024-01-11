@@ -22,6 +22,18 @@ public class FPSController : MonoBehaviourPun
     [Header("Gun")]
     [SerializeField] public GameObject aimingObject;
     [SerializeField] private GameObject _flashLight;
+    [Header("PickUp")]
+    [SerializeField] private Transform transformPickupRifle;
+    [SerializeField] private Transform transformPickupPistol;
+    private bool isHoldingGun = false;
+    private GameObject pickedUpGunRifle;
+    private GameObject pickedUpGunPistol;
+    [SerializeField] private Transform playerCameraTransform;
+    [SerializeField] private GameObject pickUpUI;
+    [SerializeField] [Min(1)] private float hitRange = 1.5f;
+    private RaycastHit hit;
+
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -62,6 +74,34 @@ public class FPSController : MonoBehaviourPun
         Move();
         Jump();
         CheckAiming();
+        PickUp();
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            if (!isHoldingGun && pickUpUI.activeSelf)
+            {
+                PickUpGun();
+            }
+        }
+        if (Input.GetMouseButton(0))
+        {
+            Shoot();
+        }
+        if (Input.GetKeyDown(KeyCode.Mouse1))
+        {
+            ZoomGun();
+        }
+        else
+        {
+            ZoomGun();
+        }
+
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            if (isHoldingGun)
+            {
+                DropGun();
+            }
+        }
         if (Input.GetButtonDown("Flashlight"))
         {
             if (_flashLight)
@@ -149,5 +189,124 @@ public class FPSController : MonoBehaviourPun
         Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
         aimingObject.transform.position = newPosition;
     }
+    public void PickUp()
+    {
+        Debug.DrawRay(playerCameraTransform.position, playerCameraTransform.forward * hitRange, Color.red);
 
+        if (hit.collider != null)
+        {
+            hit.collider.GetComponent<Highlight>()?.ToggleHighlight(false);
+            pickUpUI.SetActive(false);
+        }
+
+        if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward, out hit, hitRange))
+        {
+            if (hit.collider.CompareTag("Pickable") || hit.collider.CompareTag("Rifle") || hit.collider.CompareTag("Pistol"))
+            {
+                hit.collider.GetComponent<Highlight>()?.ToggleHighlight(true);
+                pickUpUI.SetActive(true);
+            }
+        }
+    }
+    void PickUpGun()
+    {
+        isHoldingGun = true;
+        pickUpUI.SetActive(false);
+
+        if (hit.collider.CompareTag("Rifle"))
+        {
+            pickedUpGunRifle = hit.collider.gameObject;
+            EquipGun(pickedUpGunRifle);
+        }
+        else if (hit.collider.CompareTag("Pistol"))
+        {
+            pickedUpGunPistol = hit.collider.gameObject;
+            EquipGun(pickedUpGunPistol);
+        }
+    }
+
+    void DropGun()
+    {
+        isHoldingGun = false;
+
+        if (pickedUpGunRifle != null)
+        {
+            UnequipGun(pickedUpGunRifle);
+            pickedUpGunRifle = null;
+        }
+
+        if (pickedUpGunPistol != null)
+        {
+            UnequipGun(pickedUpGunPistol);
+            pickedUpGunPistol = null;
+        }
+    }
+    void EquipGun(GameObject gun)
+    {
+        if (gun.CompareTag("Rifle"))
+        {
+            gun.transform.parent = transformPickupRifle;
+        }
+        else if (gun.CompareTag("Pistol"))
+        {
+            gun.transform.parent = transformPickupPistol;
+        }
+
+        gun.transform.localPosition = Vector3.zero;
+        gun.transform.localRotation = Quaternion.identity;
+        gun.GetComponent<Rigidbody>().useGravity = false;
+        gun.GetComponent<BoxCollider>().isTrigger = true;
+
+        Gun_Shoot gunShoot = gun.GetComponent<Gun_Shoot>();
+        if (gunShoot != null)
+        {
+            gunShoot.originalFOV = cameraHolder.fieldOfView;
+            gunShoot.playerCamera = cameraHolder;
+        }
+    }
+
+    void UnequipGun(GameObject gun)
+    {
+        gun.transform.parent = null;
+        gun.GetComponent<Rigidbody>().useGravity = true;
+        gun.GetComponent<BoxCollider>().isTrigger = false;
+    }
+    void Shoot()
+    {
+        if (pickedUpGunRifle != null)
+        {
+            IUsable usable = pickedUpGunRifle.GetComponent<IUsable>();
+            if (usable != null)
+            {
+                usable.Shoot(this.gameObject);
+            }
+        }
+         if (pickedUpGunPistol != null)
+        {
+            IUsable usable = pickedUpGunPistol.GetComponent<IUsable>();
+            if (usable != null)
+            {
+                usable.Shoot(this.gameObject);
+            }
+        }
+    }
+    void ZoomGun()
+    {
+        if (pickedUpGunRifle != null)
+        {
+            IUsable usable = pickedUpGunRifle.GetComponent<IUsable>();
+            if (usable != null)
+            {
+                usable.Zoom(this.gameObject);
+            }
+        }
+        else if (pickedUpGunPistol != null)
+        {
+            IUsable usable = pickedUpGunPistol.GetComponent<IUsable>();
+            if (usable != null)
+            {
+                usable.Zoom(this.gameObject);
+            }
+        }
+    }
 }
