@@ -109,6 +109,10 @@ public class FPSController : MonoBehaviourPun
         {
             Shoot();
         }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            ReloadGun();
+        }
         if (Input.GetKeyDown(KeyCode.Mouse1))
         {
             ZoomGun();
@@ -355,6 +359,25 @@ public class FPSController : MonoBehaviourPun
             if (usable != null)
             {
                 usable.Zoom(this.gameObject);
+            }
+        }
+    }
+    void ReloadGun()
+    {
+        if (pickedUpGunRifle != null)
+        {
+            IUsable usable = pickedUpGunRifle.GetComponent<IUsable>();
+            if (usable != null)
+            {
+                usable.Reload(this.gameObject);
+            }
+        }
+        else if (pickedUpGunPistol != null)
+        {
+            IUsable usable = pickedUpGunPistol.GetComponent<IUsable>();
+            if (usable != null)
+            {
+                usable.Reload(this.gameObject);
             }
         }
     }

@@ -41,8 +41,6 @@ public class SwitchGun : MonoBehaviour
     {
         int previousSelectedWeapon = selectedWeapon;
 
-        if (Gun_Shoot.instance.MuzzleGun.activeSelf)
-            return;
 
         if (Input.GetAxis("Mouse ScrollWheel") > 0f)
         {
