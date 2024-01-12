@@ -30,15 +30,15 @@ public class FPSController : MonoBehaviourPun
     [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
 
     [Header("PickUp")]
-    [SerializeField] private Transform transformPickupRifle;
-    [SerializeField] private Transform transformPickupPistol;
-
-    [SerializeField] private GameObject pickedUpGunRifle;
-    [SerializeField] private GameObject pickedUpGunPistol;
+    [SerializeField] private Transform transformPickup;
+    [SerializeField] public GameObject pickedUpGun;
+    [SerializeField] public List<GameObject> pickedUpGuns = new List<GameObject>();
 
     [SerializeField] private Transform playerCameraTransform;
     [SerializeField] private GameObject pickUpUI;
-    [SerializeField] [Min(1)] private float hitRange = 1.5f;
+    [SerializeField][Min(1)] private float hitRange = 1.5f;
+    private bool canDropGun = true;
+    private float dropGunCooldown = 0.5f;
 
     Rigidbody rb;
     Animator ani;
@@ -78,6 +78,7 @@ public class FPSController : MonoBehaviourPun
         }
         if (PV.IsMine)
         {
+            Gun_Shoot.instance.txtAmmo.gameObject.SetActive(false);
         }
         else
         {
@@ -88,8 +89,8 @@ public class FPSController : MonoBehaviourPun
                 _flashLight.SetActive(false);
         }
     }
-     void Update()
-	{
+    void Update()
+    {
         if (!PV.IsMine)
             return;
 
@@ -100,7 +101,7 @@ public class FPSController : MonoBehaviourPun
         PickUp();
         if (Input.GetKeyDown(KeyCode.E))
         {
-            if (!isHoldingGun && pickUpUI.activeSelf)
+            if (pickUpUI.activeSelf)
             {
                 PickUpGun();
             }
@@ -108,6 +109,10 @@ public class FPSController : MonoBehaviourPun
         if (Input.GetMouseButton(0))
         {
             Shoot();
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            ReloadGun();
         }
         if (Input.GetKeyDown(KeyCode.Mouse1))
         {
@@ -118,12 +123,10 @@ public class FPSController : MonoBehaviourPun
             ZoomGun();
         }
 
-        if (Input.GetKeyDown(KeyCode.G))
+        if (Input.GetKey(KeyCode.G) && canDropGun)
         {
-            if (isHoldingGun)
-            {
-                DropGun();
-            }
+            DropGun();
+            StartCoroutine(DropGunCooldown());
         }
         if (Input.GetButtonDown("Flashlight"))
         {
@@ -261,97 +264,92 @@ public class FPSController : MonoBehaviourPun
     {
         isHoldingGun = true;
         pickUpUI.SetActive(false);
+        GameObject newPickedUpGun = hit.collider.gameObject;
+        pickedUpGuns.Add(newPickedUpGun);
+        newPickedUpGun.transform.parent = transformPickup;
+        newPickedUpGun.transform.localPosition = Vector3.zero;
+        newPickedUpGun.transform.localRotation = Quaternion.identity;
+        newPickedUpGun.GetComponent<Rigidbody>().isKinematic = true;
+        newPickedUpGun.GetComponent<BoxCollider>().isTrigger = true;
 
-        if (hit.collider.CompareTag("Rifle"))
+        Gun_Shoot gunShoot = newPickedUpGun.GetComponent<Gun_Shoot>();
+        if (gunShoot != null)
         {
-            pickedUpGunRifle = hit.collider.gameObject;
-            EquipGun(pickedUpGunRifle);
+            gunShoot.originalFOV = cameraHolder.fieldOfView;
+            gunShoot.playerCamera = cameraHolder;
+            gunShoot.txtAmmo.gameObject.SetActive(true);
         }
-        else if (hit.collider.CompareTag("Pistol"))
+        if (pickedUpGuns.Count > 0)
         {
-            pickedUpGunPistol = hit.collider.gameObject;
-            EquipGun(pickedUpGunPistol);
+            pickedUpGun = pickedUpGuns[0];
+            SelectGun();
         }
     }
 
     void DropGun()
     {
-        isHoldingGun = false;
-
-        if (pickedUpGunRifle != null)
+        if (pickedUpGuns.Count > 0 && pickedUpGun != null)
         {
-            UnequipGun(pickedUpGunRifle);
-            pickedUpGunRifle = null;
-        }
-
-        if (pickedUpGunPistol != null)
-        {
-            UnequipGun(pickedUpGunPistol);
-            pickedUpGunPistol = null;
-        }
-    }
-    void EquipGun(GameObject gun)
-    {
-        if (gun.CompareTag("Rifle"))
-        {
-            gun.transform.parent = transformPickupRifle;
-        }
-        else if (gun.CompareTag("Pistol"))
-        {
-            gun.transform.parent = transformPickupPistol;
-        }
-
-        gun.transform.localPosition = Vector3.zero;
-        gun.transform.localRotation = Quaternion.identity;
-        gun.GetComponent<Rigidbody>().useGravity = false;
-        gun.GetComponent<BoxCollider>().isTrigger = true;
-
-        Gun_Shoot gunShoot = gun.GetComponent<Gun_Shoot>();
-        if (gunShoot != null)
-        {
-            gunShoot.originalFOV = cameraHolder.fieldOfView;
-            gunShoot.playerCamera = cameraHolder;
+            isHoldingGun = false;
+            GameObject droppedGun = pickedUpGun;
+            if (pickedUpGun == droppedGun)
+            {
+                pickedUpGun = null;
+            }
+            droppedGun.transform.parent = null;
+            droppedGun.GetComponent<Rigidbody>().isKinematic = false;
+            droppedGun.GetComponent<BoxCollider>().isTrigger = false;           
+            pickedUpGuns.Remove(droppedGun);
+            Gun_Shoot gunShoot = droppedGun.GetComponent<Gun_Shoot>();
+            if (gunShoot != null)
+            {
+                gunShoot.txtAmmo.gameObject.SetActive(false);
+            }
+            if (pickedUpGuns.Count > 0)
+            {
+                pickedUpGun = pickedUpGuns[0];
+            }
+            SelectGun();
         }
     }
 
-    void UnequipGun(GameObject gun)
+
+    public void SelectGun()
     {
-        gun.transform.parent = null;
-        gun.GetComponent<Rigidbody>().useGravity = true;
-        gun.GetComponent<BoxCollider>().isTrigger = false;
+        foreach (GameObject gun in pickedUpGuns)
+        {
+            gun.SetActive(gun == pickedUpGun);
+        }
+    }
+
+    public void UpdateSelectedGun(GameObject newGun)
+    {
+        pickedUpGun = newGun;
+        SelectGun();
+    }
+    IEnumerator DropGunCooldown()
+    {
+        canDropGun = false;
+        yield return new WaitForSeconds(dropGunCooldown);
+        canDropGun = true;
     }
     void Shoot()
     {
-        if (pickedUpGunRifle != null)
+        if (pickedUpGun != null)
         {
-            IUsable usable = pickedUpGunRifle.GetComponent<IUsable>();
-            if (usable != null)
-            {
-                usable.Shoot(this.gameObject);
-            }
-        }
-         if (pickedUpGunPistol != null)
-        {
-            IUsable usable = pickedUpGunPistol.GetComponent<IUsable>();
+            IUsable usable = pickedUpGun.GetComponent<IUsable>();
             if (usable != null)
             {
                 usable.Shoot(this.gameObject);
             }
         }
     }
+
     void ZoomGun()
     {
-        if (pickedUpGunRifle != null)
+        if (pickedUpGun != null)
         {
-            IUsable usable = pickedUpGunRifle.GetComponent<IUsable>();
-            if (usable != null)
-            {
-                usable.Zoom(this.gameObject);
-            }
-        }
-        else if (pickedUpGunPistol != null)
-        {
-            IUsable usable = pickedUpGunPistol.GetComponent<IUsable>();
+            IUsable usable = pickedUpGun.GetComponent<IUsable>();
             if (usable != null)
             {
                 usable.Zoom(this.gameObject);
@@ -359,8 +357,15 @@ public class FPSController : MonoBehaviourPun
         }
     }
 
-    public static implicit operator FPSController(PlayerHUD v)
+    void ReloadGun()
     {
-        throw new NotImplementedException();
+        if (pickedUpGun != null)
+        {
+            IUsable usable = pickedUpGun.GetComponent<IUsable>();
+            if (usable != null)
+            {
+                usable.Reload(this.gameObject);
+            }
+        }
     }
 }

@@ -1,35 +1,52 @@
 ﻿using UnityEngine;
 using Photon.Pun;
 using System.Collections;
+using TMPro;
+using UnityEngine.UIElements;
 
 public class Gun_Shoot : MonoBehaviourPun
 {
     public static Gun_Shoot instance;
     public float damage = 10f;
-    public float fireRate = 10f;
-    public float zoomFOV = 40f;
-    private float nextTimeToFire = 0f;
+    public float timeBetweenShooting, spread, range, reloadTime, timeBetweenShots;
+    public int magazineSize, bulletsPerTap;
+    public bool allowButtonHold;
+    public int bulletsLeft;
+    int bulletsShot;
+    bool shooting, readyToShoot, reloading;
     public Camera playerCamera;
     public Transform bulletTransForms;
-    public GameObject MuzzleGun;
-    public GameObject bulletPrefab;
-    private bool isZoomed = false;
+    public RaycastHit rayHit;
+    public float zoomFOV = 40f;
+    public bool isZoomed = false;
     public float originalFOV;
+    public GameObject muzzle, bulletPrefab;
+    public TextMeshProUGUI txtAmmo;
     private void Awake()
     {
         if(instance == null)
         {
             instance = this;
         }
+        bulletsLeft = magazineSize;
+        txtAmmo.text = bulletsLeft + " / " + magazineSize;
+        readyToShoot = true;
     }
-
     public void Shooting()
     {
-       
-        if (Time.time >= nextTimeToFire)
+        if (allowButtonHold) shooting = Input.GetKey(KeyCode.Mouse0);
+        else shooting = Input.GetKeyDown(KeyCode.Mouse0);
+        if(readyToShoot && shooting && !reloading && bulletsLeft > 0)
         {
-            nextTimeToFire = Time.time + 1f / fireRate;
+            bulletsShot = bulletsPerTap;
             Shoot();
+        }
+    }
+    public void Reloading()
+    {
+        if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !reloading)
+        {
+            Reload();
         }
     }
     public void ZoomGun()
@@ -48,17 +65,52 @@ public class Gun_Shoot : MonoBehaviourPun
     }
     void Shoot()
     {
-        MuzzleGun.SetActive(true);
-        StartCoroutine(HideMuzzleGun());
-        Vector3 shootDirection = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized;
-        GameObject bullet = Instantiate(bulletPrefab, bulletTransForms.position, Quaternion.LookRotation(shootDirection));
-        bullet.GetComponent<Rigidbody>().velocity = shootDirection * 20f;
-        Destroy(bullet, 3f);
-    }
 
+        readyToShoot = false;
+        float x = Random.Range(-spread, spread);
+        float y = Random.Range(-spread, spread);
+        Vector3 direction = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized + new Vector3(x, y, 0);
+        if (Physics.Raycast(FPSController.me.aimingObject.transform.position, direction,out rayHit, range))
+        {
+/*            if (rayHit.collider.CompareTag("Enemy"))
+            {
+              rayHit.collider.GetComponent<ZombieHeal>.TakeDame(damage);  Dame Zombie
+            }*/
+        }
+        muzzle.SetActive(true);
+        StartCoroutine(HideMuzzleGun());
+        GameObject bullet = Instantiate(bulletPrefab, bulletTransForms.position, Quaternion.LookRotation(direction));
+        bullet.GetComponent<Rigidbody>().velocity = direction * 20f;
+        Destroy(bullet, 3f);
+        bulletsLeft--;
+        bulletsShot--;
+        UpdateAmmoUI();
+        Invoke("ResetShot", timeBetweenShooting);
+        if(bulletsShot >0 && bulletsLeft > 0)
+        Invoke("Shoot", timeBetweenShots);
+    }
+    void ResetShot()
+    {
+        readyToShoot = true;
+    }
+    void Reload()
+    {
+        reloading = true;
+        Invoke("ReloadFinished", reloadTime);
+    }
+    void ReloadFinished()
+    {
+        bulletsLeft = magazineSize;
+        reloading = false;
+        UpdateAmmoUI();
+    }
     IEnumerator HideMuzzleGun()
     {
         yield return new WaitForSeconds(0.1f);
-        MuzzleGun.SetActive(false);
+        muzzle.SetActive(false);
+    }
+    void UpdateAmmoUI()
+    {
+        txtAmmo.text = bulletsLeft + " / " + magazineSize;
     }
 }

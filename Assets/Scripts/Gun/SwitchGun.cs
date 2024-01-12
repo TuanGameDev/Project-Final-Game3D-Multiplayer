@@ -41,9 +41,6 @@ public class SwitchGun : MonoBehaviour
     {
         int previousSelectedWeapon = selectedWeapon;
 
-        if (Gun_Shoot.instance.MuzzleGun.activeSelf)
-            return;
-
         if (Input.GetAxis("Mouse ScrollWheel") > 0f)
         {
             selectedWeapon = (selectedWeapon >= transform.childCount - 1) ? 0 : selectedWeapon + 1;
@@ -69,10 +66,14 @@ public class SwitchGun : MonoBehaviour
         {
             lastSwitchTime = Time.time;
             canSwitch = false;
+            GameObject newGun = transform.GetChild(selectedWeapon).gameObject;
+
+            FPSController.me.UpdateSelectedGun(newGun);
+
+
             SelectWeapon();
         }
     }
-
 
     void SelectWeapon()
     {
