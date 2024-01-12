@@ -8,7 +8,7 @@ public class Gun_Shoot : MonoBehaviourPun
 {
     public static Gun_Shoot instance;
     public float damage = 10f;
-    public float timeBetweenShooting, spread, range, reloadTime, timeBetweenShots;
+    public float timeBetweenShooting, spread, reloadTime, timeBetweenShots;
     public int magazineSize, bulletsPerTap;
     public bool allowButtonHold;
     public int bulletsLeft;
@@ -65,17 +65,18 @@ public class Gun_Shoot : MonoBehaviourPun
     }
     void Shoot()
     {
-
         readyToShoot = false;
         float x = Random.Range(-spread, spread);
         float y = Random.Range(-spread, spread);
         Vector3 direction = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized + new Vector3(x, y, 0);
-        if (Physics.Raycast(FPSController.me.aimingObject.transform.position, direction,out rayHit, range))
+        Collider[] hitColliders = Physics.OverlapSphere(FPSController.me.aimingObject.transform.position, 1f);
+        foreach (Collider collider in hitColliders)
         {
-           /* if (rayHit.collider.CompareTag("Zombie"))
+            if (collider.CompareTag("Zombie"))
             {
-                rayHit.collider.GetComponent<AIZombie>().TakeDamage(damage);
-            }*/
+                collider.GetComponent<AIZombie>().photonView.RPC("TakeDamage", RpcTarget.All, damage);
+                break;
+            }
         }
         muzzle.SetActive(true);
         StartCoroutine(HideMuzzleGun());
@@ -86,9 +87,11 @@ public class Gun_Shoot : MonoBehaviourPun
         bulletsShot--;
         UpdateAmmoUI();
         Invoke("ResetShot", timeBetweenShooting);
-        if(bulletsShot >0 && bulletsLeft > 0)
-        Invoke("Shoot", timeBetweenShots);
+
+        if (bulletsShot > 0 && bulletsLeft > 0)
+            Invoke("Shoot", timeBetweenShots);
     }
+
     void ResetShot()
     {
         readyToShoot = true;

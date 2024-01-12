@@ -47,7 +47,7 @@ public class FPSController : MonoBehaviourPun
     Vector3 moveAmount;
     float verticalLookRotation;
     bool grounded;
-    private bool isHoldingGun = false;
+    public bool isHoldingGun = false;
     private RaycastHit hit;
     private float maxHealthValue;
 
@@ -72,10 +72,14 @@ public class FPSController : MonoBehaviourPun
     }
     void Start()
     {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
         if (!photonView.IsMine)
         {
             canvashealth.enabled = false;
         }
+
         if (PV.IsMine)
         {
             Gun_Shoot.instance.txtAmmo.gameObject.SetActive(false);

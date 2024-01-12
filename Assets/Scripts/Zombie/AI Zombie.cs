@@ -11,8 +11,8 @@ public class AIZombie : MonoBehaviourPun
     public int damage;
     public string enemyName;
     public float moveSpeed;
-    public int currentHP;
-    public int maxHP;
+    public float currentHP;
+    public float maxHP;
     public float chaseRange;
     public float attackRange;
     public float playerdetectRate;
@@ -22,7 +22,6 @@ public class AIZombie : MonoBehaviourPun
     public Rigidbody rb;
     private FPSController[] playerInScene;
     private FPSController targetPlayer;
-    public int curAttackerID;
     private void Start()
     {
         EnemyStatusInfo(maxHP);
@@ -101,24 +100,30 @@ public class AIZombie : MonoBehaviourPun
         }
     }
     [PunRPC]
-    public void TakeDamage(int attackerId, int damageAmount)
+    public void TakeDamage(float damageAmount)
     {
+        if (!photonView.IsMine)
+            return;
+
         currentHP -= damageAmount;
-        curAttackerID = attackerId;
-        photonView.RPC("EnemyStatusInfo",RpcTarget.All,currentHP);
+        photonView.RPC("EnemyStatusInfo", RpcTarget.All, currentHP);
+
         if (currentHP <= 0)
         {
             Die();
         }
     }
     [PunRPC]
-    public void EnemyStatusInfo(int maxVal)
+    public void EnemyStatusInfo(float maxVal)
     {
         currentHP = maxVal;
     }
     void Die()
     {
-       PhotonNetwork.Destroy(gameObject);
+        if (photonView.IsMine)
+        {
+            PhotonNetwork.Destroy(gameObject);
+        }
     }
     private void OnDrawGizmosSelected()
     {
