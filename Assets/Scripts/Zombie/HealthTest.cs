@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class HealthTest : MonoBehaviourPun
 {
-    public int currentHP;
-    public int maxHP;
+    public float currentHP;
+    public float maxHP;
     private float maxHealthValue;
     private void Start()
     {
@@ -14,7 +14,7 @@ public class HealthTest : MonoBehaviourPun
 
     }
     [PunRPC]
-    public void TakeDamage(int damageAmount)
+    public void TakeDamage(float damageAmount)
     {
         currentHP -= damageAmount;
         if (currentHP <= 0)
@@ -22,7 +22,7 @@ public class HealthTest : MonoBehaviourPun
             Die();
         }
     }
-    public void EnemyStatusInfo(int maxVal)
+    public void EnemyStatusInfo(float maxVal)
     {
         maxHealthValue = maxVal;
     }
