@@ -1,43 +1,47 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Photon.Pun;
-using Unity.VisualScripting;
 
 public class Bullet : MonoBehaviourPun
 {
     [SerializeField] private float bulletSpeed = 20f;
-    [SerializeField] private float maxBulletDistance = 20f;
-    private Rigidbody rb;
-    private float currentSpeed = 0f;
-    private int attackerId;
-    private bool isMine;
-    public int damage;
-    private void Awake()
-    {
-        rb = GetComponent<Rigidbody>();
-    }
+    [SerializeField] private float destroyDelay = 2f;
+    [SerializeField] public float bulletDamage;
+
     private void Update()
     {
-        rb.velocity = transform.forward * currentSpeed;
-        currentSpeed = bulletSpeed;
-        if (Vector3.Distance(transform.position, transform.position + rb.velocity * Time.deltaTime) > maxBulletDistance)
-        {
-            Destroy(gameObject);
-        }
+        MoveBullet();
+    }
+
+    private void MoveBullet()
+    {
+        transform.Translate(Vector3.forward * bulletSpeed * Time.deltaTime);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "Zombie")
+        if (other.gameObject != gameObject)
         {
-            AIZombie zombie = other.GetComponent<AIZombie>();
-            zombie.photonView.RPC("TakeDamage", RpcTarget.MasterClient,this.attackerId, damage);
+            if (other.CompareTag("Zombie"))
+            {
+                ZombieHit(other.gameObject);
+            }
+            photonView.RPC("DestroyBullet", RpcTarget.AllBuffered);
         }
     }
-    public void Initialized(int attackId, bool isMine)
+
+    [PunRPC]
+    private void DestroyBullet()
     {
-        this.attackerId = attackId;
-        this.isMine = isMine;
+        Invoke("DestroyDelayed", destroyDelay);
+    }
+
+    private void DestroyDelayed()
+    {
+        PhotonNetwork.Destroy(gameObject);
+    }
+
+    private void ZombieHit(GameObject zombie)
+    {
+        zombie.GetComponent<AIZombie>().TakeDamage(bulletDamage);
     }
 }

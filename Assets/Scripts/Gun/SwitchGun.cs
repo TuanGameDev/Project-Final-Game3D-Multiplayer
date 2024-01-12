@@ -1,8 +1,9 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SwitchGun : MonoBehaviour
+public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
 {
     public int selectedWeapon = 0;
     public float switchCooldown = 0.1f;
@@ -16,65 +17,89 @@ public class SwitchGun : MonoBehaviour
 
     private void Update()
     {
-        int previousSelectedWeapon = selectedWeapon;
-
-        if (canSwitch)
+        if (photonView.IsMine)
         {
-            if (Input.GetAxis("Mouse ScrollWheel") > 0f || Input.GetAxis("Mouse ScrollWheel") < 0f)
+            int previousSelectedWeapon = selectedWeapon;
+
+            if (canSwitch)
             {
-                SwitchWeapon();
+                if (Input.GetAxis("Mouse ScrollWheel") > 0f || Input.GetAxis("Mouse ScrollWheel") < 0f)
+                {
+                    SwitchWeapon();
+                }
+
+                if (Input.GetKeyDown(KeyCode.Alpha1) || (Input.GetKeyDown(KeyCode.Alpha2) && transform.childCount >= 2) || (Input.GetKeyDown(KeyCode.Alpha3) && transform.childCount >= 3))
+                {
+                    SwitchWeapon();
+                }
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha1) || (Input.GetKeyDown(KeyCode.Alpha2) && transform.childCount >= 2) || (Input.GetKeyDown(KeyCode.Alpha3) && transform.childCount >= 3))
+            if (!canSwitch && Time.time >= lastSwitchTime + switchCooldown)
             {
-                SwitchWeapon();
+                canSwitch = true;
             }
-        }
-
-        if (!canSwitch && Time.time >= lastSwitchTime + switchCooldown)
-        {
-            canSwitch = true;
         }
     }
 
     void SwitchWeapon()
     {
-        int previousSelectedWeapon = selectedWeapon;
+        if (photonView.IsMine)
+        {
+            int previousSelectedWeapon = selectedWeapon;
 
-        if (Input.GetAxis("Mouse ScrollWheel") > 0f)
-        {
-            selectedWeapon = (selectedWeapon >= transform.childCount - 1) ? 0 : selectedWeapon + 1;
-        }
-        else if (Input.GetAxis("Mouse ScrollWheel") < 0f)
-        {
-            selectedWeapon = (selectedWeapon <= 0) ? transform.childCount - 1 : selectedWeapon - 1;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            selectedWeapon = 0;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha2) && transform.childCount >= 2)
-        {
-            selectedWeapon = 1;
-        }
-        else if (Input.GetKeyDown(KeyCode.Alpha3) && transform.childCount >= 3)
-        {
-            selectedWeapon = 2;
-        }
+            if (Input.GetAxis("Mouse ScrollWheel") > 0f)
+            {
+                selectedWeapon = (selectedWeapon >= transform.childCount - 1) ? 0 : selectedWeapon + 1;
+            }
+            else if (Input.GetAxis("Mouse ScrollWheel") < 0f)
+            {
+                selectedWeapon = (selectedWeapon <= 0) ? transform.childCount - 1 : selectedWeapon - 1;
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                selectedWeapon = 0;
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha2) && transform.childCount >= 2)
+            {
+                selectedWeapon = 1;
+            }
+            else if (Input.GetKeyDown(KeyCode.Alpha3) && transform.childCount >= 3)
+            {
+                selectedWeapon = 2;
+            }
 
-        if (previousSelectedWeapon != selectedWeapon)
+            if (previousSelectedWeapon != selectedWeapon)
+            {
+                lastSwitchTime = Time.time;
+                canSwitch = false;
+                GameObject newGun = transform.GetChild(selectedWeapon).gameObject;
+
+                FPSController.me.UpdateSelectedGun(newGun);
+
+
+                SelectWeapon();
+            }
+            photonView.RPC("SyncSelectedWeapon", RpcTarget.Others, selectedWeapon);
+        }
+    }
+    [PunRPC]
+    void SyncSelectedWeapon(int newSelectedWeapon)
+    {
+        selectedWeapon = newSelectedWeapon;
+        SelectWeapon();
+    }
+    public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.IsWriting)
         {
-            lastSwitchTime = Time.time;
-            canSwitch = false;
-            GameObject newGun = transform.GetChild(selectedWeapon).gameObject;
-
-            FPSController.me.UpdateSelectedGun(newGun);
-
-
+            stream.SendNext(selectedWeapon);
+        }
+        else
+        {
+            selectedWeapon = (int)stream.ReceiveNext();
             SelectWeapon();
         }
     }
-
     void SelectWeapon()
     {
         int i = 0;

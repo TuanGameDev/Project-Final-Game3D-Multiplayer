@@ -47,7 +47,7 @@ public class FPSController : MonoBehaviourPun
     Vector3 moveAmount;
     float verticalLookRotation;
     bool grounded;
-    private bool isHoldingGun = false;
+    public bool isHoldingGun = false;
     private RaycastHit hit;
     private float maxHealthValue;
 
@@ -72,10 +72,14 @@ public class FPSController : MonoBehaviourPun
     }
     void Start()
     {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
         if (!photonView.IsMine)
         {
             canvashealth.enabled = false;
         }
+
         if (PV.IsMine)
         {
             Gun_Shoot.instance.txtAmmo.gameObject.SetActive(false);
@@ -255,12 +259,22 @@ public class FPSController : MonoBehaviourPun
         {
             if (hit.collider.CompareTag("Pickable") || hit.collider.CompareTag("Rifle") || hit.collider.CompareTag("Pistol"))
             {
-                hit.collider.GetComponent<Highlight>()?.ToggleHighlight(true);
-                pickUpUI.SetActive(true);
+                if (!pickedUpGuns.Contains(hit.collider.gameObject))
+                {
+                    hit.collider.GetComponent<Highlight>()?.ToggleHighlight(true);
+                    pickUpUI.SetActive(true);
+                }
             }
         }
     }
+
     void PickUpGun()
+    {
+        photonView.RPC("PickUpGunRPC", RpcTarget.All);
+    }
+
+    [PunRPC]
+    void PickUpGunRPC()
     {
         isHoldingGun = true;
         pickUpUI.SetActive(false);
@@ -288,6 +302,13 @@ public class FPSController : MonoBehaviourPun
 
     void DropGun()
     {
+        photonView.RPC("DropGunRPC", RpcTarget.All);
+        StartCoroutine(DropGunCooldown());
+    }
+
+    [PunRPC]
+    void DropGunRPC()
+    {
         if (pickedUpGuns.Count > 0 && pickedUpGun != null)
         {
             isHoldingGun = false;
@@ -298,7 +319,7 @@ public class FPSController : MonoBehaviourPun
             }
             droppedGun.transform.parent = null;
             droppedGun.GetComponent<Rigidbody>().isKinematic = false;
-            droppedGun.GetComponent<BoxCollider>().isTrigger = false;           
+            droppedGun.GetComponent<BoxCollider>().isTrigger = false;
             pickedUpGuns.Remove(droppedGun);
             Gun_Shoot gunShoot = droppedGun.GetComponent<Gun_Shoot>();
             if (gunShoot != null)
