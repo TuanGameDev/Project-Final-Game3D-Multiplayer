@@ -69,6 +69,27 @@ public class Gun_Shoot : MonoBehaviourPun
         float x = Random.Range(-spread, spread);
         float y = Random.Range(-spread, spread);
         Vector3 direction = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized + new Vector3(x, y, 0);
+
+        photonView.RPC("ShootRPC", RpcTarget.All, bulletTransForms.position, direction);
+
+        bulletsLeft--;
+        bulletsShot--;
+        UpdateAmmoUI();
+        Invoke("ResetShot", timeBetweenShooting);
+
+        if (bulletsShot > 0 && bulletsLeft > 0)
+            Invoke("Shoot", timeBetweenShots);
+    }
+
+    [PunRPC]
+    void ShootRPC(Vector3 position, Vector3 direction)
+    {
+        muzzle.SetActive(true);
+        StartCoroutine(HideMuzzleGun());
+        GameObject bullet = Instantiate(bulletPrefab, position, Quaternion.LookRotation(direction));
+        bullet.GetComponent<Rigidbody>().velocity = direction * 20f;
+        Destroy(bullet, 3f);
+
         Collider[] hitColliders = Physics.OverlapSphere(FPSController.me.aimingObject.transform.position, 1f);
         foreach (Collider collider in hitColliders)
         {
@@ -78,19 +99,8 @@ public class Gun_Shoot : MonoBehaviourPun
                 break;
             }
         }
-        muzzle.SetActive(true);
-        StartCoroutine(HideMuzzleGun());
-        GameObject bullet = Instantiate(bulletPrefab, bulletTransForms.position, Quaternion.LookRotation(direction));
-        bullet.GetComponent<Rigidbody>().velocity = direction * 20f;
-        Destroy(bullet, 3f);
-        bulletsLeft--;
-        bulletsShot--;
-        UpdateAmmoUI();
-        Invoke("ResetShot", timeBetweenShooting);
-
-        if (bulletsShot > 0 && bulletsLeft > 0)
-            Invoke("Shoot", timeBetweenShots);
     }
+
 
     void ResetShot()
     {
