@@ -3,6 +3,7 @@ using Photon.Pun;
 using System.Collections;
 using TMPro;
 using UnityEngine.UIElements;
+using Photon.Pun.Demo.Asteroids;
 
 public class Gun_Shoot : MonoBehaviourPun
 {
@@ -98,6 +99,7 @@ public class Gun_Shoot : MonoBehaviourPun
         direction = direction.normalized + new Vector3(Random.Range(-spread, spread), Random.Range(-spread, spread), 0) + 
             (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized;
         Bullet bulletInstance = PhotonNetwork.Instantiate("Bullet", position, Quaternion.LookRotation(direction)).GetComponent<Bullet>();
+        bulletInstance.GetComponent<Rigidbody>().velocity = direction * 20f;
         bulletInstance.bulletDamage = damageValue;
     }
 
