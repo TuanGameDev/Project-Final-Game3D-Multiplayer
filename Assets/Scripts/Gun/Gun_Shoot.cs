@@ -72,9 +72,9 @@ public class Gun_Shoot : MonoBehaviourPun
         Vector3 direction = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized + new Vector3(x, y, 0);
         if (Physics.Raycast(FPSController.me.aimingObject.transform.position, direction,out rayHit, range))
         {
-/*            if (rayHit.collider.CompareTag("Enemy"))
+           /* if (rayHit.collider.CompareTag("Zombie"))
             {
-              rayHit.collider.GetComponent<ZombieHeal>.TakeDame(damage);  Dame Zombie
+                rayHit.collider.GetComponent<AIZombie>().TakeDamage(damage);
             }*/
         }
         muzzle.SetActive(true);
