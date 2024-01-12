@@ -94,13 +94,4 @@ public class GameManager : MonoBehaviourPun
     {
         TrySpawn(zombieSpawnInfo);
     }
-    public FPSController GetPlayer(int playerId)
-    {
-        return players.First(x => x.id == playerId); 
-    }
-
-    public FPSController GetPlayer(GameObject playerObject)
-    {
-        return players.First(x => x.gameObject == playerObject);
-    }
 }

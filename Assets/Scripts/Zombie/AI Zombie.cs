@@ -22,7 +22,6 @@ public class AIZombie : MonoBehaviourPun
     public Rigidbody rb;
     private FPSController[] playerInScene;
     private FPSController targetPlayer;
-    private float maxHealthValue;
     public int curAttackerID;
     private void Start()
     {
@@ -119,9 +118,7 @@ public class AIZombie : MonoBehaviourPun
     }
     void Die()
     {
-        FPSController player = GameManager.gamemanager.GetPlayer(curAttackerID);
-        PhotonNetwork.Instantiate(dead, transform.position, Quaternion.identity);
-        PhotonNetwork.Destroy(gameObject);
+       PhotonNetwork.Destroy(gameObject);
     }
     private void OnDrawGizmosSelected()
     {
