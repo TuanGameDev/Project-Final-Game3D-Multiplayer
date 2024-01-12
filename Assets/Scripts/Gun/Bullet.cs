@@ -29,14 +29,12 @@ public class Bullet : MonoBehaviourPun
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "Zombie" && isMine)
+        if (other.tag == "Zombie")
         {
             Debug.Log("Va cham voi zombie");
 
-            AIZombie zombie = other.GetComponent<AIZombie>();
-            zombie.TakeDamage(attackerId,damage);
-
-            Destroy(gameObject);
+            HealthTest zombie = other.GetComponent<HealthTest>();
+            zombie.TakeDamage(10);
         }
     }
     [PunRPC]
