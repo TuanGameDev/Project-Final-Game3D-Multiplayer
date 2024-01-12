@@ -29,20 +29,10 @@ public class Bullet : MonoBehaviourPun
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Zombie"))
+        if (other.tag == "Zombie")
         {
-            Debug.Log("Va cham voi zombie");
-
             AIZombie zombie = other.GetComponent<AIZombie>();
-            if (zombie != null)
-            {
-                // Thay đổi tên của phương thức RPC từ "TakeDamage" thành "TakeDamageWithAttackerId" (hoặc bạn có thể đặt tên khác)
-                string rpcMethodName = "TakeDamage";
-                int attackerId = this.attackerId; // Giá trị attackerId của bạn
-
-                // Gọi RPC với các tham số mới bao gồm attackerId
-                zombie.photonView.RPC(rpcMethodName, RpcTarget.MasterClient, attackerId, damage);
-            }
+            zombie.photonView.RPC("TakeDamage", RpcTarget.MasterClient,this.attackerId, damage);
         }
     }
     public void Initialized(int attackId, bool isMine)
