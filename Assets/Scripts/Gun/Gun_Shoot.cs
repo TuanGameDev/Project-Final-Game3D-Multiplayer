@@ -17,10 +17,9 @@ public class Gun_Shoot : MonoBehaviourPun
     public Transform bulletTransForms;
     public RaycastHit rayHit;
     public float zoomFOV = 40f;
-    private bool isZoomed = false;
+    public bool isZoomed = false;
     public float originalFOV;
     public GameObject muzzle, bulletPrefab;
-    public TextMeshProUGUI txt;
     private void Awake()
     {
         if(instance == null)
@@ -29,10 +28,6 @@ public class Gun_Shoot : MonoBehaviourPun
         }
         bulletsLeft = magazineSize;
         readyToShoot = true;
-    }
-    private void Update()
-    {
-        txt.SetText(bulletsLeft + " / " + magazineSize);
     }
     public void Shooting()
     {
@@ -67,11 +62,12 @@ public class Gun_Shoot : MonoBehaviourPun
     }
     void Shoot()
     {
+
         readyToShoot = false;
         float x = Random.Range(-spread, spread);
         float y = Random.Range(-spread, spread);
-        Vector3 direction = playerCamera.transform.forward + new Vector3(x, y, 0);
-        if (Physics.Raycast(playerCamera.transform.position, direction,out rayHit, range))
+        Vector3 direction = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized + new Vector3(x, y, 0);
+        if (Physics.Raycast(FPSController.me.aimingObject.transform.position, direction,out rayHit, range))
         {
 /*            if (rayHit.collider.CompareTag("Enemy"))
             {
