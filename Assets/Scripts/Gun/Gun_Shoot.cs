@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 public class Gun_Shoot : MonoBehaviourPun
 {
     public static Gun_Shoot instance;
-    public float damage;
+    public float damage = 10f;
     public float timeBetweenShooting, spread, range, reloadTime, timeBetweenShots;
     public int magazineSize, bulletsPerTap;
     public bool allowButtonHold;
@@ -72,10 +72,10 @@ public class Gun_Shoot : MonoBehaviourPun
         Vector3 direction = (FPSController.me.aimingObject.transform.position - bulletTransForms.position).normalized + new Vector3(x, y, 0);
         if (Physics.Raycast(FPSController.me.aimingObject.transform.position, direction,out rayHit, range))
         {
-            if (rayHit.collider.CompareTag("Zombie"))
+           /* if (rayHit.collider.CompareTag("Zombie"))
             {
-                rayHit.collider.GetComponent<HealthTest>().TakeDamage(damage);
-            }
+                rayHit.collider.GetComponent<AIZombie>().TakeDamage(damage);
+            }*/
         }
         muzzle.SetActive(true);
         StartCoroutine(HideMuzzleGun());

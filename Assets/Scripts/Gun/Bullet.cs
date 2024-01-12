@@ -23,7 +23,7 @@ public class Bullet : MonoBehaviourPun
         currentSpeed = bulletSpeed;
         if (Vector3.Distance(transform.position, transform.position + rb.velocity * Time.deltaTime) > maxBulletDistance)
         {
-            DestroyBullet();
+            Destroy(gameObject);
         }
     }
 
@@ -33,14 +33,9 @@ public class Bullet : MonoBehaviourPun
         {
             Debug.Log("Va cham voi zombie");
 
-            HealthTest zombie = other.GetComponent<HealthTest>();
-            zombie.TakeDamage(10);
+            AIZombie zombie = other.GetComponent<AIZombie>();
+            zombie.photonView.RPC("TakeDamage", RpcTarget.MasterClient,this.attackerId, damage);
         }
-    }
-    [PunRPC]
-    private void DestroyBullet()
-    {
-        Destroy(gameObject,2);
     }
     public void Initialized(int attackId, bool isMine)
     {
