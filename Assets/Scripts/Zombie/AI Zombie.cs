@@ -106,14 +106,16 @@ public class AIZombie : MonoBehaviourPun
     {
         currentHP -= damageAmount;
         curAttackerID = attackerId;
+        photonView.RPC("EnemyStatusInfo",RpcTarget.All,currentHP);
         if (currentHP <= 0)
         {
             Die();
         }
     }
+    [PunRPC]
     public void EnemyStatusInfo(int maxVal)
     {
-        maxHealthValue = maxVal;
+        currentHP = maxVal;
     }
     void Die()
     {
