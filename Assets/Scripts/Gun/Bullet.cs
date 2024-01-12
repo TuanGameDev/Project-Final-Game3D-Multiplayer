@@ -1,16 +1,15 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using Photon.Pun;
 
 public class Bullet : MonoBehaviourPun
 {
     [SerializeField] private float bulletSpeed = 20f;
-    [SerializeField] private float maxBulletDistance = 20f;
+    [SerializeField] private float destroyDelay = 2f;
+    [SerializeField] public float bulletDamage;
 
     private void Update()
     {
         MoveBullet();
-        CheckMaxDistance();
     }
 
     private void MoveBullet()
@@ -18,17 +17,31 @@ public class Bullet : MonoBehaviourPun
         transform.Translate(Vector3.forward * bulletSpeed * Time.deltaTime);
     }
 
-    private void CheckMaxDistance()
+    private void OnTriggerEnter(Collider other)
     {
-        if (Vector3.Distance(transform.position, transform.position + transform.forward * bulletSpeed * Time.deltaTime) > maxBulletDistance)
+        if (other.gameObject != gameObject)
         {
-            DestroyBullet();
+            if (other.CompareTag("Zombie"))
+            {
+                ZombieHit(other.gameObject);
+            }
+            photonView.RPC("DestroyBullet", RpcTarget.AllBuffered);
         }
     }
 
     [PunRPC]
     private void DestroyBullet()
     {
+        Invoke("DestroyDelayed", destroyDelay);
+    }
+
+    private void DestroyDelayed()
+    {
         PhotonNetwork.Destroy(gameObject);
+    }
+
+    private void ZombieHit(GameObject zombie)
+    {
+        zombie.GetComponent<AIZombie>().TakeDamage(bulletDamage);
     }
 }
