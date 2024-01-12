@@ -78,6 +78,7 @@ public class FPSController : MonoBehaviourPun
         }
         if (PV.IsMine)
         {
+            Gun_Shoot.instance.txtAmmo.gameObject.SetActive(false);
         }
         else
         {
@@ -276,6 +277,7 @@ public class FPSController : MonoBehaviourPun
         {
             gunShoot.originalFOV = cameraHolder.fieldOfView;
             gunShoot.playerCamera = cameraHolder;
+            gunShoot.txtAmmo.gameObject.SetActive(true);
         }
         if (pickedUpGuns.Count > 0)
         {
@@ -296,9 +298,13 @@ public class FPSController : MonoBehaviourPun
             }
             droppedGun.transform.parent = null;
             droppedGun.GetComponent<Rigidbody>().isKinematic = false;
-            droppedGun.GetComponent<BoxCollider>().isTrigger = false;
+            droppedGun.GetComponent<BoxCollider>().isTrigger = false;           
             pickedUpGuns.Remove(droppedGun);
-
+            Gun_Shoot gunShoot = droppedGun.GetComponent<Gun_Shoot>();
+            if (gunShoot != null)
+            {
+                gunShoot.txtAmmo.gameObject.SetActive(false);
+            }
             if (pickedUpGuns.Count > 0)
             {
                 pickedUpGun = pickedUpGuns[0];

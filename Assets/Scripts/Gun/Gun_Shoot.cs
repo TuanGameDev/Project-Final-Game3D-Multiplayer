@@ -11,7 +11,8 @@ public class Gun_Shoot : MonoBehaviourPun
     public float timeBetweenShooting, spread, range, reloadTime, timeBetweenShots;
     public int magazineSize, bulletsPerTap;
     public bool allowButtonHold;
-    int bulletsLeft, bulletsShot;
+    public int bulletsLeft;
+    int bulletsShot;
     bool shooting, readyToShoot, reloading;
     public Camera playerCamera;
     public Transform bulletTransForms;
@@ -20,6 +21,7 @@ public class Gun_Shoot : MonoBehaviourPun
     public bool isZoomed = false;
     public float originalFOV;
     public GameObject muzzle, bulletPrefab;
+    public TextMeshProUGUI txtAmmo;
     private void Awake()
     {
         if(instance == null)
@@ -27,6 +29,7 @@ public class Gun_Shoot : MonoBehaviourPun
             instance = this;
         }
         bulletsLeft = magazineSize;
+        txtAmmo.text = bulletsLeft + " / " + magazineSize;
         readyToShoot = true;
     }
     public void Shooting()
@@ -81,6 +84,7 @@ public class Gun_Shoot : MonoBehaviourPun
         Destroy(bullet, 3f);
         bulletsLeft--;
         bulletsShot--;
+        UpdateAmmoUI();
         Invoke("ResetShot", timeBetweenShooting);
         if(bulletsShot >0 && bulletsLeft > 0)
         Invoke("Shoot", timeBetweenShots);
@@ -98,10 +102,15 @@ public class Gun_Shoot : MonoBehaviourPun
     {
         bulletsLeft = magazineSize;
         reloading = false;
+        UpdateAmmoUI();
     }
     IEnumerator HideMuzzleGun()
     {
         yield return new WaitForSeconds(0.1f);
         muzzle.SetActive(false);
+    }
+    void UpdateAmmoUI()
+    {
+        txtAmmo.text = bulletsLeft + " / " + magazineSize;
     }
 }
