@@ -24,6 +24,11 @@ public class AIZombie : MonoBehaviourPun
     private FPSController targetPlayer;
     private float maxHealthValue;
     public int curAttackerID;
+    private void Start()
+    {
+        EnemyStatusInfo(maxHP);
+
+    }
     private void Update()
     {
         if (!PhotonNetwork.IsMasterClient)
@@ -106,6 +111,10 @@ public class AIZombie : MonoBehaviourPun
             Die();
         }
     }
+    public void EnemyStatusInfo(int maxVal)
+    {
+        maxHealthValue = maxVal;
+    }
     void Die()
     {
         FPSController player = GameManager.gamemanager.GetPlayer(curAttackerID);
@@ -118,8 +127,5 @@ public class AIZombie : MonoBehaviourPun
         Gizmos.DrawWireSphere(transform.position, chaseRange);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, playerdetectRate);
-
     }
 }
