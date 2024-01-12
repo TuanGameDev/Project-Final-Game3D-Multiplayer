@@ -130,7 +130,7 @@ public class FPSController : MonoBehaviourPun
         if (Input.GetKey(KeyCode.G) && canDropGun)
         {
             DropGun();
-            StartCoroutine(DropGunCooldown());
+            StartCoroutine(DropGunCooldown(pickedUpGun.transform.position, pickedUpGun.transform.rotation.eulerAngles));
         }
         if (Input.GetButtonDown("Flashlight"))
         {
@@ -245,7 +245,7 @@ public class FPSController : MonoBehaviourPun
         Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
         aimingObject.transform.position = newPosition;
     }
-    public void PickUp()
+    void PickUp()
     {
         Debug.DrawRay(playerCameraTransform.position, playerCameraTransform.forward * hitRange, Color.red);
 
@@ -307,7 +307,7 @@ public class FPSController : MonoBehaviourPun
     }
 
     [PunRPC]
-    void DropGunRPC()
+    void DropGunRPC(Vector3 gunPosition, Vector3 gunRotation)
     {
         if (pickedUpGuns.Count > 0 && pickedUpGun != null)
         {
@@ -334,6 +334,15 @@ public class FPSController : MonoBehaviourPun
         }
     }
 
+    IEnumerator DropGunCooldown(Vector3 gunPosition, Vector3 gunRotation)
+    {
+        canDropGun = false;
+        yield return new WaitForSeconds(dropGunCooldown);
+        photonView.RPC("DropGunRPC", RpcTarget.All, gunPosition, gunRotation);
+        canDropGun = true;
+    }
+
+
 
     public void SelectGun()
     {
@@ -353,6 +362,13 @@ public class FPSController : MonoBehaviourPun
         canDropGun = false;
         yield return new WaitForSeconds(dropGunCooldown);
         canDropGun = true;
+    }
+    [PunRPC]
+    void SetIsHoldingGunRPC(bool holding)
+    {
+        isHoldingGun = holding;
+        // Gọi hàm cập nhật trạng thái vũ khí ở đây nếu cần thiết
+        SelectGun();
     }
     void Shoot()
     {

@@ -19,25 +19,11 @@ public class Bullet : MonoBehaviourPun
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject != gameObject)
+        if (other.CompareTag("Zombie"))
         {
-            if (other.CompareTag("Zombie"))
-            {
-                ZombieHit(other.gameObject);
-            }
-            photonView.RPC("DestroyBullet", RpcTarget.AllBuffered);
+            ZombieHit(other.gameObject);
+            Destroy(gameObject);
         }
-    }
-
-    [PunRPC]
-    private void DestroyBullet()
-    {
-        Invoke("DestroyDelayed", destroyDelay);
-    }
-
-    private void DestroyDelayed()
-    {
-        PhotonNetwork.Destroy(gameObject);
     }
 
     private void ZombieHit(GameObject zombie)
