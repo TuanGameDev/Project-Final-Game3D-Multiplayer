@@ -116,8 +116,9 @@ public class FPSController : MonoBehaviourPun
 
             if (Input.GetMouseButton(0))
             {
-                photonView.RPC("ShootRPC", RpcTarget.All);
+                photonView.RPC("ShootRPC", RpcTarget.AllViaServer);
             }
+
             if (Input.GetKeyDown(KeyCode.R))
             {
                 photonView.RPC("ReloadGunRPC", RpcTarget.All);
@@ -281,7 +282,6 @@ public class FPSController : MonoBehaviourPun
         }
     }
 
-
     [PunRPC]
     public void PickUpGunRPC(Vector3 gunPosition, Vector3 gunRotation, PhotonMessageInfo info)
     {
@@ -294,13 +294,16 @@ public class FPSController : MonoBehaviourPun
         if (hit.collider != null)
         {
             GameObject newPickedUpGun = hit.collider.gameObject;
+            if (!newPickedUpGun.GetComponent<PhotonView>().IsMine)
+                return;
+
             pickedUpGuns.Add(newPickedUpGun);
             newPickedUpGun.transform.parent = transformPickup;
             newPickedUpGun.transform.localPosition = Vector3.zero;
             newPickedUpGun.transform.localRotation = Quaternion.identity;
             newPickedUpGun.GetComponent<Rigidbody>().isKinematic = true;
             newPickedUpGun.GetComponent<BoxCollider>().isTrigger = true;
-            photonView.RPC("SetGunTransformRPC", RpcTarget.All, newPickedUpGun.GetComponent<PhotonView>().ViewID, transformPickup.position, transformPickup.rotation.eulerAngles);
+            photonView.RPC("SetGunTransformRPC", RpcTarget.All, newPickedUpGun.GetComponent<PhotonView>().ViewID, transformPickup.position, transformPickup.rotation.eulerAngles, true);
 
             Gun_Shoot gunShoot = newPickedUpGun.GetComponent<Gun_Shoot>();
             if (gunShoot != null)
@@ -320,7 +323,7 @@ public class FPSController : MonoBehaviourPun
     }
 
     [PunRPC]
-    public void SetGunTransformRPC(int gunViewID, Vector3 gunPosition, Vector3 gunRotation)
+    public void SetGunTransformRPC(int gunViewID, Vector3 gunPosition, Vector3 gunRotation, bool isPickingUp)
     {
         PhotonView gunView = PhotonView.Find(gunViewID);
         if (gunView != null)
@@ -328,40 +331,49 @@ public class FPSController : MonoBehaviourPun
             GameObject gunObject = gunView.gameObject;
             gunObject.transform.position = gunPosition;
             gunObject.transform.rotation = Quaternion.Euler(gunRotation);
+
+            if (!isPickingUp)
+            {
+                gunObject.GetComponent<Rigidbody>().isKinematic = false;
+                gunObject.GetComponent<BoxCollider>().isTrigger = false;
+            }
         }
     }
 
+
     [PunRPC]
-    public void DropGunRPC()
+    public void DropGunRPC(PhotonMessageInfo info)
     {
         if (!photonView.IsMine)
             return;
 
-        if (pickedUpGuns.Count > 0 && pickedUpGun != null)
+        isHoldingGun = false;
+        GameObject droppedGun = pickedUpGun;
+        if (pickedUpGun == droppedGun)
         {
-            isHoldingGun = false;
-            GameObject droppedGun = pickedUpGun;
-            if (pickedUpGun == droppedGun)
-            {
-                pickedUpGun = null;
-            }
-            droppedGun.transform.parent = null;
-            droppedGun.GetComponent<Rigidbody>().isKinematic = false;
-            droppedGun.GetComponent<BoxCollider>().isTrigger = false;
-            pickedUpGuns.Remove(droppedGun);
-            Gun_Shoot gunShoot = droppedGun.GetComponent<Gun_Shoot>();
-            if (gunShoot != null)
-            {
-                gunShoot.txtAmmo.gameObject.SetActive(false);
-            }
-            if (pickedUpGuns.Count > 0)
-            {
-                pickedUpGun = pickedUpGuns[0];
-            }
+            pickedUpGun = null;
+        }
+        droppedGun.transform.parent = null;
+        droppedGun.GetComponent<Rigidbody>().isKinematic = false;
+        droppedGun.GetComponent<BoxCollider>().isTrigger = false;
+        photonView.RPC("SetGunTransformRPC", RpcTarget.All, droppedGun.GetComponent<PhotonView>().ViewID, droppedGun.transform.position, droppedGun.transform.rotation.eulerAngles, false);
+
+        pickedUpGuns.Remove(droppedGun);
+        Gun_Shoot gunShoot = droppedGun.GetComponent<Gun_Shoot>();
+        if (gunShoot != null)
+        {
+            gunShoot.txtAmmo.gameObject.SetActive(false);
+        }
+
+        if (pickedUpGuns.Count > 0)
+        {
+            pickedUpGun = pickedUpGuns[0];
             SelectGun();
-            photonView.RPC("SetIsHoldingGunRPC", RpcTarget.All, false);
+            photonView.RPC("SetIsHoldingGunRPC", RpcTarget.AllBuffered, false);
         }
     }
+
+
 
     [PunRPC]
     void SetIsHoldingGunRPC(bool holding)
@@ -407,7 +419,7 @@ public class FPSController : MonoBehaviourPun
             IUsable usable = pickedUpGun.GetComponent<IUsable>();
             if (usable != null)
             {
-                usable.Shoot(this.gameObject);
+                usable.Shoot(gameObject);
             }
         }
     }
