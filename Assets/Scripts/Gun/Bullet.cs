@@ -7,6 +7,11 @@ public class Bullet : MonoBehaviourPun
     [SerializeField] private float destroyDelay = 2f;
     [SerializeField] public float bulletDamage;
 
+    private void Start()
+    {
+        Invoke("DestroyBullet", destroyDelay);
+    }
+
     private void Update()
     {
         MoveBullet();
@@ -19,29 +24,20 @@ public class Bullet : MonoBehaviourPun
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject != gameObject)
+        if (other.CompareTag("Zombie"))
         {
-            if (other.CompareTag("Zombie"))
-            {
-                ZombieHit(other.gameObject);
-            }
-            photonView.RPC("DestroyBullet", RpcTarget.AllBuffered);
+            ZombieHit(other.gameObject);
+            DestroyBullet();
         }
-    }
-
-    [PunRPC]
-    private void DestroyBullet()
-    {
-        Invoke("DestroyDelayed", destroyDelay);
-    }
-
-    private void DestroyDelayed()
-    {
-        PhotonNetwork.Destroy(gameObject);
     }
 
     private void ZombieHit(GameObject zombie)
     {
         zombie.GetComponent<AIZombie>().TakeDamage(bulletDamage);
+    }
+
+    private void DestroyBullet()
+    {
+        Destroy(gameObject);
     }
 }

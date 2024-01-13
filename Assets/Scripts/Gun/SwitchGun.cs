@@ -9,7 +9,7 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
     public float switchCooldown = 0.1f;
     private bool canSwitch = true;
     private float lastSwitchTime;
-
+    private bool gunActivated = true;
     private void Start()
     {
         SelectWeapon();
@@ -47,23 +47,31 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
         {
             int previousSelectedWeapon = selectedWeapon;
 
+            int childCount = transform.childCount;
+
+            if (childCount == 0)
+            {
+                Debug.LogWarning("No weapons available!");
+                return;
+            }
+
             if (Input.GetAxis("Mouse ScrollWheel") > 0f)
             {
-                selectedWeapon = (selectedWeapon >= transform.childCount - 1) ? 0 : selectedWeapon + 1;
+                selectedWeapon = (selectedWeapon + 1) % childCount;
             }
             else if (Input.GetAxis("Mouse ScrollWheel") < 0f)
             {
-                selectedWeapon = (selectedWeapon <= 0) ? transform.childCount - 1 : selectedWeapon - 1;
+                selectedWeapon = (selectedWeapon - 1 + childCount) % childCount;
             }
             else if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 selectedWeapon = 0;
             }
-            else if (Input.GetKeyDown(KeyCode.Alpha2) && transform.childCount >= 2)
+            else if (Input.GetKeyDown(KeyCode.Alpha2) && childCount >= 2)
             {
                 selectedWeapon = 1;
             }
-            else if (Input.GetKeyDown(KeyCode.Alpha3) && transform.childCount >= 3)
+            else if (Input.GetKeyDown(KeyCode.Alpha3) && childCount >= 3)
             {
                 selectedWeapon = 2;
             }
@@ -74,14 +82,22 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
                 canSwitch = false;
                 GameObject newGun = transform.GetChild(selectedWeapon).gameObject;
 
-                FPSController.me.UpdateSelectedGun(newGun);
-
+                if (newGun != null)
+                {
+                    gunActivated = true;
+                    FPSController.me.UpdateSelectedGun(newGun);
+                }
+                else
+                {
+                    gunActivated = false;
+                }
 
                 SelectWeapon();
             }
             photonView.RPC("SyncSelectedWeapon", RpcTarget.Others, selectedWeapon);
         }
     }
+
     [PunRPC]
     void SyncSelectedWeapon(int newSelectedWeapon)
     {
@@ -107,7 +123,14 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
         {
             if (i == selectedWeapon)
             {
-                weapon.gameObject.SetActive(true);
+                if (gunActivated)
+                {
+                    weapon.gameObject.SetActive(true);
+                }
+                else
+                {
+                    weapon.gameObject.SetActive(false);
+                }
             }
             else
             {
@@ -116,4 +139,5 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
             i++;
         }
     }
+
 }

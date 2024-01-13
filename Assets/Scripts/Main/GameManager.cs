@@ -5,6 +5,7 @@ using Photon.Pun;
 using System.Linq;
 using TMPro;
 using Photon.Realtime;
+
 [System.Serializable]
 public class ZombieInfo
 {
@@ -13,6 +14,7 @@ public class ZombieInfo
     public List<Transform> spawnCheckRadiusPirate = new List<Transform>();
     public List<GameObject> currentEnemies = new List<GameObject>();
 }
+
 public class GameManager : MonoBehaviourPun
 {
     [Header("Players")]
@@ -27,7 +29,12 @@ public class GameManager : MonoBehaviourPun
     public float spawnCheckTime;
     private float lastSpawnCheckTime;
 
+    [Header("Spawn Gun")]
+    public GameObject[] gun;
+    public Transform[] spawnGun;
+
     public static GameManager gamemanager;
+
     private void Awake()
     {
         gamemanager = this;
@@ -38,6 +45,7 @@ public class GameManager : MonoBehaviourPun
         players = new FPSController[PhotonNetwork.PlayerList.Length];
         photonView.RPC("ImInGame", RpcTarget.AllBuffered);
     }
+
     private void Update()
     {
         if (!PhotonNetwork.IsMasterClient)
@@ -49,12 +57,28 @@ public class GameManager : MonoBehaviourPun
             TrySpawnZombie();
         }
     }
+
     [PunRPC]
     void ImInGame()
     {
         playersInGame++;
         if (playersInGame == PhotonNetwork.PlayerList.Length)
+        {
             SpawnPlayer();
+            SpawnGun();          
+        }
+        else if (playersInGame > 1)
+        {
+            TrySpawnZombie();
+        }
+    }
+
+    private void SpawnGun()
+    {
+        for (int i = 0; i < gun.Length; i++)
+        {
+            PhotonNetwork.Instantiate(gun[i % gun.Length].name, spawnGun[i].position, spawnGun[i].rotation);
+        }
     }
 
     void SpawnPlayer()
@@ -62,6 +86,7 @@ public class GameManager : MonoBehaviourPun
         GameObject playerObject = PhotonNetwork.Instantiate(PlayerSelection.playerselection.playerPrefabName, spawnPoint[Random.Range(0, spawnPoint.Length)].position, Quaternion.identity);
         playerObject.GetComponent<PhotonView>().RPC("Initialized", RpcTarget.All, PhotonNetwork.LocalPlayer);
     }
+
     void TrySpawn(ZombieInfo zombieSpawnInfo)
     {
         for (int x = zombieSpawnInfo.currentEnemies.Count - 1; x >= 0; x--)
@@ -90,6 +115,7 @@ public class GameManager : MonoBehaviourPun
             zombieSpawnInfo.currentEnemies.Add(enemy);
         }
     }
+
     void TrySpawnZombie()
     {
         TrySpawn(zombieSpawnInfo);
