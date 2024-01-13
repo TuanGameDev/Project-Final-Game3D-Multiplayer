@@ -69,6 +69,7 @@ public class AIZombie : MonoBehaviourPun
       //  aim.SetTrigger("Attack");
         lastattackTime = Time.time;
         targetPlayer.photonView.RPC("TakeDamage", RpcTarget.All, damage);
+        Debug.Log("Attack");
     }
 
     void DetectPlayer()
