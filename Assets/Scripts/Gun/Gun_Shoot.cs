@@ -42,26 +42,59 @@ public class Gun_Shoot : MonoBehaviourPun
         readyToShoot = true;
     }
 
+    [PunRPC]
+    public void ShootingRPC(Vector3 position, Vector3 direction, float damageValue)
+    {
+        readyToShoot = false;
+        muzzle.SetActive(true);
+        StartCoroutine(HideMuzzleGun());
+        Bullet bulletInstance = Instantiate(bulletPrefab, position, Quaternion.LookRotation(direction)).GetComponent<Bullet>();
+        bulletInstance.GetComponent<Rigidbody>().velocity = direction * 20f;
+        bulletInstance.bulletDamage = damageValue;
+
+        bulletsLeft--;
+        UpdateAmmoUI();
+        Invoke("ResetShot", timeBetweenShooting);
+
+        if (bulletsShot > 0 && bulletsLeft > 0)
+            Invoke("Shoot", timeBetweenShots);
+    }
+
     public void Shooting()
     {
+        if (!photonView.IsMine) return;
+
         if (allowButtonHold) shooting = Input.GetKey(KeyCode.Mouse0);
         else shooting = Input.GetKeyDown(KeyCode.Mouse0);
+
         if (readyToShoot && shooting && !reloading && bulletsLeft > 0)
         {
-            Shoot(currentDamage);
+            Vector3 direction = playerCamera.transform.forward;
+            photonView.RPC("ShootingRPC", RpcTarget.All, bulletTransForms.position, direction, currentDamage);
         }
+    }
+
+    [PunRPC]
+    public void ReloadRPC()
+    {
+        reloading = true;
+        Invoke("ReloadFinished", reloadTime);
     }
 
     public void Reloading()
     {
+        if (!photonView.IsMine) return;
+
         if (Input.GetKeyDown(KeyCode.R) && bulletsLeft < magazineSize && !reloading)
         {
-            Reload();
+            photonView.RPC("ReloadRPC", RpcTarget.All);
         }
     }
 
     public void ZoomGun()
     {
+        if (!photonView.IsMine) return;
+
         if (Input.GetMouseButtonDown(1))
         {
             isZoomed = true;
@@ -75,40 +108,9 @@ public class Gun_Shoot : MonoBehaviourPun
         }
     }
 
-    void Shoot(float damageValue)
-    {
-        readyToShoot = false;
-        Vector3 direction = playerCamera.transform.forward;
-        photonView.RPC("ShootRPC", RpcTarget.All, bulletTransForms.position, direction, damageValue);
-        bulletsLeft--;
-
-        UpdateAmmoUI();
-        Invoke("ResetShot", timeBetweenShooting);
-
-        if (bulletsShot > 0 && bulletsLeft > 0)
-            Invoke("Shoot", timeBetweenShots);
-    }
-
-    [PunRPC]
-    void ShootRPC(Vector3 position, Vector3 direction, float damageValue)
-    {
-        muzzle.SetActive(true);
-        StartCoroutine(HideMuzzleGun());
-        Bullet bulletInstance = PhotonNetwork.Instantiate("Bullet", position, Quaternion.LookRotation(direction)).GetComponent<Bullet>();
-        bulletInstance.GetComponent<Rigidbody>().velocity = direction * 20f;
-        bulletInstance.bulletDamage = damageValue;
-    }
-
-
     void ResetShot()
     {
         readyToShoot = true;
-    }
-
-    void Reload()
-    {
-        reloading = true;
-        Invoke("ReloadFinished", reloadTime);
     }
 
     void ReloadFinished()

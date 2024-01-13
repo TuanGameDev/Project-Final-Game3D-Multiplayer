@@ -7,6 +7,11 @@ public class Bullet : MonoBehaviourPun
     [SerializeField] private float destroyDelay = 2f;
     [SerializeField] public float bulletDamage;
 
+    private void Start()
+    {
+        Invoke("DestroyBullet", destroyDelay);
+    }
+
     private void Update()
     {
         MoveBullet();
@@ -22,12 +27,17 @@ public class Bullet : MonoBehaviourPun
         if (other.CompareTag("Zombie"))
         {
             ZombieHit(other.gameObject);
-            Destroy(gameObject);
+            DestroyBullet();
         }
     }
 
     private void ZombieHit(GameObject zombie)
     {
         zombie.GetComponent<AIZombie>().TakeDamage(bulletDamage);
+    }
+
+    private void DestroyBullet()
+    {
+        Destroy(gameObject);
     }
 }

@@ -9,7 +9,6 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
     public float switchCooldown = 0.1f;
     private bool canSwitch = true;
     private float lastSwitchTime;
-
     private void Start()
     {
         SelectWeapon();
