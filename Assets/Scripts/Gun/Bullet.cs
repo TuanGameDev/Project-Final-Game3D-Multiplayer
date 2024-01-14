@@ -35,7 +35,7 @@ public class Bullet : MonoBehaviourPun
     }
     private void DestroyBullet()
     {
-        Destroy(gameObject,2);
+        Destroy(gameObject, destroyDelay);
     }
     public void Initialized(int attackId, bool isMine)
     {
