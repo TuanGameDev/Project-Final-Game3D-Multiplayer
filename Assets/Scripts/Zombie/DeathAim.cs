@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Photon.Pun;
-
-public class DeathAim : MonoBehaviourPun
+public class DeathAim : MonoBehaviour
 {
     public float destroyTime;
     void Start()

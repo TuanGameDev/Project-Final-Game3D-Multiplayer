@@ -19,6 +19,7 @@ public class AIZombie : MonoBehaviourPun
     private float lastPlayerDetectTime;
     public float attackrate;
     private float lastattackTime;
+    public Animator aim;
     public Rigidbody rb;
     private FPSController[] playerInScene;
     private FPSController targetPlayer;
@@ -53,12 +54,12 @@ public class AIZombie : MonoBehaviourPun
             {
                 Vector3 dir = targetPlayer.transform.position - transform.position;
                 rb.velocity = dir.normalized * moveSpeed;
-               // aim.SetBool("Move", true);
+                aim.SetBool("Move", true);
             }
             else
             {
                 rb.velocity = Vector2.zero;
-               // aim.SetBool("Move", false);
+                aim.SetBool("Move", false);
             }
         }
 
@@ -66,7 +67,7 @@ public class AIZombie : MonoBehaviourPun
     }
     void Attack()
     {
-      //  aim.SetTrigger("Attack");
+        aim.SetTrigger("Attack");
         lastattackTime = Time.time;
         targetPlayer.photonView.RPC("TakeDamage", RpcTarget.All, damage);
         Debug.Log("Attack");
@@ -86,7 +87,7 @@ public class AIZombie : MonoBehaviourPun
                     if (dist > chaseRange)
                     {
                         targetPlayer = null;
-                      //  aim.SetBool("Move", false);
+                        aim.SetBool("Move", false);
                         rb.velocity = Vector2.zero;
                     }
                 }
