@@ -6,10 +6,12 @@ public class Bullet : MonoBehaviourPun
     [SerializeField] private float bulletSpeed = 20f;
     [SerializeField] private float destroyDelay = 2f;
     [SerializeField] public float bulletDamage;
+    private int attackerId;
+    private bool isMine;
 
     private void Start()
     {
-        Invoke("DestroyBullet", destroyDelay);
+       // Invoke("DestroyBullet", destroyDelay);
     }
 
     private void Update()
@@ -24,20 +26,20 @@ public class Bullet : MonoBehaviourPun
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Zombie"))
+        if (other.tag== "Zombie" )
         {
-            ZombieHit(other.gameObject);
+            AIZombie zombie = other.GetComponent<AIZombie>();
+            zombie.photonView.RPC("TakeDamage", RpcTarget.MasterClient,bulletDamage);
             DestroyBullet();
         }
     }
-
-    private void ZombieHit(GameObject zombie)
-    {
-        zombie.GetComponent<AIZombie>().TakeDamage(bulletDamage);
-    }
-
     private void DestroyBullet()
     {
-        Destroy(gameObject);
+        Destroy(gameObject,2);
+    }
+    public void Initialized(int attackId, bool isMine)
+    {
+        this.attackerId = attackId;
+        this.isMine = isMine;
     }
 }
