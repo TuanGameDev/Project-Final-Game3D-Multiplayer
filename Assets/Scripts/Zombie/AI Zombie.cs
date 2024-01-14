@@ -124,6 +124,7 @@ public class AIZombie : MonoBehaviourPun
         if (photonView.IsMine)
         {
             PhotonNetwork.Destroy(gameObject);
+            PhotonNetwork.Instantiate(dead, transform.position, Quaternion.identity);
         }
     }
     private void OnDrawGizmosSelected()
