@@ -6,14 +6,10 @@ public class Bullet : MonoBehaviourPun
     [SerializeField] private float bulletSpeed = 20f;
     [SerializeField] private float destroyDelay = 2f;
     [SerializeField] public float bulletDamage;
-    private int attackerId;
-    private bool isMine;
-
-
     public GameObject bloodPrefab;
     private void Start()
     {
-       // Invoke("DestroyBullet", destroyDelay);
+        Invoke("DestroyBullet", destroyDelay);
     }
 
     private void Update()
@@ -34,19 +30,12 @@ public class Bullet : MonoBehaviourPun
             AIZombie zombie = other.GetComponent<AIZombie>();
             ShowBloodEffect(other.transform.position);
             zombie.photonView.RPC("TakeDamage", RpcTarget.MasterClient,bulletDamage);
-            DestroyBullet();
         }
     }
     private void DestroyBullet()
     {
-        Destroy(gameObject, destroyDelay);
+        Destroy(gameObject);
     }
-    public void Initialized(int attackId, bool isMine)
-    {
-        this.attackerId = attackId;
-        this.isMine = isMine;
-    }
-
     private void ShowBloodEffect(Vector3 position)
     {
         GameObject blood = Instantiate(bloodPrefab, position, Quaternion.identity);

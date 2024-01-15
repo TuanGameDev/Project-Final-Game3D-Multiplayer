@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
@@ -21,6 +21,7 @@ public class AIZombie : MonoBehaviourPun
     private float lastattackTime;
     public Animator aim;
     public Rigidbody rb;
+    public Transform modelTransform;
     private FPSController[] playerInScene;
     private FPSController targetPlayer;
     private void Start()
@@ -32,19 +33,10 @@ public class AIZombie : MonoBehaviourPun
     {
         if (!PhotonNetwork.IsMasterClient)
             return;
+
         if (targetPlayer != null)
         {
             float dist = Vector2.Distance(transform.position, targetPlayer.transform.position);
-            float face = targetPlayer.transform.position.x - transform.position.x;
-
-            if (face > 0)
-            {
-               // photonView.RPC("FlipLeft", RpcTarget.All);
-            }
-            else
-            {
-               // photonView.RPC("FlipRight", RpcTarget.All);
-            }
 
             if (dist < attackRange && Time.time - lastattackTime >= attackrate)
             {
@@ -61,16 +53,17 @@ public class AIZombie : MonoBehaviourPun
                 rb.velocity = Vector2.zero;
                 aim.SetBool("Move", false);
             }
+            if (modelTransform != null)
+            {
+                Vector3 direction = targetPlayer.transform.position - modelTransform.position;
+                Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
+                modelTransform.rotation = rotation;
+            }
         }
-
-        DetectPlayer();
-    }
-    void Attack()
-    {
-        aim.SetTrigger("Attack");
-        lastattackTime = Time.time;
-        targetPlayer.photonView.RPC("TakeDamage", RpcTarget.All, damage);
-        Debug.Log("Attack");
+        else
+        {
+            DetectPlayer();
+        }
     }
 
     void DetectPlayer()
@@ -78,10 +71,14 @@ public class AIZombie : MonoBehaviourPun
         if (Time.time - lastPlayerDetectTime > playerdetectRate)
         {
             lastPlayerDetectTime = Time.time;
-            playerInScene = FindObjectsOfType<FPSController>();
+            FPSController[] playerInScene = FindObjectsOfType<FPSController>();
+            float closestDistance = Mathf.Infinity;
+            FPSController closestPlayer = null;
+
             foreach (FPSController player in playerInScene)
             {
                 float dist = Vector2.Distance(transform.position, player.transform.position);
+
                 if (player == targetPlayer)
                 {
                     if (dist > chaseRange)
@@ -91,22 +88,35 @@ public class AIZombie : MonoBehaviourPun
                         rb.velocity = Vector2.zero;
                     }
                 }
-                else if (dist < chaseRange)
+                else if (dist < chaseRange && dist < closestDistance)
                 {
-                    if (targetPlayer == null)
-                    {
-                        targetPlayer = player;
-                    }
+                    closestDistance = dist;
+                    closestPlayer = player;
+                }
+            }
+
+            if (closestPlayer != null)
+            {
+                targetPlayer = closestPlayer;
+                if (modelTransform != null)
+                {
+                    Vector3 direction = targetPlayer.transform.position - modelTransform.position;
+                    Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
+                    modelTransform.rotation = rotation;
                 }
             }
         }
     }
+    void Attack()
+    {
+        aim.SetTrigger("Attack");
+        lastattackTime = Time.time;
+        targetPlayer.photonView.RPC("TakeDamage", RpcTarget.All, damage);
+        Debug.Log("Attack");
+    }
     [PunRPC]
     public void TakeDamage(float damageAmount)
     {
-        if (!photonView.IsMine)
-            return;
-
         currentHP -= damageAmount;
         photonView.RPC("EnemyStatusInfo", RpcTarget.All, currentHP);
 
