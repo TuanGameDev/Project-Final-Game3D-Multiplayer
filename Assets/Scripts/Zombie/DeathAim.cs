@@ -6,7 +6,7 @@ public class DeathAim : MonoBehaviour
     public float destroyTime;
     void Start()
     {
-        Invoke("OnDestroyObject",destroyTime);
+        Invoke(nameof(OnDestroyObject),destroyTime);
     }
     private void OnDestroyObject()
     {

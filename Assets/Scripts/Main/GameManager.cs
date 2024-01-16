@@ -9,7 +9,7 @@ using Photon.Realtime;
 [System.Serializable]
 public class ZombieInfo
 {
-    public string prefabPath;
+    public GameObject[] prefabPath;
     public float maxEnemies;
     public List<Transform> spawnCheckRadiusPirate = new List<Transform>();
     public List<GameObject> currentEnemies = new List<GameObject>();
@@ -111,7 +111,22 @@ public class GameManager : MonoBehaviourPun
             Vector3 randomOffset = Random.insideUnitCircle * spawnPoint.localScale.x;
             Vector3 spawnPosition = spawnPoint.position + randomOffset;
 
-            GameObject enemy = PhotonNetwork.Instantiate(zombieSpawnInfo.prefabPath, spawnPosition, Quaternion.identity);
+            if (zombieSpawnInfo.prefabPath.Length == 0)
+            {
+                Debug.LogError("Prefab array is empty!");
+                return;
+            }
+
+            int randomPrefabIndex = Random.Range(0, zombieSpawnInfo.prefabPath.Length);
+            GameObject prefab = zombieSpawnInfo.prefabPath[randomPrefabIndex];
+
+            if (prefab == null)
+            {
+                Debug.LogError("Prefab at index " + randomPrefabIndex + " is null!");
+                return;
+            }
+
+            GameObject enemy = PhotonNetwork.Instantiate(prefab.name, spawnPosition, Quaternion.identity);
             zombieSpawnInfo.currentEnemies.Add(enemy);
         }
     }
