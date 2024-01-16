@@ -15,10 +15,10 @@ public class AIZombie : MonoBehaviourPun
     public float maxHP;
     public float chaseRange;
     public float attackRange;
-    public float playerdetectRate;
+    public float playerDetectRate;
     private float lastPlayerDetectTime;
-    public float attackrate;
-    private float lastattackTime;
+    public float attackRate;
+    private float lastAttackTime;
     public Animator aim;
     public Rigidbody rb;
     public Transform modelTransform;
@@ -38,7 +38,7 @@ public class AIZombie : MonoBehaviourPun
         {
             float dist = Vector2.Distance(transform.position, targetPlayer.transform.position);
 
-            if (dist < attackRange && Time.time - lastattackTime >= attackrate)
+            if (dist < attackRange && Time.time - lastAttackTime >= attackRate)
             {
                 Attack();
             }
@@ -58,17 +58,13 @@ public class AIZombie : MonoBehaviourPun
     }
     void DetectPlayer()
     {
-        if (Time.time - lastPlayerDetectTime > playerdetectRate)
+        if (Time.time - lastPlayerDetectTime > playerDetectRate)
         {
             lastPlayerDetectTime = Time.time;
-            FPSController[] playerInScene = FindObjectsOfType<FPSController>();
-            float closestDistance = Mathf.Infinity;
-            FPSController closestPlayer = null;
-
+            playerInScene = FindObjectsOfType<FPSController>();
             foreach (FPSController player in playerInScene)
             {
                 float dist = Vector2.Distance(transform.position, player.transform.position);
-
                 if (player == targetPlayer)
                 {
                     if (dist > chaseRange)
@@ -78,21 +74,18 @@ public class AIZombie : MonoBehaviourPun
                         rb.velocity = Vector2.zero;
                     }
                 }
-                else if (dist < chaseRange && dist < closestDistance)
+                else if (dist < chaseRange)
                 {
-                    closestDistance = dist;
-                    closestPlayer = player;
-                }
-            }
-
-            if (closestPlayer != null)
-            {
-                targetPlayer = closestPlayer;
-                if (modelTransform != null)
-                {
-                    Vector3 direction = targetPlayer.transform.position - modelTransform.position;
-                    Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
-                    modelTransform.rotation = rotation;
+                    if (targetPlayer == null)
+                    {
+                        targetPlayer = player;
+                    }
+                    if (modelTransform != null)
+                    {
+                        Vector3 direction = targetPlayer.transform.position - modelTransform.position;
+                        Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
+                        modelTransform.rotation = rotation;
+                    }
                 }
             }
         }
@@ -100,7 +93,7 @@ public class AIZombie : MonoBehaviourPun
     void Attack()
     {
         aim.SetTrigger("Attack");
-        lastattackTime = Time.time;
+        lastAttackTime = Time.time;
         targetPlayer.photonView.RPC("TakeDamage", RpcTarget.All, damage);
         Debug.Log("Attack");
     }
