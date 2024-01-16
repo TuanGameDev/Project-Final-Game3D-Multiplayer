@@ -53,19 +53,9 @@ public class AIZombie : MonoBehaviourPun
                 rb.velocity = Vector2.zero;
                 aim.SetBool("Move", false);
             }
-            if (modelTransform != null)
-            {
-                Vector3 direction = targetPlayer.transform.position - modelTransform.position;
-                Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
-                modelTransform.rotation = rotation;
-            }
         }
-        else
-        {
-            DetectPlayer();
-        }
+        DetectPlayer();
     }
-
     void DetectPlayer()
     {
         if (Time.time - lastPlayerDetectTime > playerdetectRate)
