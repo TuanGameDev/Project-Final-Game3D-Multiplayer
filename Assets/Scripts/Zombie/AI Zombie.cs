@@ -22,7 +22,6 @@ public class AIZombie : MonoBehaviourPun
     public Animator aim;
     public Rigidbody rb;
     public Transform modelTransform;
-    private FPSController[] playerInScene;
     private FPSController targetPlayer;
     private void Start()
     {
@@ -36,7 +35,7 @@ public class AIZombie : MonoBehaviourPun
 
         if (targetPlayer != null)
         {
-            float dist = Vector2.Distance(transform.position, targetPlayer.transform.position);
+            float dist = Vector3.Distance(transform.position, targetPlayer.transform.position);
 
             if (dist < attackRange && Time.time - lastAttackTime >= attackRate)
             {
@@ -50,28 +49,29 @@ public class AIZombie : MonoBehaviourPun
             }
             else
             {
-                rb.velocity = Vector2.zero;
+                rb.velocity = Vector3.zero;
                 aim.SetBool("Move", false);
             }
         }
         DetectPlayer();
     }
+
     void DetectPlayer()
     {
         if (Time.time - lastPlayerDetectTime > playerDetectRate)
         {
             lastPlayerDetectTime = Time.time;
-            playerInScene = FindObjectsOfType<FPSController>();
+            FPSController[] playerInScene = FindObjectsOfType<FPSController>();
             foreach (FPSController player in playerInScene)
             {
-                float dist = Vector2.Distance(transform.position, player.transform.position);
+                float dist = Vector3.Distance(transform.position, player.transform.position);
                 if (player == targetPlayer)
                 {
                     if (dist > chaseRange)
                     {
                         targetPlayer = null;
                         aim.SetBool("Move", false);
-                        rb.velocity = Vector2.zero;
+                        rb.velocity = Vector3.zero;
                     }
                 }
                 else if (dist < chaseRange)
@@ -124,7 +124,5 @@ public class AIZombie : MonoBehaviourPun
         Gizmos.DrawWireSphere(transform.position, chaseRange);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, playerDetectRate);
     }
 }
