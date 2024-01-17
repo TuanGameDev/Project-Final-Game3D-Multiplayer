@@ -63,14 +63,8 @@ public class GameManager : MonoBehaviourPun
     {
         playersInGame++;
         if (playersInGame == PhotonNetwork.PlayerList.Length)
-        {
             SpawnPlayer();
-            SpawnGun();          
-        }
-        else if (playersInGame > 1)
-        {
-            TrySpawnZombie();
-        }
+            SpawnGun();
     }
 
     private void SpawnGun()
@@ -86,7 +80,6 @@ public class GameManager : MonoBehaviourPun
         GameObject playerObject = PhotonNetwork.Instantiate(PlayerSelection.playerselection.playerPrefabName, spawnPoint[Random.Range(0, spawnPoint.Length)].position, Quaternion.identity);
         playerObject.GetComponent<PhotonView>().RPC("Initialized", RpcTarget.All, PhotonNetwork.LocalPlayer);
     }
-
     void TrySpawn(ZombieInfo zombieSpawnInfo)
     {
         for (int x = zombieSpawnInfo.currentEnemies.Count - 1; x >= 0; x--)
