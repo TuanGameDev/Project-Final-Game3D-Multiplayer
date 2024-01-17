@@ -124,5 +124,7 @@ public class AIZombie : MonoBehaviourPun
         Gizmos.DrawWireSphere(transform.position, chaseRange);
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, playerDetectRate);
     }
 }

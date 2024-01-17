@@ -228,7 +228,6 @@ public class FPSController : MonoBehaviourPun
         healthSlider.value = 1.0f;
     }
     #endregion
-
     public void CheckAiming()
     {
         Ray ray = cameraHolder.ScreenPointToRay(new Vector3(Screen.width / 2f, Screen.height / 2f, 0f));
@@ -252,7 +251,6 @@ public class FPSController : MonoBehaviourPun
             }
         }
     }
-
     private void MoveObjectToPosition(Vector3 targetPosition)
     {
         Vector3 newPosition = new Vector3(targetPosition.x, targetPosition.y, targetPosition.z);
