@@ -7,10 +7,16 @@ using UnityEngine.UI;
 public class PlayerSelection : MonoBehaviour
 {
     [Header("Select Player")]
-    public GameObject selectButton;
     public GameObject creatRoomButton;
     public GameObject findRoomButton;
     public GameObject iconPlayer;
+
+    [Header("Popup UI")]
+    public GameObject selectButton;
+    public GameObject inputfielnamePopup;
+    public GameObject findroomPopup;
+    public GameObject creatroomPopup;
+
     public string playerPrefabName;
     public GameObject[] playerModel;
     public int selectedCharacter=0;
@@ -36,6 +42,9 @@ public class PlayerSelection : MonoBehaviour
             player.SetActive(false);
         }
         selectButton.SetActive(true);
+        inputfielnamePopup.SetActive(true);
+        findroomPopup.SetActive(false);
+        creatroomPopup.SetActive(false);
         selectedCharacter = characterIndex;
         playerPrefabName = playerModel[selectedCharacter].GetComponent<PlayerModelName>().playerName;
         playerModel[selectedCharacter].SetActive(true);
