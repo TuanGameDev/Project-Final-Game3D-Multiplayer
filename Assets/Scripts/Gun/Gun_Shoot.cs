@@ -2,8 +2,9 @@
 using Photon.Pun;
 using System.Collections;
 using TMPro;
-using UnityEngine.UIElements;
-using Photon.Pun.Demo.Asteroids;
+using UnityEngine.UI;
+using Unity.VisualScripting;
+
 
 public class Gun_Shoot : MonoBehaviourPun
 {
