@@ -6,7 +6,7 @@ public class MainView : MonoBehaviour
 {
     public GameObject mainsreenPopup;
     public GameObject loadingPopup;
-    public void ShowmainsreenPopup()
+    public void ShowMainsreenPopup()
     {
         mainsreenPopup.SetActive(true);
         loadingPopup.SetActive(false);

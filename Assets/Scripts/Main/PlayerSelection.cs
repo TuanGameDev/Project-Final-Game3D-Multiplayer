@@ -49,10 +49,6 @@ public class PlayerSelection : MonoBehaviour
         playerPrefabName = playerModel[selectedCharacter].GetComponent<PlayerModelName>().playerName;
         playerModel[selectedCharacter].SetActive(true);
     }
-    public void SelectChar()
-    {
-        PlayerPrefs.SetInt("SelectedCharacter", selectedCharacter);
-    }
     private IEnumerator HideMessageAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
@@ -61,6 +57,7 @@ public class PlayerSelection : MonoBehaviour
     public void ShowuiRoom()
     {
         selectButton.SetActive(false);
+        iconPlayer.SetActive(false);
         creatRoomButton.SetActive(true);
         findRoomButton.SetActive(true);
     }
