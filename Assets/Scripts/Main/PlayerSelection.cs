@@ -16,11 +16,12 @@ public class PlayerSelection : MonoBehaviour
     public GameObject inputfielnamePopup;
     public GameObject findroomPopup;
     public GameObject creatroomPopup;
+    public GameObject playerselectionPopup;
+
 
     public string playerPrefabName;
     public GameObject[] playerModel;
-    public int selectedCharacter=0;
-    public Button[] characterIcons;
+    private int selectedCharacter=0;
     public string selectedCharacterName;
     public TextMeshProUGUI messageText;
     public static PlayerSelection playerselection;
@@ -60,5 +61,9 @@ public class PlayerSelection : MonoBehaviour
         iconPlayer.SetActive(false);
         creatRoomButton.SetActive(true);
         findRoomButton.SetActive(true);
+    }
+    public void ShowPlayerSelection()
+    {
+        playerselectionPopup.SetActive(true);
     }
 }
