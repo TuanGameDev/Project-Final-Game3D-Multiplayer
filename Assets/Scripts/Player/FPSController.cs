@@ -68,7 +68,8 @@ public class FPSController : MonoBehaviourPun
         playerName.UpdateNameTag(player.NickName);
         GameManager.gamemanager.players[id - 1] = this;
         UpdateHpText(currentHP, maxHP);
-        UpdateHealthSlider(maxHP);
+        UpdateHealthSlider(currentHP);
+        UpdateHeal(maxHP);
         if (player.IsLocal)
             me = this;
     }
@@ -221,11 +222,15 @@ public class FPSController : MonoBehaviourPun
     {
         hpText.text = curHP + "/" + maxHP;
     }
+    public void UpdateHeal(int maxVal)
+    {
+        maxHealthValue = maxVal;
+        healthSlider.value = 1.0f;
 
+    }
     void UpdateHealthSlider(int heal)
     {
-        maxHealthValue = heal;
-        healthSlider.value = 1.0f;
+        healthSlider.value = (float)heal / maxHealthValue;
     }
     #endregion
     public void CheckAiming()
