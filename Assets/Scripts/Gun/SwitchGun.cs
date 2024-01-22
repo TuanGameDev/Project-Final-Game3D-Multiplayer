@@ -10,6 +10,7 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
     private bool canSwitch = true;
     private float lastSwitchTime;
     private bool gunActivated = true;
+
     private void Start()
     {
         SelectWeapon();
@@ -28,7 +29,7 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
                     SwitchWeapon();
                 }
 
-                if (Input.GetKeyDown(KeyCode.Alpha1) || (Input.GetKeyDown(KeyCode.Alpha2) && transform.childCount >= 2) || (Input.GetKeyDown(KeyCode.Alpha3) && transform.childCount >= 3))
+                if (Input.GetKeyDown(KeyCode.Alpha1) || (Input.GetKeyDown(KeyCode.Alpha2) && transform.childCount >= 2))
                 {
                     SwitchWeapon();
                 }
@@ -65,15 +66,11 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
             }
             else if (Input.GetKeyDown(KeyCode.Alpha1))
             {
-                selectedWeapon = 0;
+                SelectWeaponWithTag("Rifle");
             }
             else if (Input.GetKeyDown(KeyCode.Alpha2) && childCount >= 2)
             {
-                selectedWeapon = 1;
-            }
-            else if (Input.GetKeyDown(KeyCode.Alpha3) && childCount >= 3)
-            {
-                selectedWeapon = 2;
+                SelectWeaponWithTag("Pistol");
             }
 
             if (previousSelectedWeapon != selectedWeapon)
@@ -86,6 +83,10 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
                 {
                     gunActivated = true;
                     FPSController.me.UpdateSelectedGun(newGun);
+                    if (previousSelectedWeapon != -1)
+                    {
+                        ToggleMuzzle(false, previousSelectedWeapon);
+                    }
                 }
                 else
                 {
@@ -93,17 +94,36 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
                 }
 
                 SelectWeapon();
+            }          
+        }
+    }
+    void ToggleMuzzle(bool toggle, int weaponIndex)
+    {
+        Transform weaponToToggle = transform.GetChild(weaponIndex);
+        if (weaponToToggle != null)
+        {
+            Gun_Shoot gunScript = weaponToToggle.GetComponent<Gun_Shoot>();
+            if (gunScript != null)
+            {
+                gunScript.ToggleMuzzle(toggle);
             }
-            photonView.RPC("SyncSelectedWeapon", RpcTarget.Others, selectedWeapon);
+        }
+    }
+    void SelectWeaponWithTag(string weaponTag)
+    {
+        int i = 0;
+        foreach (Transform weapon in transform)
+        {
+            if (weapon.CompareTag(weaponTag))
+            {
+                selectedWeapon = i;
+                break;
+            }
+            i++;
         }
     }
 
-    [PunRPC]
-    void SyncSelectedWeapon(int newSelectedWeapon)
-    {
-        selectedWeapon = newSelectedWeapon;
-        SelectWeapon();
-    }
+
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
     {
         if (stream.IsWriting)
@@ -116,6 +136,7 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
             SelectWeapon();
         }
     }
+
     void SelectWeapon()
     {
         int i = 0;
@@ -139,5 +160,4 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
             i++;
         }
     }
-
 }

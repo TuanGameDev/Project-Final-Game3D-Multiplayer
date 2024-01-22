@@ -126,9 +126,13 @@ public class Gun_Shoot : MonoBehaviourPun
         yield return new WaitForSeconds(0.1f);
         muzzle.SetActive(false);
     }
-
+    public void ToggleMuzzle(bool toggle)
+    {
+        muzzle.SetActive(toggle);
+    }
     void UpdateAmmoUI()
     {
         txtAmmo.text = bulletsLeft + " / " + magazineSize;
     }
+
 }
