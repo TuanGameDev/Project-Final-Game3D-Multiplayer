@@ -5,12 +5,19 @@ using UnityEngine;
 
 public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
 {
+    public static SwitchGun instance;
     public int selectedWeapon = 0;
     public float switchCooldown = 0.1f;
-    private bool canSwitch = true;
+    public bool canSwitch = true;
     private float lastSwitchTime;
     private bool gunActivated = true;
-
+    private void Awake()
+    {
+        if(instance == null)
+        {
+            instance = this;
+        }
+    }
     private void Start()
     {
         SelectWeapon();

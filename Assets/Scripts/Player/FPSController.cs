@@ -7,6 +7,7 @@ using Photon.Pun.Demo.PunBasics;
 using TMPro;
 using UnityEngine.UI;
 using System;
+using System.Linq;
 
 public class FPSController : MonoBehaviourPun
 {
@@ -39,6 +40,8 @@ public class FPSController : MonoBehaviourPun
     [SerializeField] private GameObject pickUpUI;
     [SerializeField][Min(1)] private float hitRange = 1.5f;
     private bool canDropGun = true;
+    [SerializeField] private bool hasRifle = false;
+    [SerializeField] private bool hasPistol = false;
 
     Rigidbody rb;
     Animator ani;
@@ -117,6 +120,8 @@ public class FPSController : MonoBehaviourPun
             if (Input.GetMouseButton(0))
             {
                 photonView.RPC("ShootRPC", RpcTarget.AllBuffered);
+                SwitchGun.instance.canSwitch = false;
+                Invoke("ResetSwitchCooldown", 0.2f);
             }
 
             if (Input.GetKeyDown(KeyCode.R))
@@ -289,27 +294,54 @@ public class FPSController : MonoBehaviourPun
     [PunRPC]
     void PickUpGunRPC(int gunViewID)
     {
-        GameObject gun = PhotonView.Find(gunViewID).gameObject;
+        GameObject gun = PhotonView.Find(gunViewID)?.gameObject;
 
-        if (!pickedUpGuns.Contains(gun))
+        if (gun != null)
         {
-            gun.transform.parent = transformPickup;
-            gun.transform.localPosition = Vector3.zero;
-            gun.transform.localRotation = Quaternion.identity;
-            gun.GetComponent<Rigidbody>().isKinematic = true;
-            gun.GetComponent<BoxCollider>().isTrigger = true;
-            pickedUpGun = gun;
-            SelectGun();
-            pickedUpGuns.Add(gun);
-            Gun_Shoot gunShoot = gun.GetComponent<Gun_Shoot>();
-            if (gunShoot != null)
+            if (!pickedUpGuns.Contains(gun))
             {
-                gunShoot.originalFOV = cameraHolder.fieldOfView;
-                gunShoot.playerCamera = cameraHolder;
-                gunShoot.txtAmmo.gameObject.SetActive(true);
+                if (gun.CompareTag("Rifle"))
+                {
+                    if (hasRifle)
+                    {
+                        photonView.RPC("DropGunRPC", RpcTarget.AllBuffered, pickedUpGun.GetPhotonView().ViewID);
+                    }
+                    hasRifle = true;
+                }
+                if (gun.CompareTag("Pistol"))
+                {
+                    if (hasPistol)
+                    {
+                        photonView.RPC("DropGunRPC", RpcTarget.AllBuffered, pickedUpGun.GetPhotonView().ViewID);
+                    }
+                    hasPistol = true;
+                }
+
+                gun.transform.parent = transformPickup;
+                gun.transform.localPosition = Vector3.zero;
+                gun.transform.localRotation = Quaternion.identity;
+                gun.GetComponent<Rigidbody>().isKinematic = true;
+                gun.GetComponent<BoxCollider>().isTrigger = true;
+                pickedUpGun = gun;
+                SelectGun();
+                pickedUpGuns.Add(gun);
+                Gun_Shoot gunShoot = gun.GetComponent<Gun_Shoot>();
+
+                if (gunShoot != null)
+                {
+                    gunShoot.originalFOV = cameraHolder.fieldOfView;
+                    gunShoot.playerCamera = cameraHolder;
+                    gunShoot.txtAmmo.gameObject.SetActive(true);
+                }
+                else if(gunShoot.playerCamera == null)
+                {
+                    Debug.Log("...");
+                }
+
             }
         }
     }
+
 
     void DropGun()
     {
@@ -324,8 +356,17 @@ public class FPSController : MonoBehaviourPun
     void DropGunRPC(int gunViewID)
     {
         GameObject gun = PhotonView.Find(gunViewID).gameObject;
-        if (pickedUpGun == gun)
+        if (gun != null && pickedUpGun == gun)
         {
+            if (gun.CompareTag("Rifle"))
+            {
+                hasRifle = false;
+            }
+            else if (gun.CompareTag("Pistol"))
+            {
+                hasPistol = false;
+            }
+
             gun.transform.parent = null;
             gun.GetComponent<Rigidbody>().isKinematic = false;
             gun.GetComponent<BoxCollider>().isTrigger = false;
@@ -347,6 +388,7 @@ public class FPSController : MonoBehaviourPun
             }
         }
     }
+
     IEnumerator DropGunCooldown()
     {
         canDropGun = false;
@@ -425,5 +467,8 @@ public class FPSController : MonoBehaviourPun
             }
         }
     }
-
+    void ResetSwitchCooldown()
+    {
+        SwitchGun.instance.canSwitch = true;
+    }
 }
