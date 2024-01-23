@@ -23,7 +23,7 @@ public class Gun_Shoot : MonoBehaviourPun
     public Transform bulletTransForms;
     public RaycastHit rayHit;
     public TextMeshProUGUI txtAmmo;
-
+    public Sprite icon;
     public float zoomFOV = 40f;
     public bool isZoomed = false;
     public float originalFOV;
@@ -126,9 +126,13 @@ public class Gun_Shoot : MonoBehaviourPun
         yield return new WaitForSeconds(0.1f);
         muzzle.SetActive(false);
     }
-
+    public void ToggleMuzzle(bool toggle)
+    {
+        muzzle.SetActive(toggle);
+    }
     void UpdateAmmoUI()
     {
         txtAmmo.text = bulletsLeft + " / " + magazineSize;
     }
+
 }
