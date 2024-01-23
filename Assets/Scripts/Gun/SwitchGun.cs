@@ -90,6 +90,18 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
                 {
                     gunActivated = true;
                     FPSController.me.UpdateSelectedGun(newGun);
+                    if (newGun.CompareTag("Rifle"))
+                    {
+                        FPSController.me.rifleIconImage.sprite = newGun.GetComponent<Gun_Shoot>().icon;
+                        FPSController.me.rifleIconImage.gameObject.SetActive(true);
+                        FPSController.me.pistolIconImage.gameObject.SetActive(false);
+                    }
+                    else if (newGun.CompareTag("Pistol"))
+                    {
+                        FPSController.me.pistolIconImage.sprite = newGun.GetComponent<Gun_Shoot>().icon;
+                        FPSController.me.pistolIconImage.gameObject.SetActive(true);
+                        FPSController.me.rifleIconImage.gameObject.SetActive(false);
+                    }
                     if (previousSelectedWeapon != -1)
                     {
                         ToggleMuzzle(false, previousSelectedWeapon);

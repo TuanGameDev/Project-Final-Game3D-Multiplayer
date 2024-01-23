@@ -41,6 +41,9 @@ public class FPSController : MonoBehaviourPun
     private bool canDropGun = true;
     [SerializeField] private bool hasRifle = false;
     [SerializeField] private bool hasPistol = false;
+    [Header("UI Icons")]
+    [SerializeField] public Image rifleIconImage;
+    [SerializeField] public Image pistolIconImage;
 
     Rigidbody rb;
     Animator ani;
@@ -328,6 +331,18 @@ public class FPSController : MonoBehaviourPun
                     gunShoot.originalFOV = cameraHolder.fieldOfView;
                     gunShoot.playerCamera = cameraHolder;
                     gunShoot.txtAmmo.gameObject.SetActive(photonView.IsMine);
+                    if (gun.CompareTag("Rifle"))
+                    {
+                        rifleIconImage.sprite = gunShoot.icon;
+                        rifleIconImage.gameObject.SetActive(true);
+                        pistolIconImage.gameObject.SetActive(false);
+                    }
+                    else if (gun.CompareTag("Pistol"))
+                    {
+                        pistolIconImage.sprite = gunShoot.icon;
+                        pistolIconImage.gameObject.SetActive(true);
+                        rifleIconImage.gameObject.SetActive(false);
+                    }
                 }
             }
         }
@@ -352,10 +367,32 @@ public class FPSController : MonoBehaviourPun
             if (gun.CompareTag("Rifle"))
             {
                 hasRifle = false;
+                rifleIconImage.gameObject.SetActive(hasRifle);
+
+                if (hasPistol)
+                {
+                    pistolIconImage.sprite = pickedUpGuns.FirstOrDefault(g => g.CompareTag("Pistol"))?.GetComponent<Gun_Shoot>().icon;
+                    pistolIconImage.gameObject.SetActive(true);
+                }
+                else
+                {
+                    pistolIconImage.gameObject.SetActive(false);
+                }
             }
             else if (gun.CompareTag("Pistol"))
             {
                 hasPistol = false;
+                pistolIconImage.gameObject.SetActive(hasPistol);
+
+                if (hasRifle)
+                {
+                    rifleIconImage.sprite = pickedUpGuns.FirstOrDefault(g => g.CompareTag("Rifle"))?.GetComponent<Gun_Shoot>().icon;
+                    rifleIconImage.gameObject.SetActive(true);
+                }
+                else
+                {
+                    rifleIconImage.gameObject.SetActive(false);
+                }
             }
 
             gun.transform.parent = null;
@@ -372,6 +409,7 @@ public class FPSController : MonoBehaviourPun
             {
                 pickedUpGun = null;
             }
+
             Gun_Shoot gunShoot = gun.GetComponent<Gun_Shoot>();
             if (gunShoot != null)
             {
@@ -379,6 +417,8 @@ public class FPSController : MonoBehaviourPun
             }
         }
     }
+
+
 
     IEnumerator DropGunCooldown()
     {

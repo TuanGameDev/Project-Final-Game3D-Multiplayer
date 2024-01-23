@@ -23,7 +23,7 @@ public class Gun_Shoot : MonoBehaviourPun
     public Transform bulletTransForms;
     public RaycastHit rayHit;
     public TextMeshProUGUI txtAmmo;
-
+    public Sprite icon;
     public float zoomFOV = 40f;
     public bool isZoomed = false;
     public float originalFOV;
