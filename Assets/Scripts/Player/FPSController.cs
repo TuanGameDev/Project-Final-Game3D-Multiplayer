@@ -30,7 +30,6 @@ public class FPSController : MonoBehaviourPun
     [SerializeField] private GameObject _flashLight;
     [SerializeField] Camera cameraHolder;
     [SerializeField] float mouseSensitivity, sprintSpeed, walkSpeed, jumpForce, smoothTime;
-
     [Header("PickUp")]
     [SerializeField] private Transform transformPickup;
     [SerializeField] public GameObject pickedUpGun;
@@ -83,21 +82,18 @@ public class FPSController : MonoBehaviourPun
         if (!photonView.IsMine)
         {
             canvashealth.enabled = false;
-        }
+            if (cameraHolder)
+                cameraHolder.gameObject.SetActive(false);
 
-        if (PV.IsMine)
-        {
-            Gun_Shoot.instance.txtAmmo.gameObject.SetActive(false);
-        }
-        else
-        {
-            Destroy(GetComponentInChildren<Camera>().gameObject);
-            Destroy(rb);
-            Destroy(crl);
             if (_flashLight)
                 _flashLight.SetActive(false);
+            if (Gun_Shoot.instance != null)
+            {
+                Gun_Shoot.instance.txtAmmo.gameObject.SetActive(photonView.IsMine);
+            }
         }
     }
+
 
     void Update()
     {
@@ -331,13 +327,8 @@ public class FPSController : MonoBehaviourPun
                 {
                     gunShoot.originalFOV = cameraHolder.fieldOfView;
                     gunShoot.playerCamera = cameraHolder;
-                    gunShoot.txtAmmo.gameObject.SetActive(true);
+                    gunShoot.txtAmmo.gameObject.SetActive(photonView.IsMine);
                 }
-                else if(gunShoot.playerCamera == null)
-                {
-                    Debug.Log("...");
-                }
-
             }
         }
     }
