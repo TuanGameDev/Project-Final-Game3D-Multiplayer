@@ -58,8 +58,7 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
             int childCount = transform.childCount;
 
             if (childCount == 0)
-            {
-                Debug.LogWarning("No weapons available!");
+            {              
                 return;
             }
 
@@ -118,16 +117,20 @@ public class SwitchGun : MonoBehaviourPunCallbacks, IPunObservable
     }
     void ToggleMuzzle(bool toggle, int weaponIndex)
     {
-        Transform weaponToToggle = transform.GetChild(weaponIndex);
-        if (weaponToToggle != null)
+        if (weaponIndex >= 0 && weaponIndex < transform.childCount)
         {
-            Gun_Shoot gunScript = weaponToToggle.GetComponent<Gun_Shoot>();
-            if (gunScript != null)
+            Transform weaponToToggle = transform.GetChild(weaponIndex);
+            if (weaponToToggle != null)
             {
-                gunScript.ToggleMuzzle(toggle);
+                Gun_Shoot gunScript = weaponToToggle.GetComponent<Gun_Shoot>();
+                if (gunScript != null)
+                {
+                    gunScript.ToggleMuzzle(toggle);
+                }
             }
         }
     }
+
     void SelectWeaponWithTag(string weaponTag)
     {
         int i = 0;

@@ -274,7 +274,7 @@ public class FPSController : MonoBehaviourPun
         {
             if (hit.collider.CompareTag("Pickable") || hit.collider.CompareTag("Rifle") || hit.collider.CompareTag("Pistol"))
             {
-                if (!pickedUpGuns.Contains(hit.collider.gameObject))
+                if (!pickedUpGuns.Contains(hit.collider.gameObject) && !IsGunPickedUpByOtherPlayer(hit.collider.gameObject))
                 {
                     hit.collider.GetComponent<Highlight>()?.ToggleHighlight(true);
                     pickUpUI.SetActive(true);
@@ -282,13 +282,32 @@ public class FPSController : MonoBehaviourPun
             }
         }
     }
+    bool IsGunPickedUpByOtherPlayer(GameObject gun)
+    {
+        FPSController[] allPlayers = GameManager.gamemanager.players;
+
+        foreach (FPSController player in allPlayers)
+        {
+            if (player != null && player.pickedUpGuns.Contains(gun))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void PickUpGun()
     {
         if (pickUpUI != null && pickUpUI.activeSelf && hit.collider != null)
         {
-            photonView.RPC("PickUpGunRPC", RpcTarget.AllBuffered, hit.collider.gameObject.GetPhotonView().ViewID);
+            if (!IsGunPickedUpByOtherPlayer(hit.collider.gameObject))
+            {
+                photonView.RPC("PickUpGunRPC", RpcTarget.AllBuffered, hit.collider.gameObject.GetPhotonView().ViewID);
+            }
         }
     }
+
 
     [PunRPC]
     void PickUpGunRPC(int gunViewID)
@@ -297,6 +316,11 @@ public class FPSController : MonoBehaviourPun
 
         if (gun != null)
         {
+            if (hasRifle && hasPistol)
+            {
+                return;
+            }
+
             if (!pickedUpGuns.Contains(gun))
             {
                 if (gun.CompareTag("Rifle"))
@@ -307,7 +331,7 @@ public class FPSController : MonoBehaviourPun
                     }
                     hasRifle = true;
                 }
-                if (gun.CompareTag("Pistol"))
+                else if (gun.CompareTag("Pistol"))
                 {
                     if (hasPistol)
                     {
@@ -315,7 +339,7 @@ public class FPSController : MonoBehaviourPun
                     }
                     hasPistol = true;
                 }
-
+                gun.GetPhotonView().TransferOwnership(photonView.Owner);
                 gun.transform.parent = transformPickup;
                 gun.transform.localPosition = Vector3.zero;
                 gun.transform.localRotation = Quaternion.identity;
@@ -347,7 +371,6 @@ public class FPSController : MonoBehaviourPun
             }
         }
     }
-
 
     void DropGun()
     {
