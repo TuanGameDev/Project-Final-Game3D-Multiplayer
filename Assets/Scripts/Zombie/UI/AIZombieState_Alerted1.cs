@@ -30,7 +30,6 @@ public class AIZombieState_Alerted1 : AIZombieState
 	// ------------------------------------------------------------------
 	public override void		OnEnterState()			
 	{
-		Debug.Log ("Entering Alerted State");
 		base.OnEnterState ();
 		if (_zombieStateMachine == null)
 			return;
