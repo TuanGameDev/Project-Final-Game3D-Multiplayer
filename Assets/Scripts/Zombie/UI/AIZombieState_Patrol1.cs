@@ -30,7 +30,6 @@ public class AIZombieState_Patrol1 : AIZombieState
 	// ------------------------------------------------------------------
 	public override void		OnEnterState()			
 	{
-		Debug.Log ("Entering Patrol State");
 		base.OnEnterState ();
 		if (_zombieStateMachine == null)
 			return;
