@@ -134,7 +134,14 @@ public abstract class AIStateMachine : MonoBehaviour
 		_animator	=	GetComponent<Animator>();
 		_navAgent	=	GetComponent<NavMeshAgent>();
 		_collider	=	GetComponent<Collider>();
-	
+
+		// Do we have a valid Game Scene Manager
+		if (GameSceneManager.instance!=null)
+		{
+			// Register State Machines with Scene Database
+			if (_collider) 			GameSceneManager.instance.RegisterAIStateMachine( _collider.GetInstanceID(), this );
+			if (_sensorTrigger)		GameSceneManager.instance.RegisterAIStateMachine( _sensorTrigger.GetInstanceID(), this );
+		}
 
 	}
 
@@ -186,7 +193,11 @@ public abstract class AIStateMachine : MonoBehaviour
 		// and set their State Machine references to this state machine
 		if (_animator)
 		{
-			
+			AIStateMachineLink[]  scripts	=	_animator.GetBehaviours<AIStateMachineLink>();
+			foreach( AIStateMachineLink script in scripts )
+			{
+				script.stateMachine = this;
+			}
 		}
 	}
 

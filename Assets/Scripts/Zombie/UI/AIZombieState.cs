@@ -201,7 +201,13 @@ public abstract class AIZombieState : AIState
 				if (hit.transform.gameObject.layer == _bodyPartLayer) 
 				{
 					// And assuming it is not our own body part
-					
+					if (_stateMachine != GameSceneManager.instance.GetAIStateMachine (hit.rigidbody.GetInstanceID ())) 
+					{
+						// Store the collider, distance and hit info.
+						closestColliderDistance = hit.distance;
+						closestCollider = hit.collider;
+						hitInfo = hit;
+					}
 				} 
 				else 
 				{
