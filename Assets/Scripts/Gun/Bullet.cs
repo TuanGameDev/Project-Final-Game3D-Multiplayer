@@ -1,4 +1,4 @@
-﻿    using UnityEngine;
+﻿using UnityEngine;
 using Photon.Pun;
 
 public class Bullet : MonoBehaviourPun
@@ -21,7 +21,6 @@ public class Bullet : MonoBehaviourPun
     {
         transform.Translate(Vector3.forward * bulletSpeed * Time.deltaTime);
     }
-
 
     private void OnTriggerEnter(Collider other)
     {
