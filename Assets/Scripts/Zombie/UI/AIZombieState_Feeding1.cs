@@ -78,6 +78,19 @@ public class AIZombieState_Feeding1 : AIZombieState
 		if (_zombieStateMachine.animator.GetCurrentAnimatorStateInfo(_eatingLayerIndex).shortNameHash == _eatingStateHash)
 		{
 			_zombieStateMachine.satisfaction = Mathf.Min (_zombieStateMachine.satisfaction + ((Time.deltaTime * _zombieStateMachine.replenishRate)/100.0f),1.0f);
+			if (GameSceneManager.instance && GameSceneManager.instance.bloodParticles && _bloodParticlesMount) 
+			{
+				if (_timer > _bloodParticlesBurstTime) 
+				{
+					ParticleSystem system = GameSceneManager.instance.bloodParticles;
+					system.transform.position = _bloodParticlesMount.transform.position;
+					system.transform.rotation = _bloodParticlesMount.transform.rotation;
+					system.simulationSpace = ParticleSystemSimulationSpace.World;
+					system.Emit (_bloodParticlesBurstAmount);
+					_timer = 0.0f;
+				}
+
+			}
 		}
 			
 		if (!_zombieStateMachine.useRootRotation)
