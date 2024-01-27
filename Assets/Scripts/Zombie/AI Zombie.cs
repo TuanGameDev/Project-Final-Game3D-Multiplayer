@@ -125,4 +125,11 @@ public class AIZombie : MonoBehaviourPun
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, attackRange);
     }
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Flash Light")
+        {
+            Debug.Log("Phat hien Player");
+        }
+    }
 }
