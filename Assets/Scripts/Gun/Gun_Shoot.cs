@@ -27,7 +27,8 @@ public class Gun_Shoot : MonoBehaviourPun
     public float zoomFOV = 40f;
     public bool isZoomed = false;
     public float originalFOV;
-
+    public float recoilForce;
+    private Vector3 originalGunRotation;
     public GameObject muzzle, bulletPrefab;
     private float currentDamage;
 
@@ -40,6 +41,7 @@ public class Gun_Shoot : MonoBehaviourPun
         bulletsLeft = magazineSize;
         currentDamage = damage;
         txtAmmo.text = bulletsLeft + " / " + magazineSize;
+        originalGunRotation = transform.localRotation.eulerAngles;
         readyToShoot = true;
     }
 
@@ -49,6 +51,13 @@ public class Gun_Shoot : MonoBehaviourPun
         readyToShoot = false;
         muzzle.SetActive(true);
         StartCoroutine(HideMuzzleGun());
+
+        Vector3 recoilCamera = new Vector3(Random.Range(-recoilForce, recoilForce), Random.Range(-recoilForce, recoilForce), 0f);
+        playerCamera.transform.Rotate(recoilCamera);
+
+        Vector3 recoilGun = new Vector3(Random.Range(-recoilForce, recoilForce) * 2f, Random.Range(-recoilForce, recoilForce), 0f);
+        StartCoroutine(ApplyRecoil(recoilGun));
+
         Bullet bulletInstance = Instantiate(bulletPrefab, position, Quaternion.LookRotation(direction)).GetComponent<Bullet>();
         bulletInstance.GetComponent<Rigidbody>().velocity = direction * 20f;
         bulletInstance.bulletDamage = damageValue;
@@ -56,9 +65,21 @@ public class Gun_Shoot : MonoBehaviourPun
         bulletsLeft--;
         UpdateAmmoUI();
         Invoke("ResetShot", timeBetweenShooting);
+    }
 
-        if (bulletsShot > 0 && bulletsLeft > 0)
-            Invoke("Shoot", timeBetweenShots);
+    private IEnumerator ApplyRecoil(Vector3 recoil)
+    {
+        float elapsedTime = 0f;
+        float recoilTime = 0.1f;
+
+        while (elapsedTime < recoilTime)
+        {
+            transform.localRotation = Quaternion.Euler(Vector3.Lerp(recoil, Vector3.zero, elapsedTime / recoilTime));
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.localRotation = Quaternion.Euler(originalGunRotation);
     }
 
     public void Shooting()
