@@ -31,7 +31,6 @@ public class AIZombieState_Idle1 : AIZombieState
 	// ------------------------------------------------------------------
 	public override void		OnEnterState()			
 	{
-		Debug.Log ("Entering Idle State");
 		base.OnEnterState ();
 		if (_zombieStateMachine == null)
 			return;
