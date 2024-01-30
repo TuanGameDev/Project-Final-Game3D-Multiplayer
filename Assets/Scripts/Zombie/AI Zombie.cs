@@ -7,20 +7,21 @@ using TMPro;
 public class AIZombie : MonoBehaviourPun
 {
     [Header("Enemy Status")]
-    public string dead = "Death";
-    public int damage;
-    public string enemyName;
-    public float moveSpeed;
-    public float currentHP;
-    public float maxHP;
-    public float chaseRange;
-    public float attackRange;
-    public float playerDetectRate;
+   [SerializeField] public string dead = "Death";
+   [SerializeField] public int damage;
+   [SerializeField] public string enemyName;
+   [SerializeField] public float moveSpeed;
+   [SerializeField] public float currentHP;
+   [SerializeField] public float maxHP;
+   [SerializeField] public float chaseRange;
+   [SerializeField] public float attackRange;
+   [SerializeField] public float playerDetectRate;
     private float lastPlayerDetectTime;
-    public float attackRate;
+   [SerializeField] public float attackRate;
     private float lastAttackTime;
     public Animator aim;
     public Rigidbody rb;
+    private Coroutine moveCoroutine;
     public Transform modelTransform;
     private FPSController targetPlayer;
     private void Start()
@@ -129,7 +130,41 @@ public class AIZombie : MonoBehaviourPun
     {
         if (other.tag == "Flash Light")
         {
-            Debug.Log("Phat hien Player");
+            Debug.Log("Phát Hiện Flash");
+            if (moveCoroutine != null)
+            {
+                StopCoroutine(moveCoroutine);
+            }
+            FPSController player = other.GetComponentInParent<FPSController>();
+            if (player != null)
+            {
+                targetPlayer = player;
+                Vector3 direction = targetPlayer.transform.position - modelTransform.position;
+                Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
+                modelTransform.rotation = rotation;
+                moveCoroutine = StartCoroutine(MoveToPlayer(player));
+            }
+        }
+    }
+
+    private IEnumerator MoveToPlayer(FPSController player)
+    {
+        while (true)
+        {
+            Vector3 direction = player.transform.position - transform.position;
+            Vector3 moveVector = direction.normalized * moveSpeed;
+            rb.velocity = moveVector;
+            aim.SetBool("Move", true);
+            float dist = Vector3.Distance(transform.position, player.transform.position);
+            if (dist <= attackRange)
+            {
+                rb.velocity = Vector3.zero;
+                aim.SetBool("Move", false);
+                Attack();
+                yield break;
+            }
+
+            yield return null;
         }
     }
 }
