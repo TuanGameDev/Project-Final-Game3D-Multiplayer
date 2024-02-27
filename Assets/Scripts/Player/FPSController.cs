@@ -55,28 +55,13 @@ public class FPSController : MonoBehaviourPun
     private RaycastHit hit;
     private float maxHealthValue;
 
-    void Awake()
+   /* void Awake()
     {
         rb = GetComponent<Rigidbody>();
         PV = GetComponent<PhotonView>();
         ani = GetComponent<Animator>();
         crl = GetComponent<CharacterController>();
     }
-
-    [PunRPC]
-    public void Initialized(Player player)
-    {
-        id = player.ActorNumber;
-        photonPlayer = player;
-        playerName.UpdateNameTag(player.NickName);
-        GameManager.gamemanager.players[id - 1] = this;
-        UpdateHpText(currentHP, maxHP);
-        UpdateHealthSlider(currentHP);
-        UpdateHeal(maxHP);
-        if (player.IsLocal)
-            me = this;
-    }
-
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
@@ -524,5 +509,5 @@ public class FPSController : MonoBehaviourPun
     void ResetSwitchCooldown()
     {
         SwitchGun.instance.canSwitch = true;
-    }
+    }*/
 }

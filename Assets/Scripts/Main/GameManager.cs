@@ -19,7 +19,6 @@ public class GameManager : MonoBehaviourPun
 {
     [Header("Players")]
     public string playerPrefabPath;
-    public FPSController[] players;
     public PlayerController[] playerCtrl;
     public Transform[] spawnPoint;
     public float respawnTime;
@@ -43,7 +42,7 @@ public class GameManager : MonoBehaviourPun
 
     void Start()
     {
-        players = new FPSController[PhotonNetwork.PlayerList.Length];
+        playerCtrl = new PlayerController[PhotonNetwork.PlayerList.Length];
         photonView.RPC("ImInGame", RpcTarget.AllBuffered);
     }
 

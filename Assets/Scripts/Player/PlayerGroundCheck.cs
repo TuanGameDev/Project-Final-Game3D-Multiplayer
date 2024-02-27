@@ -6,7 +6,7 @@ public class PlayerGroundCheck : MonoBehaviour
 {
     FPSController playerController;
 
-    void Awake()
+   /* void Awake()
     {
         playerController = GetComponentInParent<FPSController>();
     }
@@ -33,5 +33,5 @@ public class PlayerGroundCheck : MonoBehaviour
             return;
 
         playerController.SetGroundedState(true);
-    }
+    }*/
 }

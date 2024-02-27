@@ -8,6 +8,7 @@ using Photon.Realtime;
 
 public class PlayerController : MonoBehaviourPun
 {
+
     PhotonView view;
     CharacterController controller;
     Animator _anim;
@@ -18,7 +19,11 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] float turnspeed = 15;
 
     [Header("HUD")]
-    public TextMeshProUGUI txtpickup;
+    [SerializeField] public int id;
+    [SerializeField] public int currentHP;
+    [SerializeField] public int maxHP;
+    [SerializeField] public int def;
+    [SerializeField] public TextMeshProUGUI txtpickup;
 
     [Header("Movement")]
     [SerializeField] float speed;
@@ -38,6 +43,10 @@ public class PlayerController : MonoBehaviourPun
     [Header("Rigging")]
     [SerializeField] Animator rigController;
     [SerializeField] UnityEngine.Animations.Rigging.Rig handIk;
+    [SerializeField] public static PlayerController me;
+    [SerializeField] public Player photonPlayer;
+    [Header("Scripts")]
+    [SerializeField] private PlayerName playerName;
 
     public enum WeaponSlot
     {
@@ -53,7 +62,19 @@ public class PlayerController : MonoBehaviourPun
         _maincam = Camera.main;
 
     }
-
+    [PunRPC]
+    public void Initialized(Player player)
+    {
+        id = player.ActorNumber;
+        photonPlayer = player;
+        playerName.UpdateNameTag(player.NickName);
+        GameManager.gamemanager.playerCtrl[id - 1] = this;
+      /*  UpdateHpText(currentHP, maxHP);
+        UpdateHealthSlider(currentHP);
+        UpdateHeal(maxHP);*/
+        if (player.IsLocal)
+            me = this;
+    }
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
