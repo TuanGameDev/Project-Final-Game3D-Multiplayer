@@ -68,16 +68,13 @@ public class PlayerController : MonoBehaviourPun
         animationEvents = GetComponentInChildren<WeaponAnimationEvents>();
         
     }
-    /*[PunRPC]
+  /*  [PunRPC]
     public void Initialized(Player player)
     {
         id = player.ActorNumber;
         photonPlayer = player;
         playerName.UpdateNameTag(player.NickName);
         GameManager.gamemanager.playerCtrl[id - 1] = this;
-      *//*  UpdateHpText(currentHP, maxHP);
-        UpdateHealthSlider(currentHP);
-        UpdateHeal(maxHP);*//*
         if (player.IsLocal)
             me = this;
     }*/
