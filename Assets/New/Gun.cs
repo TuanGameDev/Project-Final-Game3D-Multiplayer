@@ -16,9 +16,18 @@ public class Gun : MonoBehaviour
     public Transform raycast;
     public Transform raycastDestination;
     public string weaponName;
+    public GunRecoil recoil;
+    public GameObject magazine; // mag prefab
+
 
     Ray _ray;
     RaycastHit _hit;
+
+    private void Awake()
+    {
+        recoil = GetComponent<GunRecoil>();
+    }
+
     void Update()
     {
         if (isFiring && Time.time >= _nextFireTime)
@@ -30,7 +39,8 @@ public class Gun : MonoBehaviour
 
     public void StartFiring()
     {
-        isFiring = true;        
+        isFiring = true;  
+        recoil.Reset();
     }
     public void StopFiring()
     {
@@ -60,5 +70,7 @@ public class Gun : MonoBehaviour
             // Di chuyển hiệu ứng trail theo đường raycast
             newTrail.transform.position = _hit.point;
         }
+
+        recoil.GenerateRecoil(weaponName);
     }
 }
