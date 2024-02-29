@@ -5,16 +5,18 @@ using Photon.Pun;
 using TMPro;
 using static PlayerController;
 using Photon.Realtime;
+using Cinemachine;
 
 public class PlayerController : MonoBehaviourPun
 {
 
-    PhotonView view;
-    CharacterController controller;
+    PhotonView _view;
+    CharacterController _controller;
     Animator _anim;
 
     [Header("Camera")]
     [SerializeField] Camera _maincam;
+    [SerializeField] Cinemachine.CinemachineFreeLook CMfreelook;
     [SerializeField] Transform playerCam;
     [SerializeField] float turnspeed = 15;
 
@@ -23,7 +25,10 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] public int currentHP;
     [SerializeField] public int maxHP;
     [SerializeField] public int def;
+    [SerializeField] private PlayerName playerName;
+    [SerializeField] public Player photonPlayer;
     [SerializeField] public TextMeshProUGUI txtpickup;
+
 
     [Header("Movement")]
     [SerializeField] float speed;
@@ -36,17 +41,17 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] Transform crosshairTarget;
 
     Gun[] _equipWeapons = new Gun[2];
-    int activeWeaponIndex;
+    int _activeWeaponIndex;
     bool _weaponActive = false;
     bool _isHolstered = false;
 
     [Header("Rigging")]
     [SerializeField] Animator rigController;
+    [SerializeField] Transform leftHand;
     [SerializeField] UnityEngine.Animations.Rigging.Rig handIk;
     [SerializeField] public static PlayerController me;
-    [SerializeField] public Player photonPlayer;
-    [Header("Scripts")]
-    [SerializeField] private PlayerName playerName;
+
+    public WeaponAnimationEvents animationEvents;
 
     public enum WeaponSlot
     {
@@ -56,94 +61,103 @@ public class PlayerController : MonoBehaviourPun
 
     void Awake()
     {
-        view = GetComponent<PhotonView>();
-        controller = GetComponent<CharacterController>();
+        _view = GetComponent<PhotonView>();
+        _controller = GetComponent<CharacterController>();
         _anim = GetComponent<Animator>();
-        _maincam = Camera.main;
-
+        CMfreelook = GetComponentInChildren<CinemachineFreeLook>();
+        animationEvents = GetComponentInChildren<WeaponAnimationEvents>();
+        
     }
-    [PunRPC]
+    /*[PunRPC]
     public void Initialized(Player player)
     {
         id = player.ActorNumber;
         photonPlayer = player;
         playerName.UpdateNameTag(player.NickName);
         GameManager.gamemanager.playerCtrl[id - 1] = this;
-      /*  UpdateHpText(currentHP, maxHP);
+      *//*  UpdateHpText(currentHP, maxHP);
         UpdateHealthSlider(currentHP);
-        UpdateHeal(maxHP);*/
+        UpdateHeal(maxHP);*//*
         if (player.IsLocal)
             me = this;
-    }
+    }*/
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        if (photonView.IsMine)
+        animationEvents.WeaponAnimationEvent.AddListener(OnAnimationEvent);
+
+
+        Gun existingweapon = GetComponentInChildren<Gun>();
+         if (existingweapon)
+         {
+            Equip(existingweapon);
+         }
+        
+    }
+    void Update()
+    {
+        HandleInput();
+        UpdateWeaponState();
+        _anim.SetBool("weaponActive", _weaponActive);
+    }
+    void FixedUpdate()
+    {
+        UpdateWeaponState();
+        if (_weaponActive && !_isHolstered)
         {
-            _maincam.gameObject.SetActive(true);
-            Gun existingweapon = GetComponentInChildren<Gun>();
-            if (existingweapon)
-            {
-                Equip(existingweapon);
-            }
+            SetCam_WithWeapon();
+            MovementWithWeapon();
         }
         else
         {
-            _maincam.gameObject.SetActive(false);
+            MovementWithoutWeapon();
         }
-
     }
-
-    void Update()
+    void HandleInput()
     {
-        if (photonView.IsMine)
+        var _weapon = GetWeapon(_activeWeaponIndex);
+        if (_weapon != null && !_isHolstered)
         {
-            var _weapon = GetWeapon(activeWeaponIndex);
-            if (_weapon != null && !_isHolstered)
+            _weaponActive = true;
+            if (Input.GetMouseButton(0))
             {
-                _weaponActive = true;
-                SetCam_WithWeapon();
-                MovementWithWeapon();
-
-                if (Input.GetMouseButtonDown(0))
-                {
-                    photonView.RPC("StartFiringRPC", RpcTarget.All);
-                }
-                if (Input.GetMouseButtonUp(0))
-                {
-                    photonView.RPC("StopFiringRPC", RpcTarget.All);
-                }
-
-                handIk.weight = 1.0f;
-                _anim.SetBool("weaponActive", _weaponActive);
+                _weapon.StartFiring();
             }
             else
             {
-                _weaponActive = false;
-                MovementWithoutWeapon();
-
-                handIk.weight = 0.0f;
-                _anim.SetBool("weaponActive", _weaponActive);
-            }
-
-            if (Input.GetKeyDown(KeyCode.X))
-            {
-                photonView.RPC("ToggleWeaponHolsterRPC", RpcTarget.All, activeWeaponIndex);
-            }
-
-            if (Input.GetKey(KeyCode.Alpha1))
-            {
-                photonView.RPC("SetActiveWeaponRPC", RpcTarget.All, WeaponSlot.Primary);
-            }
-
-            if (Input.GetKey(KeyCode.Alpha2))
-            {
-                photonView.RPC("SetActiveWeaponRPC", RpcTarget.All, WeaponSlot.Secondary);
+                _weapon.StopFiring();
             }
         }
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            ToggleWeaponHolster();
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            SetActiveWeapon(WeaponSlot.Primary);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            SetActiveWeapon(WeaponSlot.Secondary);
+        }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            rigController.SetTrigger("reload");
+        }
     }
-
+    void UpdateWeaponState()
+    {
+        var _weapon = GetWeapon(_activeWeaponIndex);
+        if (_weapon != null && !_isHolstered)
+        {
+            _weaponActive = true;
+        }
+        else
+        {
+            _weaponActive = false;
+        }
+    }
     void MovementWithWeapon()
     {
         _hor = Input.GetAxis("Horizontal");
@@ -151,7 +165,7 @@ public class PlayerController : MonoBehaviourPun
         Vector3 direction = new Vector3(_hor, 0f, _ver).normalized;
 
         Vector3 moveDirection = transform.TransformDirection(direction) * speed;
-        controller.Move(moveDirection * Time.deltaTime);
+        _controller.Move(moveDirection * Time.deltaTime);
 
         if (direction.magnitude >= 0.1)
         {
@@ -164,7 +178,6 @@ public class PlayerController : MonoBehaviourPun
             _anim.SetFloat("zValue", 0f);
         }
     }
-
     void MovementWithoutWeapon()
     {
         _hor = Input.GetAxisRaw("Horizontal");
@@ -178,7 +191,7 @@ public class PlayerController : MonoBehaviourPun
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            controller.Move(moveDir.normalized * speed * Time.deltaTime);
+            _controller.Move(moveDir.normalized * speed * Time.deltaTime);
             _anim.SetFloat("xValue", _hor);
             _anim.SetFloat("zValue", _ver);
         }
@@ -188,7 +201,6 @@ public class PlayerController : MonoBehaviourPun
             _anim.SetFloat("zValue", 0f);
         }
     }
-
     void SetCam_WithWeapon()
     {
         float yCam = _maincam.transform.rotation.eulerAngles.y;
@@ -203,6 +215,7 @@ public class PlayerController : MonoBehaviourPun
         }
         return _equipWeapons[index];
     }
+    public void GetActiveWeapon() => GetWeapon(_activeWeaponIndex);
 
     public void Equip(Gun newWeapon)
     {
@@ -210,20 +223,20 @@ public class PlayerController : MonoBehaviourPun
         var _weapon = GetWeapon(weaponSlotIndex);
         if (_weapon)
         {
-            PhotonNetwork.Destroy(_weapon.gameObject);
+            Destroy(_weapon.gameObject);
         }
 
         _weapon = newWeapon;
         _weapon.raycastDestination = crosshairTarget;
+        _weapon.recoil.playerCamera = CMfreelook;
+        _weapon.recoil.rig = rigController;
         _weapon.transform.SetParent(weaponSlots[weaponSlotIndex], false);
         _equipWeapons[weaponSlotIndex] = _weapon;
         SetActiveWeapon(newWeapon.weaponSlot);
     }
-
-    [PunRPC]
-    void SetActiveWeaponRPC(WeaponSlot weaponSlot)
+    void SetActiveWeapon(WeaponSlot weaponSlot)
     {
-        int holsterIndex = activeWeaponIndex;
+        int holsterIndex = _activeWeaponIndex;
         int activateIndex = (int)weaponSlot;
 
         if (holsterIndex == activateIndex)
@@ -232,44 +245,25 @@ public class PlayerController : MonoBehaviourPun
         }
 
         StartCoroutine(SwitchWeapon(holsterIndex, activateIndex));
-        
     }
-
-    void ToggleActiveWeapon()
-    {
-        photonView.RPC("ToggleWeaponHolsterRPC", RpcTarget.All, activeWeaponIndex);
-    }
-
-    [PunRPC]
-    void ToggleWeaponHolsterRPC(int index)
+    void ToggleWeaponHolster()
     {
         bool _isHolster = rigController.GetBool("holster_weapon");
         if (_isHolster)
         {
-            StartCoroutine(ActivateWeapon(index));
+            StartCoroutine(ActivateWeapon(_activeWeaponIndex));
         }
         else
         {
-            StartCoroutine(HolsterWeapon(index));
+            StartCoroutine(HolsterWeapon(_activeWeaponIndex));
         }
     }
-
-    void SetActiveWeapon(WeaponSlot weaponSlot)
-    {
-        activeWeaponIndex = (int)weaponSlot;
-        if (photonView.IsMine)
-        {
-            photonView.RPC("SetActiveWeaponRPC", RpcTarget.Others, weaponSlot);
-        }
-    }
-
     IEnumerator SwitchWeapon(int holsterIndex, int activateIndex)
     {
         yield return StartCoroutine(HolsterWeapon(holsterIndex));
         yield return StartCoroutine(ActivateWeapon(activateIndex));
-        activeWeaponIndex = activateIndex;
+        _activeWeaponIndex = activateIndex;
     }
-
     IEnumerator HolsterWeapon(int index)
     {
         _isHolstered = true;
@@ -284,14 +278,13 @@ public class PlayerController : MonoBehaviourPun
             while (rigController.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.0f);
         }
     }
-
     IEnumerator ActivateWeapon(int index)
     {
         var weapon = GetWeapon(index);
         if (weapon != null)
         {
-            rigController.Play("weapon_" + weapon.weaponName);
             rigController.SetBool("holster_weapon", false);
+            rigController.Play("weapon_" + weapon.weaponName);
             do
             {
                 yield return new WaitForEndOfFrame();
@@ -301,24 +294,32 @@ public class PlayerController : MonoBehaviourPun
         }
     }
 
-    [PunRPC]
-    void StartFiringRPC()
+    void OnAnimationEvent(string eventName)
     {
-        var _weapon = GetWeapon(activeWeaponIndex);
-        if (_weapon != null)
+        switch (eventName)
         {
-            _weapon.StartFiring();
+            case "detach_mag": DetachMag(); break;
+            case "drop_mag": DropMag(); break;
+            case "refill_mag": RefillMag(); break;
+            case "attach_mag": AttachMag(); break;
         }
     }
 
-    [PunRPC]
-    void StopFiringRPC()
+    void DetachMag()
     {
-        var _weapon = GetWeapon(activeWeaponIndex);
-        if (_weapon != null)
-        {
-            _weapon.StopFiring();
-        }
     }
+    void DropMag()
+    {
+
+    }
+    void RefillMag()
+    {
+
+    }
+    void AttachMag()
+    {
+
+    }
+
 
 }

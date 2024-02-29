@@ -7,12 +7,12 @@ public class CrossHairTarget : MonoBehaviour
     Camera _cam;
     Ray _ray;
     RaycastHit _hit;
-    void Start()
+
+    private void Awake()
     {
-        _cam = Camera.main;
+        _cam = GetComponentInParent<Camera>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         _ray = _cam.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
