@@ -6,52 +6,65 @@ using TMPro;
 using static PlayerController;
 using Photon.Realtime;
 using Cinemachine;
+using Unity.VisualScripting;
 
 public class PlayerController : MonoBehaviourPun
 {
-
-    PhotonView _view;
+    PhotonView PV;
     CharacterController _controller;
     Animator _anim;
+    public static PlayerController me;
 
-    [Header("Camera")]
+    [Header("CAMERA")]
     [SerializeField] Camera _maincam;
-    [SerializeField] Cinemachine.CinemachineFreeLook CMfreelook;
     [SerializeField] Transform playerCam;
-    [SerializeField] float turnspeed = 15;
+    CinemachineFreeLook CMfreelook;
+    float turnspeed = 20;
 
     [Header("HUD")]
-    [SerializeField] public int id;
-    [SerializeField] public int currentHP;
-    [SerializeField] public int maxHP;
-    [SerializeField] public int def;
+    public int id;
+    public int currentHP;
+    public int maxHP;
+    public int def;
+    public Canvas canvashealth;
+    public Player photonPlayer;
+    public TextMeshProUGUI txtpickup;
+    public TextMeshProUGUI txtAmmo;
     [SerializeField] private PlayerName playerName;
-    [SerializeField] public Player photonPlayer;
-    [SerializeField] public TextMeshProUGUI txtpickup;
 
-
-    [Header("Movement")]
-    [SerializeField] float speed;
+    [Header("MOVEMENT")]
+    [SerializeField] float walkSpeed;
+    [SerializeField] float runSpeed;
+    [SerializeField] float jumpHeight;
     float _hor, _ver;
     float _turnCalmTime = 0.1f;
     float _turnCalmVelocity;
+    bool _isJumping = false;
+    Vector3 _velocity;
 
-    [Header("Weapon")]
+    [Header("WEAPON")]
     [SerializeField] Transform[] weaponSlots;
     [SerializeField] Transform crosshairTarget;
 
+    float aimZoomDistance = 35f;
+    float zoomSpeed = 5f; // Tốc độ zoom
+
+    private float defaultZoomDistance;
+    private float targetZoomDistance; // Khoảng cách zoom mục tiêu
+
+    GameObject magazineHand;
     Gun[] _equipWeapons = new Gun[2];
     int _activeWeaponIndex;
     bool _weaponActive = false;
     bool _isHolstered = false;
+    bool _aiming = false;
+    bool _isReloading = false;
 
-    [Header("Rigging")]
+    [Header("RIGGING")]
     [SerializeField] Animator rigController;
     [SerializeField] Transform leftHand;
     [SerializeField] UnityEngine.Animations.Rigging.Rig handIk;
-    [SerializeField] public static PlayerController me;
-
-    public WeaponAnimationEvents animationEvents;
+    [HideInInspector] public WeaponAnimationEvents animationEvents;
 
     public enum WeaponSlot
     {
@@ -61,14 +74,14 @@ public class PlayerController : MonoBehaviourPun
 
     void Awake()
     {
-        _view = GetComponent<PhotonView>();
+        PV = GetComponent<PhotonView>();
         _controller = GetComponent<CharacterController>();
         _anim = GetComponent<Animator>();
         CMfreelook = GetComponentInChildren<CinemachineFreeLook>();
         animationEvents = GetComponentInChildren<WeaponAnimationEvents>();
         
     }
-  /*  [PunRPC]
+    [PunRPC]
     public void Initialized(Player player)
     {
         id = player.ActorNumber;
@@ -77,14 +90,23 @@ public class PlayerController : MonoBehaviourPun
         GameManager.gamemanager.playerCtrl[id - 1] = this;
         if (player.IsLocal)
             me = this;
-    }*/
+    }
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        if (!photonView.IsMine)
+        {
+            canvashealth.enabled = false;
+            if (_maincam)
+                _maincam.gameObject.SetActive(false);
+        }
+
+        defaultZoomDistance = CMfreelook.m_Lens.FieldOfView;
+        targetZoomDistance = defaultZoomDistance;
+
         animationEvents.WeaponAnimationEvent.AddListener(OnAnimationEvent);
-
-
         Gun existingweapon = GetComponentInChildren<Gun>();
          if (existingweapon)
          {
@@ -94,12 +116,14 @@ public class PlayerController : MonoBehaviourPun
     }
     void Update()
     {
+        if (!photonView.IsMine) return;
         HandleInput();
         UpdateWeaponState();
         _anim.SetBool("weaponActive", _weaponActive);
     }
     void FixedUpdate()
     {
+        if (!photonView.IsMine) return;
         UpdateWeaponState();
         if (_weaponActive && !_isHolstered)
         {
@@ -111,6 +135,8 @@ public class PlayerController : MonoBehaviourPun
             MovementWithoutWeapon();
         }
     }
+    //
+    #region MOVEMENT
     void HandleInput()
     {
         var _weapon = GetWeapon(_activeWeaponIndex);
@@ -119,17 +145,39 @@ public class PlayerController : MonoBehaviourPun
             _weaponActive = true;
             if (Input.GetMouseButton(0))
             {
-                _weapon.StartFiring();
+                if (!_isReloading)
+                {
+                    _weapon.StartFiring();
+                    UpdateAmmo();
+                }
             }
             else
             {
                 _weapon.StopFiring();
             }
+
+            if (Input.GetMouseButton(1))
+            {
+                _aiming = true;
+                _weapon.recoil.recoilModifier = _aiming ? 0.3f : .1f;
+                CMfreelook.m_Lens.FieldOfView = Mathf.Lerp(CMfreelook.m_Lens.FieldOfView, aimZoomDistance, Time.deltaTime * zoomSpeed);
+            }
+            else
+            {
+                _aiming = false;
+                CMfreelook.m_Lens.FieldOfView = Mathf.Lerp(CMfreelook.m_Lens.FieldOfView, defaultZoomDistance, Time.deltaTime * zoomSpeed);
+            }
+
+            if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize)
+            {
+                if (!_isReloading)
+                {
+                    rigController.SetTrigger("reload");
+                    StartCoroutine(DelayedReload());
+                }
+            }
         }
-        if (Input.GetKeyDown(KeyCode.X))
-        {
-            ToggleWeaponHolster();
-        }
+
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             SetActiveWeapon(WeaponSlot.Primary);
@@ -138,21 +186,9 @@ public class PlayerController : MonoBehaviourPun
         {
             SetActiveWeapon(WeaponSlot.Secondary);
         }
-        if (Input.GetKeyDown(KeyCode.R))
+        if (Input.GetKeyDown(KeyCode.X))
         {
-            rigController.SetTrigger("reload");
-        }
-    }
-    void UpdateWeaponState()
-    {
-        var _weapon = GetWeapon(_activeWeaponIndex);
-        if (_weapon != null && !_isHolstered)
-        {
-            _weaponActive = true;
-        }
-        else
-        {
-            _weaponActive = false;
+            ToggleWeaponHolster();
         }
     }
     void MovementWithWeapon()
@@ -161,8 +197,11 @@ public class PlayerController : MonoBehaviourPun
         _ver = Input.GetAxis("Vertical");
         Vector3 direction = new Vector3(_hor, 0f, _ver).normalized;
 
-        Vector3 moveDirection = transform.TransformDirection(direction) * speed;
-        _controller.Move(moveDirection * Time.deltaTime);
+        Vector3 moveDirection = transform.TransformDirection(direction);
+
+        float targetSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
+
+        _controller.Move(moveDirection * targetSpeed * Time.deltaTime);
 
         if (direction.magnitude >= 0.1)
         {
@@ -187,8 +226,10 @@ public class PlayerController : MonoBehaviourPun
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnCalmVelocity, _turnCalmTime);
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
+            float targetSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
+
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            _controller.Move(moveDir.normalized * speed * Time.deltaTime);
+            _controller.Move(moveDir.normalized * targetSpeed * Time.deltaTime);
             _anim.SetFloat("xValue", _hor);
             _anim.SetFloat("zValue", _ver);
         }
@@ -203,7 +244,21 @@ public class PlayerController : MonoBehaviourPun
         float yCam = _maincam.transform.rotation.eulerAngles.y;
         transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(0, yCam, 0), turnspeed * Time.fixedDeltaTime);
     }
-
+    #endregion
+    //
+    #region WEAPON
+    void UpdateWeaponState()
+    {
+        var _weapon = GetWeapon(_activeWeaponIndex);
+        if (_weapon != null && !_isHolstered)
+        {
+            _weaponActive = true;
+        }
+        else
+        {
+            _weaponActive = false;
+        }
+    }
     Gun GetWeapon(int index)
     {
         if (index < 0 || index >= _equipWeapons.Length)
@@ -212,8 +267,7 @@ public class PlayerController : MonoBehaviourPun
         }
         return _equipWeapons[index];
     }
-    public void GetActiveWeapon() => GetWeapon(_activeWeaponIndex);
-
+    Gun GetActiveWeapon() => GetWeapon(_activeWeaponIndex);
     public void Equip(Gun newWeapon)
     {
         int weaponSlotIndex = (int)newWeapon.weaponSlot;
@@ -230,6 +284,7 @@ public class PlayerController : MonoBehaviourPun
         _weapon.transform.SetParent(weaponSlots[weaponSlotIndex], false);
         _equipWeapons[weaponSlotIndex] = _weapon;
         SetActiveWeapon(newWeapon.weaponSlot);
+        UpdateAmmo();
     }
     void SetActiveWeapon(WeaponSlot weaponSlot)
     {
@@ -260,6 +315,8 @@ public class PlayerController : MonoBehaviourPun
         yield return StartCoroutine(HolsterWeapon(holsterIndex));
         yield return StartCoroutine(ActivateWeapon(activateIndex));
         _activeWeaponIndex = activateIndex;
+        UpdateAmmo();
+
     }
     IEnumerator HolsterWeapon(int index)
     {
@@ -290,7 +347,21 @@ public class PlayerController : MonoBehaviourPun
             _isHolstered = false;
         }
     }
-
+    void DropWeapon()
+    {
+        var weapon = GetActiveWeapon();
+        if (weapon != null && !_isHolstered)
+        {
+            // Tạo một vũ khí mới tại vị trí hiện tại của người chơi và xóa vũ khí hiện tại
+            Gun dropWeapon = Instantiate(weapon);
+            dropWeapon.AddComponent<Rigidbody>();
+            dropWeapon.AddComponent<BoxCollider>();
+            dropWeapon.transform.position = transform.position;
+            dropWeapon.transform.rotation = transform.rotation;
+            Equip(dropWeapon);
+            Destroy(weapon.gameObject);
+        }
+    }
     void OnAnimationEvent(string eventName)
     {
         switch (eventName)
@@ -301,22 +372,47 @@ public class PlayerController : MonoBehaviourPun
             case "attach_mag": AttachMag(); break;
         }
     }
-
     void DetachMag()
     {
+        Gun weapon = GetActiveWeapon();
+        magazineHand = Instantiate(weapon.magazine, leftHand, true);
+        weapon.magazine.SetActive(false);
     }
     void DropMag()
     {
-
+        GameObject dropMag = Instantiate(magazineHand, magazineHand.transform.position, magazineHand.transform.rotation);
+        dropMag.AddComponent<Rigidbody>();
+        dropMag.AddComponent<BoxCollider>();
+        magazineHand.SetActive(false);
+        Destroy(dropMag, 3f);
     }
     void RefillMag()
     {
-
+        magazineHand.SetActive(true);
     }
     void AttachMag()
     {
-
+        Gun weapon = GetActiveWeapon();
+        weapon.magazine.SetActive(true);
+        Destroy(magazineHand);
+        weapon.ammoCount = weapon.magSize;
+        rigController.ResetTrigger("reload");
+        UpdateAmmo();
     }
-
-
+    void UpdateAmmo() // gọi hàm sau mỗi hành động liên quan đến weapon
+    {
+        Gun weapon = GetActiveWeapon();
+        if (weapon != null)
+        {
+            txtAmmo.text = weapon.ammoCount + "/" + weapon.magSize;
+        }
+    }
+    IEnumerator DelayedReload()
+    {   
+        _isReloading = true;
+        yield return new WaitForSeconds(1.8f);
+        _isReloading = false;
+    }
+    #endregion
+    //
 }
