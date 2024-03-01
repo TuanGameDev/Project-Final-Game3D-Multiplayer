@@ -8,11 +8,10 @@ public class GunRecoil : MonoBehaviour
     [HideInInspector] public CinemachineFreeLook playerCamera;
     [HideInInspector] public CinemachineImpulseSource cameraShake;
     [HideInInspector] public Animator rig;
+    [HideInInspector] public float recoilModifier = 1f;
 
     [SerializeField] Vector2[] recoilPattern;
-
-
-    public float duration;
+    [SerializeField] float duration;
 
     float verRecoil;
     float horRecoil;
@@ -21,7 +20,7 @@ public class GunRecoil : MonoBehaviour
 
     int NextIndex(int index)
     {
-        return (index +1) % recoilPattern.Length;
+        return (index + 1) % recoilPattern.Length;
     }
 
     private void Awake()
@@ -34,8 +33,8 @@ public class GunRecoil : MonoBehaviour
     {
         if (time > 0)
         {
-            playerCamera.m_YAxis.Value -= ((verRecoil/1000) * Time.deltaTime) / duration;
-            playerCamera.m_XAxis.Value -= ((horRecoil/10) * Time.deltaTime) / duration;
+            playerCamera.m_YAxis.Value -= (((verRecoil/10) * Time.deltaTime) / duration) * recoilModifier;
+            playerCamera.m_XAxis.Value -= (((horRecoil / 10) * Time.deltaTime) / duration) * recoilModifier;
             time -= Time.deltaTime;
         }
     }
