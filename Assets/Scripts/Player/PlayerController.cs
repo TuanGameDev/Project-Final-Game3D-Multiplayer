@@ -285,6 +285,7 @@ public class PlayerController : MonoBehaviourPun
         _equipWeapons[weaponSlotIndex] = _weapon;
         SetActiveWeapon(newWeapon.weaponSlot);
         UpdateAmmo();
+        _weapon.PV.TransferOwnership(PhotonNetwork.LocalPlayer);
     }
     void SetActiveWeapon(WeaponSlot weaponSlot)
     {
