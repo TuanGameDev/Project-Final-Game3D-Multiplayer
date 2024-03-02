@@ -24,10 +24,10 @@ public class GameManager : MonoBehaviourPun
     public float respawnTime;
     private int playersInGame;
 
-    [Header("Spawn Zombie")]
+   /* [Header("Spawn Zombie")]
     public ZombieInfo zombieSpawnInfo;
     public float spawnCheckTime;
-    private float lastSpawnCheckTime;
+    private float lastSpawnCheckTime;*/
 
     [Header("Spawn Gun")]
     public GameObject[] gun;
@@ -48,14 +48,14 @@ public class GameManager : MonoBehaviourPun
 
     private void Update()
     {
-        if (!PhotonNetwork.IsMasterClient)
+        /*if (!PhotonNetwork.IsMasterClient)
             return;
 
         if (Time.time - lastSpawnCheckTime > spawnCheckTime)
         {
             lastSpawnCheckTime = Time.time;
             TrySpawnZombie();
-        }
+        }*/
     }
 
     [PunRPC]
@@ -64,23 +64,22 @@ public class GameManager : MonoBehaviourPun
         playersInGame++;
         if (playersInGame == PhotonNetwork.PlayerList.Length)
             SpawnPlayer();
-            SpawnGun();
     }
 
-    private void SpawnGun()
+  /*  private void SpawnGun()
     {
         for (int i = 0; i < gun.Length; i++)
         {
             PhotonNetwork.Instantiate(gun[i % gun.Length].name, spawnGun[i].position, spawnGun[i].rotation);
         }
-    }
+    }*/
 
     void SpawnPlayer()
     {
         GameObject playerObject = PhotonNetwork.Instantiate(PlayerSelection.playerselection.playerPrefabName, spawnPoint[Random.Range(0, spawnPoint.Length)].position, Quaternion.identity);
         playerObject.GetComponent<PhotonView>().RPC("Initialized", RpcTarget.All, PhotonNetwork.LocalPlayer);
     }
-    void TrySpawn(ZombieInfo zombieSpawnInfo)
+  /*  void TrySpawn(ZombieInfo zombieSpawnInfo)
     {
         for (int x = zombieSpawnInfo.currentEnemies.Count - 1; x >= 0; x--)
         {
@@ -127,5 +126,5 @@ public class GameManager : MonoBehaviourPun
     void TrySpawnZombie()
     {
         TrySpawn(zombieSpawnInfo);
-    }
+    }*/
 }

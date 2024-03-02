@@ -10,7 +10,6 @@ using Unity.VisualScripting;
 
 public class PlayerController : MonoBehaviourPun
 {
-    PhotonView PV;
     CharacterController _controller;
     Animator _anim;
     public static PlayerController me;
@@ -26,7 +25,6 @@ public class PlayerController : MonoBehaviourPun
     public int currentHP;
     public int maxHP;
     public int def;
-    public Canvas canvashealth;
     public Player photonPlayer;
     public TextMeshProUGUI txtpickup;
     public TextMeshProUGUI txtAmmo;
@@ -64,22 +62,12 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] Animator rigController;
     [SerializeField] Transform leftHand;
     [SerializeField] UnityEngine.Animations.Rigging.Rig handIk;
-    [HideInInspector] public WeaponAnimationEvents animationEvents;
+     public WeaponAnimationEvents animationEvents;
 
     public enum WeaponSlot
     {
         Primary = 0,
         Secondary = 1
-    }
-
-    void Awake()
-    {
-        PV = GetComponent<PhotonView>();
-        _controller = GetComponent<CharacterController>();
-        _anim = GetComponent<Animator>();
-        CMfreelook = GetComponentInChildren<CinemachineFreeLook>();
-        animationEvents = GetComponentInChildren<WeaponAnimationEvents>();
-        
     }
     [PunRPC]
     public void Initialized(Player player)
@@ -93,12 +81,15 @@ public class PlayerController : MonoBehaviourPun
     }
     void Start()
     {
+        _controller = GetComponent<CharacterController>();
+        _anim = GetComponent<Animator>();
+        CMfreelook = GetComponentInChildren<CinemachineFreeLook>();
+        animationEvents = GetComponentInChildren<WeaponAnimationEvents>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
         if (!photonView.IsMine)
         {
-            canvashealth.enabled = false;
             if (_maincam)
                 _maincam.gameObject.SetActive(false);
         }
@@ -114,16 +105,11 @@ public class PlayerController : MonoBehaviourPun
          }
         
     }
-    void Update()
+    private void Update()
     {
-        if (!photonView.IsMine) return;
+        if (!photonView.IsMine)
+            return;
         HandleInput();
-        UpdateWeaponState();
-        _anim.SetBool("weaponActive", _weaponActive);
-    }
-    void FixedUpdate()
-    {
-        if (!photonView.IsMine) return;
         UpdateWeaponState();
         if (_weaponActive && !_isHolstered)
         {
@@ -134,6 +120,7 @@ public class PlayerController : MonoBehaviourPun
         {
             MovementWithoutWeapon();
         }
+        _anim.SetBool("weaponActive", _weaponActive);
     }
     //
     #region MOVEMENT
@@ -359,7 +346,7 @@ public class PlayerController : MonoBehaviourPun
             dropWeapon.AddComponent<BoxCollider>();
             dropWeapon.transform.position = transform.position;
             dropWeapon.transform.rotation = transform.rotation;
-            Equip(dropWeapon);
+            //Equip(dropWeapon);
             Destroy(weapon.gameObject);
         }
     }
