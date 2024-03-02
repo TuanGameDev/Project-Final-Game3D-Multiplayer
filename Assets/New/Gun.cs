@@ -5,10 +5,11 @@ using UnityEngine;
 
 public class Gun : MonoBehaviourPun
 {
+    public PhotonView PV;
     [Header("WEAPON INFOR")]
     public PlayerController.WeaponSlot weaponSlot;
-    public PhotonView PV;
     public string weaponName;
+    public int damage;
     public int ammoCount; // đạn
     public int magSize; // số viên đạn trong 1 băng
     //public int mag; // băng đạn
@@ -24,6 +25,7 @@ public class Gun : MonoBehaviourPun
     [Header("EFFECTS")]
     public ParticleSystem[] muzzleFlash;
     public ParticleSystem hitEffect;
+    //public ParticleSystem zombieHitEffect;
     public TrailRenderer trailEffect; // tia lửa 
     private TrailRenderer currentTrail;
 
@@ -89,21 +91,36 @@ public class Gun : MonoBehaviourPun
     currentTrail.Clear();
     currentTrail.AddPosition(_ray.origin);
 
-    if (Physics.Raycast(_ray, out _hit))
-    {
-        hitEffect.transform.position = _hit.point;
-        hitEffect.transform.forward = _hit.normal;
-        hitEffect.Emit(1);
-
-        // Di chuyển hiệu ứng trail đến hit point
-        currentTrail.transform.position = _hit.point;
-    }
-    else
-    {
-        // Nếu không có va chạm, di chuyển hiệu ứng trail theo raycast
-        currentTrail.transform.position = _ray.origin + _ray.direction * 100f;
-    }
-    recoil.GenerateRecoil(weaponName);
+        if (Physics.Raycast(_ray, out _hit))
+        {
+            ParticleSystem selectedHitEffect = hitEffect;
+            /*if (_hit.collider.gameObject.layer == LayerMask.NameToLayer("Zombie"))
+            {
+                selectedHitEffect = zombieHitEffect;
+            }*/
+            // Kiểm tra nếu đối tượng va chạm có layer là "Zombie"
+            if (_hit.collider.gameObject.layer == LayerMask.NameToLayer("Zombie"))
+            {
+                Debug.Log("Trúng zombie");
+                // Gọi hàm để gây damage cho zombie ở đây
+                AIZombie zombieHealth = _hit.collider.GetComponent<AIZombie>();
+                if (zombieHealth != null)
+                {
+                    zombieHealth.TakeDamage(damage);
+                }
+            }
+            selectedHitEffect.transform.position = _hit.point;
+            selectedHitEffect.transform.forward = _hit.normal;
+            selectedHitEffect.Emit(1);
+            // Di chuyển hiệu ứng trail đến hit point
+            currentTrail.transform.position = _hit.point;
+        }
+        else
+        {
+            // Nếu không có va chạm, di chuyển hiệu ứng trail theo raycast
+            currentTrail.transform.position = _ray.origin + _ray.direction * 100f;
+        }
+        recoil.GenerateRecoil(weaponName);
     }
 
 }
