@@ -1,11 +1,13 @@
-﻿using System.Collections;
+﻿using Photon.Pun;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Gun : MonoBehaviour
+public class Gun : MonoBehaviourPun
 {
     [Header("WEAPON INFOR")]
     public PlayerController.WeaponSlot weaponSlot;
+    public PhotonView PV;
     public string weaponName;
     public int ammoCount; // đạn
     public int magSize; // số viên đạn trong 1 băng
