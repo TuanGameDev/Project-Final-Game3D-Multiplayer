@@ -6,28 +6,28 @@ using TMPro;
 
 public class AIZombie : MonoBehaviourPun
 {
-    [Header("Enemy Status")]
-   [SerializeField] public string dead = "Death";
-   [SerializeField] public int damage;
-   [SerializeField] public string enemyName;
-   [SerializeField] public float moveSpeed;
-   [SerializeField] public float currentHP;
-   [SerializeField] public float maxHP;
-   [SerializeField] public float chaseRange;
-   [SerializeField] public float attackRange;
-   [SerializeField] public float playerDetectRate;
-    private float lastPlayerDetectTime;
-   [SerializeField] public float attackRate;
+    [Header("Enemy")]
+    [SerializeField] public string enemyName;
+    [SerializeField] public string dead = "Death";
+    [SerializeField] public int damage;
+    [SerializeField] public float moveSpeed;
+    [SerializeField] public float currentHP;
+    [SerializeField] public float maxHP;
+    [SerializeField] public float chaseRange;
+    [SerializeField] public float attackRange;
+    [SerializeField] public float playerDetectRate;
+    [SerializeField] private float lastPlayerDetectTime;
+    [SerializeField] public float attackRate;
+    [SerializeField] public int curAttackerID;
     private float lastAttackTime;
     public Animator aim;
     public Rigidbody rb;
     private Coroutine moveCoroutine;
     public Transform modelTransform;
-    private FPSController targetPlayer;
+    private PlayerController targetPlayer;
     private void Start()
     {
-        EnemyStatusInfo(maxHP);
-
+        UpdateHealth(maxHP);
     }
     private void Update()
     {
@@ -36,9 +36,12 @@ public class AIZombie : MonoBehaviourPun
 
         if (targetPlayer != null)
         {
-            float dist = Vector3.Distance(transform.position, targetPlayer.transform.position);
-
-            if (dist < attackRange && Time.time - lastAttackTime >= attackRate)
+            float dist = Vector2.Distance(transform.position, targetPlayer.transform.position);
+            if (targetPlayer.currentHP <= 0)
+            {
+                StopAttacking();
+            }
+            else if (dist < attackRange && Time.time - lastAttackTime >= attackRate)
             {
                 Attack();
             }
@@ -50,8 +53,14 @@ public class AIZombie : MonoBehaviourPun
             }
             else
             {
-                rb.velocity = Vector3.zero;
+                rb.velocity = Vector2.zero;
                 aim.SetBool("Move", false);
+            }
+            if (modelTransform != null)
+            {
+                Vector3 direction = targetPlayer.transform.position - modelTransform.position;
+                Quaternion rotation = Quaternion.LookRotation(new Vector3(direction.x, 0f, direction.z));
+                modelTransform.rotation = rotation;
             }
         }
         DetectPlayer();
@@ -62,8 +71,8 @@ public class AIZombie : MonoBehaviourPun
         if (Time.time - lastPlayerDetectTime > playerDetectRate)
         {
             lastPlayerDetectTime = Time.time;
-            FPSController[] playerInScene = FindObjectsOfType<FPSController>();
-            foreach (FPSController player in playerInScene)
+            PlayerController[] playerInScene = FindObjectsOfType<PlayerController>();
+            foreach (PlayerController player in playerInScene)
             {
                 float dist = Vector3.Distance(transform.position, player.transform.position);
                 if (player == targetPlayer)
@@ -81,15 +90,13 @@ public class AIZombie : MonoBehaviourPun
                     {
                         targetPlayer = player;
                     }
-                    if (modelTransform != null)
-                    {
-                        Vector3 direction = targetPlayer.transform.position - modelTransform.position;
-                        Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
-                        modelTransform.rotation = rotation;
-                    }
                 }
             }
         }
+    }
+    void StopAttacking()
+    {
+        aim.ResetTrigger("Attack");
     }
     void Attack()
     {
@@ -99,23 +106,24 @@ public class AIZombie : MonoBehaviourPun
         Debug.Log("Attack");
     }
     [PunRPC]
-    public void TakeDamage(float damageAmount)
+    public void TakeDamage(int attackerId,int damageAmount)
     {
         currentHP -= damageAmount;
-        photonView.RPC("EnemyStatusInfo", RpcTarget.All, currentHP);
-
+        curAttackerID = attackerId;
+        photonView.RPC("UpdateHealth", RpcTarget.All, currentHP);
         if (currentHP <= 0)
         {
             Die();
         }
     }
     [PunRPC]
-    public void EnemyStatusInfo(float maxVal)
+    public void UpdateHealth(float maxVal)
     {
         currentHP = maxVal;
     }
     void Die()
     {
+        PlayerController player = GameManager.gamemanager.GetPlayer(curAttackerID);
         PhotonNetwork.Destroy(gameObject);
         PhotonNetwork.Instantiate(dead, transform.position, Quaternion.identity);
     }
@@ -135,7 +143,7 @@ public class AIZombie : MonoBehaviourPun
             {
                 StopCoroutine(moveCoroutine);
             }
-            FPSController player = other.GetComponentInParent<FPSController>();
+            PlayerController player = other.GetComponentInParent<PlayerController>();
             if (player != null)
             {
                 targetPlayer = player;
@@ -147,7 +155,7 @@ public class AIZombie : MonoBehaviourPun
         }
     }
 
-    private IEnumerator MoveToPlayer(FPSController player)
+    private IEnumerator MoveToPlayer(PlayerController player)
     {
         while (true)
         {

@@ -9,6 +9,8 @@ public class Gun : MonoBehaviourPun
     [Header("WEAPON INFOR")]
     public PlayerController.WeaponSlot weaponSlot;
     public string weaponName;
+    private int warriorID;
+    private bool isMine;
     public int damage;
     public int ammoCount; // đạn
     public int magSize; // số viên đạn trong 1 băng
@@ -101,12 +103,13 @@ public class Gun : MonoBehaviourPun
             // Kiểm tra nếu đối tượng va chạm có layer là "Zombie"
             if (_hit.collider.gameObject.layer == LayerMask.NameToLayer("Zombie"))
             {
+                Initialized(PlayerController.me.id, photonView.IsMine);
+
                 Debug.Log("Trúng zombie");
-                // Gọi hàm để gây damage cho zombie ở đây
                 AIZombie zombieHealth = _hit.collider.GetComponent<AIZombie>();
-                if (zombieHealth != null)
+                if (zombieHealth != null && photonView.IsMine)
                 {
-                    zombieHealth.TakeDamage(damage);
+                    zombieHealth.photonView.RPC("TakeDamage", RpcTarget.MasterClient,warriorID, damage);
                 }
             }
             selectedHitEffect.transform.position = _hit.point;
@@ -122,5 +125,9 @@ public class Gun : MonoBehaviourPun
         }
         recoil.GenerateRecoil(weaponName);
     }
-
+    public void Initialized(int attackId, bool isMine)
+    {
+        this.warriorID = attackId;
+        this.isMine = isMine;
+    }
 }
