@@ -21,14 +21,14 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] public float currentHP;
     [SerializeField] public float maxHP;
     [SerializeField] public int armor;
-    public Player photonPlayer;
+    public TextMeshProUGUI nametagText;
     public TextMeshProUGUI hpText;
     public TextMeshProUGUI armorText;
     public TextMeshProUGUI txtpickup;
     public TextMeshProUGUI txtAmmo;
+    public Player photonPlayer;
     [SerializeField] private Canvas cavansHUD;
     [SerializeField] private Slider healthSlider;
-    [SerializeField] private PlayerName playerName;
 
     [Header("MOVEMENT")]
     [SerializeField] float walkSpeed;
@@ -44,8 +44,8 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] Transform[] weaponSlots;
     [SerializeField] Transform crosshairTarget;
 
-    float aimZoomDistance = 35f;
-    float zoomSpeed = 5f; // Tốc độ zoom
+    float aimZoomDistance = 30f;
+    float zoomSpeed = 10f; // Tốc độ zoom
 
     private float defaultZoomDistance;
     private float targetZoomDistance; // Khoảng cách zoom mục tiêu
@@ -77,7 +77,7 @@ public class PlayerController : MonoBehaviourPun
     {
         id = player.ActorNumber;
         photonPlayer = player;
-        playerName.UpdateNameTag(player.NickName);
+        UpdateNameTag(player.NickName);
         GameManager.gamemanager.playerCtrl[id - 1] = this;
         currentHP = maxHP;
         UpdateHealthSlider(maxHP);
@@ -136,18 +136,6 @@ public class PlayerController : MonoBehaviourPun
         }
     }
     #region HEALTH + ARMOR + SPAWNPLAYER
-    void UpdateHpText(float curHP)
-    {
-        hpText.text = " " + curHP;
-    }
-    void UpdateArText(int armor)
-    {
-        armorText.text = " Armor: " + armor;
-    }
-    void UpdateHealthSlider(float health)
-    {
-        healthSlider.value = health / maxHP;
-    }
     [PunRPC]
     public void TakeDamage(int damageAmount)
     {
@@ -168,9 +156,9 @@ public class PlayerController : MonoBehaviourPun
     }
     void Die()
     {
-     /*   dead = true;
+        dead = true;
         Vector3 spawnPos = GameManager.gamemanager.spawnPoint[Random.Range(0, GameManager.gamemanager.spawnPoint.Length)].position;
-        StartCoroutine(Spawn(spawnPos, GameManager.gamemanager.respawnTime));*/
+        StartCoroutine(Spawn(spawnPos, GameManager.gamemanager.respawnTime));
     }
     IEnumerator Spawn(Vector3 spawnPos, float timeToSpawn)
     {
@@ -181,6 +169,22 @@ public class PlayerController : MonoBehaviourPun
         UpdateHealthSlider(currentHP);
         UpdateHpText(currentHP);
         UpdateArText(armor);
+    }
+    void UpdateHpText(float curHP)
+    {
+        hpText.text = " " + curHP;
+    }
+    void UpdateArText(int armor)
+    {
+        armorText.text = " Armor: " + armor;
+    }
+    void UpdateHealthSlider(float health)
+    {
+        healthSlider.value = health / maxHP;
+    }
+    public void UpdateNameTag(string name)
+    {
+        nametagText.text = name;
     }
     #endregion
     //
@@ -235,50 +239,56 @@ public class PlayerController : MonoBehaviourPun
     }
     void MovementWithWeapon()
     {
-        _hor = Input.GetAxis("Horizontal");
-        _ver = Input.GetAxis("Vertical");
-        Vector3 direction = new Vector3(_hor, 0f, _ver).normalized;
-
-        Vector3 moveDirection = transform.TransformDirection(direction);
-
-        float targetSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
-
-        _controller.Move(moveDirection * targetSpeed * Time.deltaTime);
-
-        if (direction.magnitude >= 0.1)
+        if (!dead)
         {
-            _anim.SetFloat("xValue", _hor);
-            _anim.SetFloat("zValue", _ver);
-        }
-        else
-        {
-            _anim.SetFloat("xValue", 0f);
-            _anim.SetFloat("zValue", 0f);
+            _hor = Input.GetAxis("Horizontal");
+            _ver = Input.GetAxis("Vertical");
+            Vector3 direction = new Vector3(_hor, 0f, _ver).normalized;
+
+            Vector3 moveDirection = transform.TransformDirection(direction);
+
+            float targetSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
+
+            _controller.Move(moveDirection * targetSpeed * Time.deltaTime);
+
+            if (direction.magnitude >= 0.1)
+            {
+                _anim.SetFloat("xValue", _hor);
+                _anim.SetFloat("zValue", _ver);
+            }
+            else
+            {
+                _anim.SetFloat("xValue", 0f);
+                _anim.SetFloat("zValue", 0f);
+            }
         }
     }
     void MovementWithoutWeapon()
     {
-        _hor = Input.GetAxisRaw("Horizontal");
-        _ver = Input.GetAxisRaw("Vertical");
-        Vector3 direction = new Vector3(_hor, 0f, _ver).normalized;
-
-        if (direction.magnitude >= 0.1)
+        if(!dead)
         {
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + playerCam.eulerAngles.y;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnCalmVelocity, _turnCalmTime);
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            _hor = Input.GetAxisRaw("Horizontal");
+            _ver = Input.GetAxisRaw("Vertical");
+            Vector3 direction = new Vector3(_hor, 0f, _ver).normalized;
 
-            float targetSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
+            if (direction.magnitude >= 0.1)
+            {
+                float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + playerCam.eulerAngles.y;
+                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnCalmVelocity, _turnCalmTime);
+                transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            _controller.Move(moveDir.normalized * targetSpeed * Time.deltaTime);
-            _anim.SetFloat("xValue", _hor);
-            _anim.SetFloat("zValue", _ver);
-        }
-        else
-        {
-            _anim.SetFloat("xValue", 0f);
-            _anim.SetFloat("zValue", 0f);
+                float targetSpeed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : walkSpeed;
+
+                Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+                _controller.Move(moveDir.normalized * targetSpeed * Time.deltaTime);
+                _anim.SetFloat("xValue", _hor);
+                _anim.SetFloat("zValue", _ver);
+            }
+            else
+            {
+                _anim.SetFloat("xValue", 0f);
+                _anim.SetFloat("zValue", 0f);
+            }
         }
     }
     void SetCam_WithWeapon()
@@ -415,7 +425,7 @@ public class PlayerController : MonoBehaviourPun
             dropWeapon.AddComponent<BoxCollider>();
             dropWeapon.transform.position = transform.position;
             dropWeapon.transform.rotation = transform.rotation;
-            //Equip(dropWeapon);
+            Equip(dropWeapon);
             Destroy(weapon.gameObject);
         }
     }
