@@ -105,12 +105,16 @@ public class PlayerController : MonoBehaviourPun
          }
         
     }
-    private void Update()
+    void Update()
     {
-        if (!photonView.IsMine)
-            return;
         HandleInput();
         UpdateWeaponState();
+        UpdateAimingState();
+        _anim.SetBool("weaponActive", _weaponActive);
+    }
+    void FixedUpdate()
+    {
+        //UpdateWeaponState();
         if (_weaponActive && !_isHolstered)
         {
             SetCam_WithWeapon();
@@ -120,7 +124,6 @@ public class PlayerController : MonoBehaviourPun
         {
             MovementWithoutWeapon();
         }
-        _anim.SetBool("weaponActive", _weaponActive);
     }
     //
     #region MOVEMENT
@@ -130,13 +133,10 @@ public class PlayerController : MonoBehaviourPun
         if (_weapon != null && !_isHolstered)
         {
             _weaponActive = true;
-            if (Input.GetMouseButton(0))
+            if (Input.GetMouseButton(0) && !_isReloading)
             {
-                if (!_isReloading)
-                {
-                    _weapon.StartFiring();
-                    UpdateAmmo();
-                }
+                _weapon.StartFiring();
+                UpdateAmmo();              
             }
             else
             {
@@ -146,13 +146,10 @@ public class PlayerController : MonoBehaviourPun
             if (Input.GetMouseButton(1))
             {
                 _aiming = true;
-                _weapon.recoil.recoilModifier = _aiming ? 0.3f : .1f;
-                CMfreelook.m_Lens.FieldOfView = Mathf.Lerp(CMfreelook.m_Lens.FieldOfView, aimZoomDistance, Time.deltaTime * zoomSpeed);
             }
             else
             {
                 _aiming = false;
-                CMfreelook.m_Lens.FieldOfView = Mathf.Lerp(CMfreelook.m_Lens.FieldOfView, defaultZoomDistance, Time.deltaTime * zoomSpeed);
             }
 
             if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize)
@@ -246,6 +243,19 @@ public class PlayerController : MonoBehaviourPun
             _weaponActive = false;
         }
     }
+    void UpdateAimingState()
+    {
+        var _weapon = GetWeapon(_activeWeaponIndex);
+        if (_aiming)
+        {
+            _weapon.recoil.recoilModifier = _aiming ? 0.3f : .1f;
+            CMfreelook.m_Lens.FieldOfView = Mathf.Lerp(CMfreelook.m_Lens.FieldOfView, aimZoomDistance, Time.deltaTime * zoomSpeed);
+        }
+        else
+        {
+            CMfreelook.m_Lens.FieldOfView = Mathf.Lerp(CMfreelook.m_Lens.FieldOfView, defaultZoomDistance, Time.deltaTime * zoomSpeed);
+        }
+    }
     Gun GetWeapon(int index)
     {
         if (index < 0 || index >= _equipWeapons.Length)
@@ -272,7 +282,6 @@ public class PlayerController : MonoBehaviourPun
         _equipWeapons[weaponSlotIndex] = _weapon;
         SetActiveWeapon(newWeapon.weaponSlot);
         UpdateAmmo();
-        _weapon.PV.TransferOwnership(PhotonNetwork.LocalPlayer);
     }
     void SetActiveWeapon(WeaponSlot weaponSlot)
     {
@@ -288,6 +297,7 @@ public class PlayerController : MonoBehaviourPun
     }
     void ToggleWeaponHolster()
     {
+        _aiming = false;
         bool _isHolster = rigController.GetBool("holster_weapon");
         if (_isHolster)
         {
@@ -300,6 +310,7 @@ public class PlayerController : MonoBehaviourPun
     }
     IEnumerator SwitchWeapon(int holsterIndex, int activateIndex)
     {
+        _aiming = false;
         yield return StartCoroutine(HolsterWeapon(holsterIndex));
         yield return StartCoroutine(ActivateWeapon(activateIndex));
         _activeWeaponIndex = activateIndex;
