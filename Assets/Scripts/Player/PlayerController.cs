@@ -3,17 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using TMPro;
-using static PlayerController;
 using Photon.Realtime;
 using Cinemachine;
 using Unity.VisualScripting;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviourPun
 {
-    CharacterController _controller;
-    Animator _anim;
-    public static PlayerController me;
-
     [Header("CAMERA")]
     [SerializeField] Camera _maincam;
     [SerializeField] Transform playerCam;
@@ -21,13 +17,17 @@ public class PlayerController : MonoBehaviourPun
     float turnspeed = 20;
 
     [Header("HUD")]
-    public int id;
-    public int currentHP;
-    public int maxHP;
-    public int def;
+    [SerializeField] public int id;
+    [SerializeField] public float currentHP;
+    [SerializeField] public float maxHP;
+    [SerializeField] public int armor;
     public Player photonPlayer;
+    public TextMeshProUGUI hpText;
+    public TextMeshProUGUI armorText;
     public TextMeshProUGUI txtpickup;
     public TextMeshProUGUI txtAmmo;
+    [SerializeField] private Canvas cavansHUD;
+    [SerializeField] private Slider healthSlider;
     [SerializeField] private PlayerName playerName;
 
     [Header("MOVEMENT")]
@@ -57,13 +57,16 @@ public class PlayerController : MonoBehaviourPun
     bool _isHolstered = false;
     bool _aiming = false;
     bool _isReloading = false;
+    bool dead = false;
 
     [Header("RIGGING")]
     [SerializeField] Animator rigController;
     [SerializeField] Transform leftHand;
     [SerializeField] UnityEngine.Animations.Rigging.Rig handIk;
      public WeaponAnimationEvents animationEvents;
-
+    CharacterController _controller;
+    Animator _anim;
+    public static PlayerController me;
     public enum WeaponSlot
     {
         Primary = 0,
@@ -76,6 +79,10 @@ public class PlayerController : MonoBehaviourPun
         photonPlayer = player;
         playerName.UpdateNameTag(player.NickName);
         GameManager.gamemanager.playerCtrl[id - 1] = this;
+        currentHP = maxHP;
+        UpdateHealthSlider(maxHP);
+        UpdateHpText(currentHP);
+        UpdateArText(armor);
         if (player.IsLocal)
             me = this;
     }
@@ -92,6 +99,7 @@ public class PlayerController : MonoBehaviourPun
         {
             if (_maincam)
                 _maincam.gameObject.SetActive(false);
+            cavansHUD.enabled = false;
         }
 
         defaultZoomDistance = CMfreelook.m_Lens.FieldOfView;
@@ -107,6 +115,7 @@ public class PlayerController : MonoBehaviourPun
     }
     void Update()
     {
+        if (!photonView.IsMine) return;
         HandleInput();
         UpdateWeaponState();
         UpdateAimingState();
@@ -114,6 +123,7 @@ public class PlayerController : MonoBehaviourPun
     }
     void FixedUpdate()
     {
+        if (!photonView.IsMine) return;
         //UpdateWeaponState();
         if (_weaponActive && !_isHolstered)
         {
@@ -125,6 +135,54 @@ public class PlayerController : MonoBehaviourPun
             MovementWithoutWeapon();
         }
     }
+    #region HEALTH + ARMOR + SPAWNPLAYER
+    void UpdateHpText(float curHP)
+    {
+        hpText.text = " " + curHP;
+    }
+    void UpdateArText(int armor)
+    {
+        armorText.text = " Armor: " + armor;
+    }
+    void UpdateHealthSlider(float health)
+    {
+        healthSlider.value = health / maxHP;
+    }
+    [PunRPC]
+    public void TakeDamage(int damageAmount)
+    {
+        armor -= damageAmount;
+        UpdateHealthSlider(currentHP);
+        if (armor <= 0)
+        {
+            currentHP += armor;
+            armor = 0;
+        }
+
+        if (currentHP <= 0)
+        {
+            Die();
+        }
+        UpdateArText(armor);
+        UpdateHpText(currentHP);
+    }
+    void Die()
+    {
+     /*   dead = true;
+        Vector3 spawnPos = GameManager.gamemanager.spawnPoint[Random.Range(0, GameManager.gamemanager.spawnPoint.Length)].position;
+        StartCoroutine(Spawn(spawnPos, GameManager.gamemanager.respawnTime));*/
+    }
+    IEnumerator Spawn(Vector3 spawnPos, float timeToSpawn)
+    {
+        yield return new WaitForSeconds(timeToSpawn);
+        dead = false;
+        transform.position = spawnPos;
+        currentHP = maxHP;
+        UpdateHealthSlider(currentHP);
+        UpdateHpText(currentHP);
+        UpdateArText(armor);
+    }
+    #endregion
     //
     #region MOVEMENT
     void HandleInput()
