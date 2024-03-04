@@ -116,6 +116,7 @@ public class PlayerController : MonoBehaviourPun
         HandleInput();
         UpdateWeaponState();
         UpdateAimingState();
+        CameraNameTag();
         _anim.SetBool("weaponActive", _weaponActive);
     }
     void FixedUpdate()
@@ -132,6 +133,18 @@ public class PlayerController : MonoBehaviourPun
             MovementWithoutWeapon();
         }
     }
+    #region CameraNametag
+    public void CameraNameTag()
+    {
+        if (_maincam == null)
+        {
+            return;
+        }
+        Vector3 directionToCamera = _maincam.transform.position - nametagText.transform.position;
+        nametagText.transform.rotation = Quaternion.LookRotation(-directionToCamera);
+    }
+    #endregion
+    //
     #region HEALTH + ARMOR + SPAWNPLAYER
     [PunRPC]
     public void TakeDamage(int damageAmount)
@@ -146,7 +159,6 @@ public class PlayerController : MonoBehaviourPun
             currentHP += armor;
             armor = 0;
         }
-
         if (currentHP <= 0)
         {
             Die();
@@ -158,7 +170,6 @@ public class PlayerController : MonoBehaviourPun
         {
             Hashtable hash = new Hashtable();
             hash["Health"] = currentHP;
-            hash["Armorr"] = armor;
             PhotonNetwork.LocalPlayer.SetCustomProperties(hash);
         }
         catch

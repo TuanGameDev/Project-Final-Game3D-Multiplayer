@@ -16,7 +16,6 @@ public class Leaderboard : MonoBehaviourPun
     public TextMeshProUGUI[] namePlayerText;
     public Slider[] sliderhealthPlayer;
     public TextMeshProUGUI[] healthPlayerText;
-    public TextMeshProUGUI[] armorrPlayerText;
     public Canvas canvas;
     public PlayerController me;
     private void Start()
@@ -26,10 +25,12 @@ public class Leaderboard : MonoBehaviourPun
             canvas.enabled = false;
         }
     }
+
     private void Update()
     {
         InvokeRepeating(nameof(Refresh), 0.5f, refreshRate);
     }
+
     public void Refresh()
     {
         Player[] players = PhotonNetwork.PlayerList;
@@ -41,22 +42,19 @@ public class Leaderboard : MonoBehaviourPun
             {
                 namePlayerText[i].text = sortedPlayers[i].NickName;
 
-                if (sortedPlayers[i].CustomProperties.ContainsKey("Health") && sortedPlayers[i].CustomProperties.ContainsKey("Armorr"))
+                if (sortedPlayers[i].CustomProperties.ContainsKey("Health"))
                 {
                     float health = (float)sortedPlayers[i].CustomProperties["Health"];
-                    int armor = (int)sortedPlayers[i].CustomProperties["Armorr"];
-                    if (sliderhealthPlayer[i].value != health/me.maxHP)
+                    if (sliderhealthPlayer[i].value != health / me.maxHP)
                     {
-                        sliderhealthPlayer[i].value = health/ me.maxHP;
+                        sliderhealthPlayer[i].value = health / me.maxHP;
                         healthPlayerText[i].text = health.ToString();
-                        armorrPlayerText[i].text = armor.ToString();
                     }
                 }
                 else
                 {
                     sliderhealthPlayer[i].value = 0f;
                     healthPlayerText[i].text = "";
-                    armorrPlayerText[i].text = "";
                 }
 
                 sliderhealthPlayer[i].gameObject.SetActive(true);
@@ -66,7 +64,6 @@ public class Leaderboard : MonoBehaviourPun
                 namePlayerText[i].text = "";
                 sliderhealthPlayer[i].gameObject.SetActive(false);
                 healthPlayerText[i].text = "";
-                armorrPlayerText[i].text = "";
             }
         }
     }

@@ -9,6 +9,7 @@ using TMPro;
 public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
 {
     [Header("Sreens")]
+    public int maxPlayers = 0;
     [SerializeField] private string playerName;
     [SerializeField] private GameObject nameInput;
     [SerializeField] private TextMeshProUGUI playerNameText;
@@ -41,6 +42,8 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
             PhotonNetwork.CurrentRoom.IsVisible = true;
             PhotonNetwork.CurrentRoom.IsOpen = true;
         }
+        PhotonNetwork.ConnectUsingSettings();
+        Debug.Log("Conecting...");
     }
     public void SetScreen(GameObject screen)
     {
@@ -94,7 +97,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         if (roomNameInput.text.Length < 2)
             return;
         else
-        NetWorkManager._networkmanager.CreateRoom(roomNameInput.text);
+        CreateRoom(roomNameInput.text);
     }
     public override void OnJoinedRoom()
     {
@@ -118,7 +121,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         PhotonNetwork.CurrentRoom.IsOpen = false;
         PhotonNetwork.CurrentRoom.IsVisible = false;
-        NetWorkManager._networkmanager.photonView.RPC("ChangeScene", RpcTarget.All,(object)"Scene Test");
+        photonView.RPC("ChangeScene", RpcTarget.All,(object)"Scene Test");
     }
     public void OnLeaveLobbyButton()
     {
@@ -157,7 +160,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     }
     public void OnJoinRoomButton(string roomName)
     {
-        NetWorkManager._networkmanager.JoinRoom(roomName);
+        JoinRoom(roomName);
     }
     public override void OnRoomListUpdate(List<RoomInfo> allRooms)
     {
@@ -168,5 +171,22 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         createRoomButton.interactable = true;
         findRoomButton.interactable = true;
         selectChar.interactable = true;
+        PhotonNetwork.JoinLobby();
+        Debug.Log("Conected...");
+    }
+    public void CreateRoom(string roomName)
+    {
+        RoomOptions options = new RoomOptions();
+        options.MaxPlayers = (byte)maxPlayers;
+        PhotonNetwork.CreateRoom(roomName, options);
+    }
+    public void JoinRoom(string roomName)
+    {
+        PhotonNetwork.JoinRoom(roomName);
+    }
+    [PunRPC]
+    public void ChangeScene(string sceneName)
+    {
+        PhotonNetwork.LoadLevel(sceneName);
     }
 }
