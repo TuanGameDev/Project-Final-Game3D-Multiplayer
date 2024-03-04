@@ -15,7 +15,6 @@ public class AIZombie : MonoBehaviourPun
     [SerializeField] public float maxHP;
     [SerializeField] public float chaseRange;
     [SerializeField] public float attackRange;
-    [SerializeField] public float playerDetectRate;
     [SerializeField] private float lastPlayerDetectTime;
     [SerializeField] public float attackRate;
     [SerializeField] public int curAttackerID;
@@ -68,7 +67,7 @@ public class AIZombie : MonoBehaviourPun
 
     void DetectPlayer()
     {
-        if (Time.time - lastPlayerDetectTime > playerDetectRate)
+        if (Time.time - lastPlayerDetectTime > chaseRange)
         {
             lastPlayerDetectTime = Time.time;
             PlayerController[] playerInScene = FindObjectsOfType<PlayerController>();

@@ -6,7 +6,7 @@ using Photon.Realtime;
 
 public class NetWorkManager : MonoBehaviourPunCallbacks
 {
-    public int maxPlayers = 0;
+   /* public int maxPlayers = 0;
     public static NetWorkManager _networkmanager;
     private void Awake()
     {
@@ -43,5 +43,5 @@ public class NetWorkManager : MonoBehaviourPunCallbacks
     public void ChangeScene(string sceneName)
     {
         PhotonNetwork.LoadLevel(sceneName);
-    }
+    }*/
 }
