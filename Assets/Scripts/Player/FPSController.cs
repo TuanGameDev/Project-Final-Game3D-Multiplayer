@@ -22,7 +22,7 @@ public class FPSController : MonoBehaviourPun
 
     [SerializeField] public static FPSController me;
     [SerializeField] public Player photonPlayer;
-    [SerializeField] private PlayerName playerName;
+    [SerializeField] private Leaderboard playerName;
     [SerializeField] public Canvas canvashealth;
 
     [Header("Gun")]

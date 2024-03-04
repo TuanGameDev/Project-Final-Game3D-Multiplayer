@@ -7,6 +7,8 @@ using Photon.Realtime;
 using Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine.UI;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
+
 
 public class PlayerController : MonoBehaviourPun
 {
@@ -22,13 +24,10 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] public float maxHP;
     [SerializeField] public int armor;
     public TextMeshProUGUI nametagText;
-    public TextMeshProUGUI hpText;
-    public TextMeshProUGUI armorText;
     public TextMeshProUGUI txtpickup;
     public TextMeshProUGUI txtAmmo;
     public Player photonPlayer;
     [SerializeField] private Canvas cavansHUD;
-    [SerializeField] private Slider healthSlider;
 
     [Header("MOVEMENT")]
     [SerializeField] float walkSpeed;
@@ -80,9 +79,7 @@ public class PlayerController : MonoBehaviourPun
         UpdateNameTag(player.NickName);
         GameManager.gamemanager.playerCtrl[id - 1] = this;
         currentHP = maxHP;
-        UpdateHealthSlider(maxHP);
-        UpdateHpText(currentHP);
-        UpdateArText(armor);
+        SetHashes();
         if (player.IsLocal)
             me = this;
     }
@@ -140,7 +137,10 @@ public class PlayerController : MonoBehaviourPun
     public void TakeDamage(int damageAmount)
     {
         armor -= damageAmount;
-        UpdateHealthSlider(currentHP);
+        if (!photonView.IsMine) return;
+        {
+            SetHashes();
+        }
         if (armor <= 0)
         {
             currentHP += armor;
@@ -151,8 +151,20 @@ public class PlayerController : MonoBehaviourPun
         {
             Die();
         }
-        UpdateArText(armor);
-        UpdateHpText(currentHP);
+    }
+    public void SetHashes()
+    {
+        try
+        {
+            Hashtable hash = new Hashtable();
+            hash["Health"] = currentHP;
+            hash["Armorr"] = armor;
+            PhotonNetwork.LocalPlayer.SetCustomProperties(hash);
+        }
+        catch
+        {
+            //
+        }
     }
     void Die()
     {
@@ -166,21 +178,6 @@ public class PlayerController : MonoBehaviourPun
         dead = false;
         transform.position = spawnPos;
         currentHP = maxHP;
-        UpdateHealthSlider(currentHP);
-        UpdateHpText(currentHP);
-        UpdateArText(armor);
-    }
-    void UpdateHpText(float curHP)
-    {
-        hpText.text = " " + curHP;
-    }
-    void UpdateArText(int armor)
-    {
-        armorText.text = " Armor: " + armor;
-    }
-    void UpdateHealthSlider(float health)
-    {
-        healthSlider.value = health / maxHP;
     }
     public void UpdateNameTag(string name)
     {
