@@ -11,8 +11,8 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     [Header("Sreens")]
     public int maxPlayers = 0;
     [SerializeField] private string playerName;
-    [SerializeField] private GameObject nameInput;
     [SerializeField] private TextMeshProUGUI playerNameText;
+    [SerializeField] private GameObject nameInput;
     [SerializeField] private GameObject mainScreen;
     [SerializeField] private GameObject createRoomSreen;
     [SerializeField] private GameObject lobbyScreen;
@@ -22,6 +22,8 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     [SerializeField] private Button createRoomButton;
     [SerializeField] private Button findRoomButton;
     [SerializeField] private Button selectChar;
+    [SerializeField] public Slider maxPlayersSlider;
+    [SerializeField] private TextMeshProUGUI maxPlayersText;
     [Header("Lobby")]
     [SerializeField] private TextMeshProUGUI playerListText;
     [SerializeField] private TextMeshProUGUI roomInfoText;
@@ -36,6 +38,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         createRoomButton.interactable = false;
         findRoomButton.interactable = false;
         selectChar.interactable = false;
+        maxPlayersSlider.onValueChanged.AddListener(OnMaxPlayersChanged);
         Cursor.lockState = CursorLockMode.None;
         if (PhotonNetwork.InRoom)
         {
@@ -44,6 +47,10 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         }
         PhotonNetwork.ConnectUsingSettings();
         Debug.Log("Conecting...");
+    }
+    public void Update()
+    {
+        maxPlayersText.text = "" + maxPlayers + " Player ";
     }
     public void SetScreen(GameObject screen)
     {
@@ -121,7 +128,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         PhotonNetwork.CurrentRoom.IsOpen = false;
         PhotonNetwork.CurrentRoom.IsVisible = false;
-        photonView.RPC("ChangeScene", RpcTarget.All,(object)"Scene Test");
+        photonView.RPC("ChangeScene", RpcTarget.All,"Scene Test");
     }
     public void OnLeaveLobbyButton()
     {
@@ -179,6 +186,10 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         RoomOptions options = new RoomOptions();
         options.MaxPlayers = (byte)maxPlayers;
         PhotonNetwork.CreateRoom(roomName, options);
+    }
+    void OnMaxPlayersChanged(float value)
+    {
+        maxPlayers = (int)value;
     }
     public void JoinRoom(string roomName)
     {

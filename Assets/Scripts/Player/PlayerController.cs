@@ -24,8 +24,10 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] public float maxHP;
     [SerializeField] public int armor;
     public TextMeshProUGUI nametagText;
-    public TextMeshProUGUI txtpickup;
-    public TextMeshProUGUI txtAmmo;
+    public TextMeshProUGUI pickupText;
+    public TextMeshProUGUI ammoText;
+    public TextMeshProUGUI armorrText;
+    public Image armorImage;
     public Player photonPlayer;
     [SerializeField] private Canvas cavansHUD;
 
@@ -37,6 +39,7 @@ public class PlayerController : MonoBehaviourPun
     float _turnCalmTime = 0.1f;
     float _turnCalmVelocity;
     bool _isJumping = false;
+    bool hasArmor = true;
     Vector3 _velocity;
 
     [Header("WEAPON")]
@@ -80,6 +83,7 @@ public class PlayerController : MonoBehaviourPun
         GameManager.gamemanager.playerCtrl[id - 1] = this;
         currentHP = maxHP;
         SetHashes();
+        UpdateArmorr(armor);
         if (player.IsLocal)
             me = this;
     }
@@ -117,6 +121,7 @@ public class PlayerController : MonoBehaviourPun
         UpdateWeaponState();
         UpdateAimingState();
         CameraNameTag();
+        UpdateArmorr(armor);
         _anim.SetBool("weaponActive", _weaponActive);
     }
     void FixedUpdate()
@@ -150,18 +155,37 @@ public class PlayerController : MonoBehaviourPun
     public void TakeDamage(int damageAmount)
     {
         armor -= damageAmount;
-        if (!photonView.IsMine) return;
-        {
-            SetHashes();
-        }
         if (armor <= 0)
         {
             currentHP += armor;
             armor = 0;
+            hasArmor = false;
         }
         if (currentHP <= 0)
         {
             Die();
+        }
+        if (hasArmor)
+        {
+            Color newColor;
+            string hexColor = "#FFFFFF"; // Mã màu đỏ
+            if (UnityEngine.ColorUtility.TryParseHtmlString(hexColor, out newColor))
+            {
+                armorImage.color = newColor;
+            }
+        }
+        else
+        {
+            Color newColor;
+            string hexColor = "#5E5E5E"; // Mã màu xám
+            if (UnityEngine.ColorUtility.TryParseHtmlString(hexColor, out newColor))
+            {
+                armorImage.color = newColor;
+            }
+        }
+        if (!photonView.IsMine) return;
+        {
+            SetHashes();
         }
     }
     public void SetHashes()
@@ -190,9 +214,13 @@ public class PlayerController : MonoBehaviourPun
         transform.position = spawnPos;
         currentHP = maxHP;
     }
-    public void UpdateNameTag(string name)
+    void UpdateNameTag(string name)
     {
         nametagText.text = name;
+    }
+    void UpdateArmorr(int armor)
+    {
+        armorrText.text = "" + armor;
     }
     #endregion
     //
@@ -479,7 +507,7 @@ public class PlayerController : MonoBehaviourPun
         Gun weapon = GetActiveWeapon();
         if (weapon != null)
         {
-            txtAmmo.text = weapon.ammoCount + "/" + weapon.magSize;
+            ammoText.text = weapon.ammoCount + "/" + weapon.magSize;
         }
     }
     IEnumerator DelayedReload()

@@ -25,12 +25,10 @@ public class Leaderboard : MonoBehaviourPun
             canvas.enabled = false;
         }
     }
-
-    private void Update()
+    public void Update()
     {
         InvokeRepeating(nameof(Refresh), 0.5f, refreshRate);
     }
-
     public void Refresh()
     {
         Player[] players = PhotonNetwork.PlayerList;
@@ -56,7 +54,6 @@ public class Leaderboard : MonoBehaviourPun
                     sliderhealthPlayer[i].value = 0f;
                     healthPlayerText[i].text = "";
                 }
-
                 sliderhealthPlayer[i].gameObject.SetActive(true);
             }
             else

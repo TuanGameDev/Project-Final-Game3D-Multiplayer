@@ -21,8 +21,7 @@ public class PlayerSelection : MonoBehaviour
 
     public string playerPrefabName;
     public GameObject[] playerModel;
-    private int selectedCharacter=0;
-    public string selectedCharacterName;
+    public int selectedCharacter=0;
     public TextMeshProUGUI messageText;
     public static PlayerSelection playerselection;
 
