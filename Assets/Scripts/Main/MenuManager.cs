@@ -11,18 +11,16 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     [Header("Sreens")]
     public int maxPlayers = 0;
     [SerializeField] private string playerName;
-    [SerializeField] private TextMeshProUGUI playerNameText;
     [SerializeField] private GameObject nameInput;
     [SerializeField] private GameObject mainScreen;
     [SerializeField] private GameObject createRoomSreen;
     [SerializeField] private GameObject lobbyScreen;
     [SerializeField] private GameObject lobbyBrowserScreen;
-    [SerializeField] private GameObject selectCharPopup;
     [Header("Main Screen")]
-    [SerializeField] private Button createRoomButton;
+    [SerializeField] private Button playermultiplayerButton;
     [SerializeField] private Button findRoomButton;
-    [SerializeField] private Button selectChar;
-    [SerializeField] public Slider maxPlayersSlider;
+    [SerializeField] private Button settingButton;
+    [SerializeField] private Button exitGameButton;
     [SerializeField] private TextMeshProUGUI maxPlayersText;
     [Header("Lobby")]
     [SerializeField] private TextMeshProUGUI playerListText;
@@ -35,10 +33,10 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     private List<RoomInfo> roomList = new List<RoomInfo>();
     void Start()
     {
-        createRoomButton.interactable = false;
+        playermultiplayerButton.interactable = false;
         findRoomButton.interactable = false;
-        selectChar.interactable = false;
-        maxPlayersSlider.onValueChanged.AddListener(OnMaxPlayersChanged);
+        settingButton.interactable = false;
+        exitGameButton.interactable = false;
         Cursor.lockState = CursorLockMode.None;
         if (PhotonNetwork.InRoom)
         {
@@ -50,21 +48,19 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     }
     public void Update()
     {
-        maxPlayersText.text = "" + maxPlayers + " Player ";
-    }
-    public void SetScreen(GameObject screen)
-    {
-        mainScreen.SetActive(false);
-        lobbyBrowserScreen.SetActive(false);
-        createRoomSreen.SetActive(false);
-        lobbyBrowserScreen.SetActive(false);
-        screen.SetActive(true);
-        if (screen == lobbyBrowserScreen)
-            UpdateLobbyBrowserUI();
+        maxPlayersText.text = " TEAM MODES: " + maxPlayers + " Player ";
     }
     public void OnBackToMainSreen()
     {
-        SetScreen(mainScreen);
+        mainScreen.SetActive(true);
+        lobbyScreen.SetActive(false);
+        createRoomSreen.SetActive(false);
+        lobbyBrowserScreen.SetActive(false);
+    }
+    public void OnCreateRoomSreen()
+    {
+        createRoomSreen.SetActive(true);
+        mainScreen.SetActive(false);
     }
     public void OnPlayerNameChanged(TMP_InputField playerNameInput)
     {
@@ -77,38 +73,22 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         }
         PhotonNetwork.NickName = playerName;
     }
-    public void OnScreenRoomButton()
-    {
-        if(playerName.Length<2)
-        {
-            return;
-        }
-        else
-        {
-            SetScreen(createRoomSreen);
-        }
-    }
     public void OnFindRoomButton()
     {
-        if (playerName.Length < 2)
-        {
-            return;
-        }
-        else
-        {
-            SetScreen(lobbyBrowserScreen);
-        }
+        lobbyBrowserScreen.SetActive(true);
+        mainScreen.SetActive(false);
     }
     public void OnCreateButton(TMP_InputField roomNameInput)
     {
         if (roomNameInput.text.Length < 2)
             return;
         else
-        CreateRoom(roomNameInput.text);
+            CreateRoom(roomNameInput.text);
     }
     public override void OnJoinedRoom()
     {
-        SetScreen(lobbyScreen);
+        lobbyScreen.SetActive(true);
+        createRoomSreen.SetActive(false);
         photonView.RPC("UpdateLobbyUI", RpcTarget.All);
     }
     public override void OnPlayerLeftRoom(Player otherPlayer)
@@ -133,7 +113,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     public void OnLeaveLobbyButton()
     {
         PhotonNetwork.LeaveRoom();
-        SetScreen(mainScreen);
+        mainScreen.SetActive(true);
         lobbyScreen.SetActive(false);
     }
     GameObject CreateRoomButton()
@@ -175,9 +155,10 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     }
     public override void OnConnectedToMaster()
     {
-        createRoomButton.interactable = true;
+        playermultiplayerButton.interactable = true;
         findRoomButton.interactable = true;
-        selectChar.interactable = true;
+        settingButton.interactable = true;
+        exitGameButton.interactable = true;
         PhotonNetwork.JoinLobby();
         Debug.Log("Conected...");
     }
@@ -186,10 +167,6 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         RoomOptions options = new RoomOptions();
         options.MaxPlayers = (byte)maxPlayers;
         PhotonNetwork.CreateRoom(roomName, options);
-    }
-    void OnMaxPlayersChanged(float value)
-    {
-        maxPlayers = (int)value;
     }
     public void JoinRoom(string roomName)
     {
@@ -200,4 +177,18 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         PhotonNetwork.LoadLevel(sceneName);
     }
+    #region Team Modes
+    public void Solo(int value)
+    {
+        maxPlayers = (int)value;
+    }
+    public void Dou(int value)
+    {
+        maxPlayers = (int)value;
+    }
+    public void Squad(int value)
+    {
+        maxPlayers = (int)value;
+    }
+    #endregion
 }
