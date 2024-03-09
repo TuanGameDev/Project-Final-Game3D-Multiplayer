@@ -21,10 +21,13 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     [SerializeField] private Button findRoomButton;
     [SerializeField] private Button settingButton;
     [SerializeField] private Button exitGameButton;
+    [SerializeField] private GameObject creatroomButton;
+    [SerializeField] private GameObject findroomButton;
     [SerializeField] private TextMeshProUGUI maxPlayersText;
     [Header("Lobby")]
     [SerializeField] private TextMeshProUGUI playerListText;
     [SerializeField] private TextMeshProUGUI roomInfoText;
+    [SerializeField] private TextMeshProUGUI joinNotificationText;
     [SerializeField] private Button startGameButton;
     [Header("Lobby Browser")]
     public RectTransform roomListContainer;
@@ -37,6 +40,8 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         findRoomButton.interactable = false;
         settingButton.interactable = false;
         exitGameButton.interactable = false;
+        creatroomButton.SetActive(false);
+        findroomButton.SetActive(false);
         Cursor.lockState = CursorLockMode.None;
         if (PhotonNetwork.InRoom)
         {
@@ -65,18 +70,27 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     public void OnPlayerNameChanged(TMP_InputField playerNameInput)
     {
         playerName = playerNameInput.text;
+        int minNameLength = 3;
         int maxNameLength = 5;
-        if (playerName.Length > maxNameLength)
+
+        if (playerName.Length < minNameLength)
+        {
+            playerName = playerName.PadRight(minNameLength);
+        }
+        else if (playerName.Length > maxNameLength)
         {
             playerName = playerName.Substring(0, maxNameLength);
-            playerNameInput.text = playerName;
         }
+
+        playerNameInput.text = playerName;
+        creatroomButton.SetActive(true);
+        findroomButton.SetActive(true);
         PhotonNetwork.NickName = playerName;
     }
     public void OnFindRoomButton()
     {
         lobbyBrowserScreen.SetActive(true);
-        mainScreen.SetActive(false);
+        createRoomSreen.SetActive(false);
     }
     public void OnCreateButton(TMP_InputField roomNameInput)
     {
@@ -88,12 +102,25 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     public override void OnJoinedRoom()
     {
         lobbyScreen.SetActive(true);
+        lobbyBrowserScreen.SetActive(false);
         createRoomSreen.SetActive(false);
         photonView.RPC("UpdateLobbyUI", RpcTarget.All);
+        joinNotificationText.color = Color.green;
+
+        string playerNames = "\n";
+        foreach (Player player in PhotonNetwork.PlayerList)
+        {
+            playerNames += player.NickName + ", ";
+        }
+
+        joinNotificationText.text = playerNames + "have joined the room.";
     }
+
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         UpdateLobbyUI();
+        joinNotificationText.color = Color.red;
+        joinNotificationText.text = "Player " + otherPlayer.NickName + " has left the room.";
     }
     [PunRPC]
     void UpdateLobbyUI()
@@ -102,7 +129,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         playerListText.text = "";
         foreach (Player player in PhotonNetwork.PlayerList)
             playerListText.text += player.NickName + "\n";
-        roomInfoText.text = "<b> Room Name </b> \n" + PhotonNetwork.CurrentRoom.Name;
+        roomInfoText.text = " Room Name: " + PhotonNetwork.CurrentRoom.Name;
     }
     public void StartGame()
     {

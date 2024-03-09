@@ -11,8 +11,8 @@ public class LoadingBar : MonoBehaviour
     public float loadSpeed = 0.5f;
     private float targetProgress = 0f;
 
-    public GameObject textPopup;
-    public GameObject sliderPopup;
+    public GameObject MainPopup;
+    public GameObject loadingbarPopup;
 
     private void Start()
     {
@@ -37,8 +37,8 @@ public class LoadingBar : MonoBehaviour
     }
     public void ShowPopup()
     {
-        textPopup.SetActive(true);
-        sliderPopup.SetActive(false);
+        MainPopup.SetActive(true);
+        loadingbarPopup.SetActive(false);
     }
     public void SetProgress(float progress)
     {
