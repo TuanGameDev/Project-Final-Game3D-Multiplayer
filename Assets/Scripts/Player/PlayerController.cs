@@ -358,6 +358,7 @@ public class PlayerController : MonoBehaviourPun
         else
         {
             CMfreelook.m_Lens.FieldOfView = Mathf.Lerp(CMfreelook.m_Lens.FieldOfView, defaultZoomDistance, Time.deltaTime * zoomSpeed);
+
         }
     }
     Gun GetWeapon(int index)
