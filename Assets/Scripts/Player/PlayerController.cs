@@ -168,7 +168,7 @@ public class PlayerController : MonoBehaviourPun
         if (hasArmor)
         {
             Color newColor;
-            string hexColor = "#FFFFFF"; // Mã màu đỏ
+            string hexColor = "#FFFFFF";
             if (UnityEngine.ColorUtility.TryParseHtmlString(hexColor, out newColor))
             {
                 armorImage.color = newColor;
@@ -177,7 +177,7 @@ public class PlayerController : MonoBehaviourPun
         else
         {
             Color newColor;
-            string hexColor = "#5E5E5E"; // Mã màu xám
+            string hexColor = "#5E5E5E";
             if (UnityEngine.ColorUtility.TryParseHtmlString(hexColor, out newColor))
             {
                 armorImage.color = newColor;
