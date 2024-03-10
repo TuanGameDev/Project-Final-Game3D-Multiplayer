@@ -34,6 +34,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     public GameObject roomButtonPrefabs;
     private List<GameObject> roomButtons = new List<GameObject>();
     private List<RoomInfo> roomList = new List<RoomInfo>();
+    private List<string> joinedPlayerNames = new List<string>();
     void Start()
     {
         playermultiplayerButton.interactable = false;
@@ -104,23 +105,45 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         lobbyScreen.SetActive(true);
         lobbyBrowserScreen.SetActive(false);
         createRoomSreen.SetActive(false);
+
         photonView.RPC("UpdateLobbyUI", RpcTarget.All);
-        joinNotificationText.color = Color.green;
 
         string playerNames = "\n";
         foreach (Player player in PhotonNetwork.PlayerList)
         {
-            playerNames += player.NickName + ", ";
+            if (!joinedPlayerNames.Contains(player.NickName))
+            {
+                playerNames += player.NickName + ", ";
+                joinedPlayerNames.Add(player.NickName);
+            }
         }
 
-        joinNotificationText.text = playerNames + "have joined the room.";
+        photonView.RPC("ShowJoinNotification", RpcTarget.All, playerNames);
+        photonView.RPC("StartClearJoinNotificationCoroutine", RpcTarget.All);
     }
 
+    [PunRPC]
+    private void ShowJoinNotification(string playerNames)
+    {
+        joinNotificationText.color = Color.green;
+        joinNotificationText.text = playerNames + "have joined the room.";
+    }
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         UpdateLobbyUI();
         joinNotificationText.color = Color.red;
-        joinNotificationText.text = "Player " + otherPlayer.NickName + " has left the room.";
+        joinNotificationText.text = otherPlayer.NickName + " has left the room.";
+        StartCoroutine(ClearJoinNotification());
+    }
+    [PunRPC]
+    private void StartClearJoinNotificationCoroutine()
+    {
+        StartCoroutine(ClearJoinNotification());
+    }
+    private IEnumerator ClearJoinNotification()
+    {
+        yield return new WaitForSeconds(3f);
+        joinNotificationText.text = "";
     }
     [PunRPC]
     void UpdateLobbyUI()
@@ -128,8 +151,15 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         startGameButton.interactable = PhotonNetwork.IsMasterClient;
         playerListText.text = "";
         foreach (Player player in PhotonNetwork.PlayerList)
-            playerListText.text += player.NickName + "\n";
-        roomInfoText.text = " Room Name: " + PhotonNetwork.CurrentRoom.Name;
+        {
+            string playerDisplayName = player.NickName;
+            if (player.IsMasterClient)
+            {
+                playerDisplayName = playerDisplayName+ "[Host]";
+            }
+            playerListText.text += playerDisplayName + "\n";
+        }
+        roomInfoText.text = "Lobby Leader: " + PhotonNetwork.MasterClient.NickName;
     }
     public void StartGame()
     {

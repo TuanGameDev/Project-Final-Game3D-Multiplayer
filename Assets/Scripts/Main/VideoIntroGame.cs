@@ -23,10 +23,7 @@ public class VideoIntroGame : MonoBehaviourPun
         leaderboardPopup.SetActive(false);
         hudPopup.SetActive(false);
         StartCoroutine(FadeInSkipText());
-        if (!photonView.IsMine)
-        {
-            canvas.enabled = false;
-        }
+       
     }
     private void Update()
     {

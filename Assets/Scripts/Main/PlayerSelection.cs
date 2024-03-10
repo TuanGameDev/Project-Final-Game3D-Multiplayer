@@ -3,37 +3,26 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-public enum PlayerName
-{
-    Nick,
-    Rochelle,
-    Coach,
-    Ellis
-}
 public class PlayerSelection : MonoBehaviour
 {
     [Header("Select Player")]
     public GameObject iconPlayer;
 
     [Header("Popup UI")]
+    public GameObject PlayerPopup;
+    public GameObject iconPlayerPopup;
     public GameObject selectButton;
-    public GameObject inputfielnamePopup;
     public GameObject playerselectionPopup;
 
 
     public string playerPrefabName;
     public GameObject[] playerModel;
-    public int selectedCharacter=1;
-    public TextMeshProUGUI SelectedCharactertext;
+    public int selectedCharacter=0;
     public static PlayerSelection playerselection;
 
     private void Awake()
     {
         playerselection = this;
-    }
-    private void Update()
-    {
-        SelectedCharactertext.text = "SELECT PLAYER: " + ((PlayerName)selectedCharacter).ToString();
     }
     public void IconClick(int characterIndex)
     {
@@ -50,10 +39,15 @@ public class PlayerSelection : MonoBehaviour
     {
         selectButton.SetActive(false);
         iconPlayer.SetActive(false);
-        inputfielnamePopup.SetActive(true);
+        PlayerPopup.SetActive(false);
     }
     public void ShowPlayerSelection()
     {
         playerselectionPopup.SetActive(true);
+    }
+    public void ChooseChacter()
+    {
+        iconPlayerPopup.SetActive(true);
+        PlayerPopup.SetActive(true);
     }
 }
