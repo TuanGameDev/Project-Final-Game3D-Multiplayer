@@ -18,12 +18,14 @@ public class VideoIntroGame : MonoBehaviourPun
     {
         videoPlayer.loopPointReached += VideoPlayer_OnLoopPointReached;
         videoPlayer.Play();
-       // _camera.gameObject.SetActive(false);
         skipText.gameObject.SetActive(false);
         leaderboardPopup.SetActive(false);
         hudPopup.SetActive(false);
         StartCoroutine(FadeInSkipText());
-       
+       if(!photonView.IsMine)
+        {
+            canvas.enabled = false;
+        }
     }
     private void Update()
     {
@@ -40,7 +42,6 @@ public class VideoIntroGame : MonoBehaviourPun
     {
         videoPlayer.Stop();
         gameObject.SetActive(false);
-        //_camera.gameObject.SetActive(true);
         leaderboardPopup.SetActive(true);
         hudPopup.SetActive(true);
     }
