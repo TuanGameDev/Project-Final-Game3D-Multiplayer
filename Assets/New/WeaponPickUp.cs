@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using Photon.Pun;
 
-public class WeaponPickUp : MonoBehaviour
+public class WeaponPickUp : MonoBehaviourPun
 {
     [SerializeField] Gun weaponFab;
     PlayerController activeWeapon;
@@ -16,6 +17,7 @@ public class WeaponPickUp : MonoBehaviour
         if (canPickUp && Input.GetKeyDown(KeyCode.F))
         {
             PickUpWeapon();
+            activeWeapon.pickupText.gameObject.SetActive(false);
         }
     }
 
@@ -26,7 +28,7 @@ public class WeaponPickUp : MonoBehaviour
         {
             canPickUp = true; // Đặt trạng thái có thể nhặt vũ khí thành true
             activeWeapon.pickupText.gameObject.SetActive(true);
-            activeWeapon.pickupText.text = "Take " + weaponFab.weaponName;
+            activeWeapon.pickupText.text = " Press F To Pick Up: " + weaponFab.weaponName;
         }
     }
 
@@ -39,14 +41,16 @@ public class WeaponPickUp : MonoBehaviour
             activeWeapon.pickupText.gameObject.SetActive(false);
         }
     }
-
-    private void PickUpWeapon()
+    void PickUpWeapon()
     {
         Gun newWeapon = Instantiate(weaponFab);
         newWeapon._canpickup = false;
-        PlayerController playerController = FindObjectOfType<PlayerController>(); // Tìm người chơi trong cảnh
-        playerController.EquipWeapon(newWeapon);
-
+        PlayerController[] playerInScene = FindObjectsOfType<PlayerController>(); // Tìm tất cả người chơi trong cảnh
+        foreach (PlayerController playerController in playerInScene)
+        {
+            playerController.EquipWeapon(newWeapon);
+            Debug.Log(playerController);
+        }
         Destroy(gameObject);
     }
 }
