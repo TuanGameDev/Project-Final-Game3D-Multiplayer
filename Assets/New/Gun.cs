@@ -6,16 +6,24 @@ using UnityEngine;
 public class Gun : MonoBehaviourPun
 {
     public PhotonView PV;
+    public GameObject prefabsDrop;
     [Header("WEAPON INFOR")]
     public PlayerController.WeaponSlot weaponSlot;
+    public enum WeaponType
+    {
+        Rifle,
+        Pistol
+    }
+    public WeaponType weaponType;
     public string weaponName;
     private int warriorID;
     private bool isMine;
     public int damage;
     public int ammoCount; // đạn
     public int magSize; // số viên đạn trong 1 băng
-    //public int mag; // băng đạn
+    public int mag; // băng đạn
     public GameObject magazine; // mag gameobject
+    public bool _canpickup = false;
 
     [SerializeField] float fireRate = 3f;
     public bool isFiring = false;
@@ -37,22 +45,26 @@ public class Gun : MonoBehaviourPun
 
     Ray _ray;
     RaycastHit _hit;
+    PlayerController activeWeapon;
 
     private void Awake()
     {
         recoil = GetComponent<GunRecoil>();
         //mag = Random.Range(1, 3); // random băng đạn ngẫu nhiên
         ammoCount = magSize; // ban đầu cho đạn = số viên đạn trong băng. VD: magSize = 30 => ammoCount = 30.
-        
+
     }
 
     void Update()
     {
-        if (isFiring && Time.time >= _nextFireTime)
+        if (_canpickup == false)
         {
-            FireBullet();
-            _nextFireTime = Time.time + 1f / fireRate;
-        }
+            if (isFiring && Time.time >= _nextFireTime)
+            {
+                FireBullet();
+                _nextFireTime = Time.time + 1f / fireRate;
+            }
+        }   
     }
 
     public void StartFiring()
@@ -63,6 +75,15 @@ public class Gun : MonoBehaviourPun
     public void StopFiring()
     {
         isFiring= false;
+    }
+
+    public int GetAmmoCount()
+    {
+        return ammoCount;
+    }
+    public void SetAmmoCount(int count)
+    {
+        ammoCount = count;
     }
 
     void FireBullet()
@@ -95,11 +116,7 @@ public class Gun : MonoBehaviourPun
 
         if (Physics.Raycast(_ray, out _hit))
         {
-            ParticleSystem selectedHitEffect = hitEffect;
-            /*if (_hit.collider.gameObject.layer == LayerMask.NameToLayer("Zombie"))
-            {
-                selectedHitEffect = zombieHitEffect;
-            }*/
+            ParticleSystem selectedHitEffect = hitEffect;          
             // Kiểm tra nếu đối tượng va chạm có layer là "Zombie"
             if (_hit.collider.gameObject.layer == LayerMask.NameToLayer("Zombie"))
             {
