@@ -6,17 +6,31 @@ using Photon.Pun;
 
 public class WeaponPickUp : MonoBehaviourPun
 {
+    PhotonView view;
     [SerializeField] Gun weaponFab;
     PlayerController activeWeapon;
-    // Thêm một biến bool để theo dõi trạng thái có thể nhặt vũ khí hay không
-    private bool canPickUp = false;
-
+    public bool _canPickup = true;
+    private void Awake()
+    {
+        view = GetComponent<PhotonView>();
+    }
     void Update()
     {
-        // Nếu có thể nhặt vũ khí và người chơi nhấn phím F
-        if (canPickUp && Input.GetKeyDown(KeyCode.F))
+        if (Input.GetKeyDown(KeyCode.F) && _canPickup)
         {
-            PickUpWeapon();
+            view.RPC("PickUpWeapon", RpcTarget.All);
+            //PickUpWeapon();
+        }
+    }
+    [PunRPC]
+    public void PickUpWeapon()
+    {
+        if (activeWeapon != null)
+        {
+            Gun newWeapon = Instantiate(weaponFab);
+            activeWeapon.EquipWeapon(newWeapon);
+            Destroy(gameObject);
+            //PhotonNetwork.Destroy(gameObject);
             activeWeapon.pickupText.gameObject.SetActive(false);
         }
     }
@@ -26,7 +40,7 @@ public class WeaponPickUp : MonoBehaviourPun
         activeWeapon = other.gameObject.GetComponent<PlayerController>();
         if (activeWeapon)
         {
-            canPickUp = true; // Đặt trạng thái có thể nhặt vũ khí thành true
+            _canPickup = true;
             activeWeapon.pickupText.gameObject.SetActive(true);
             activeWeapon.pickupText.text = " Press F To Pick Up: " + weaponFab.weaponName;
         }
@@ -37,20 +51,8 @@ public class WeaponPickUp : MonoBehaviourPun
         activeWeapon = other.gameObject.GetComponent<PlayerController>();
         if (activeWeapon)
         {
-            canPickUp = false; // Đặt trạng thái có thể nhặt vũ khí thành false khi không còn trong vùng nhặt
+            _canPickup = false;
             activeWeapon.pickupText.gameObject.SetActive(false);
         }
-    }
-    void PickUpWeapon()
-    {
-        Gun newWeapon = Instantiate(weaponFab);
-        newWeapon._canpickup = false;
-        PlayerController[] playerInScene = FindObjectsOfType<PlayerController>(); // Tìm tất cả người chơi trong cảnh
-        foreach (PlayerController playerController in playerInScene)
-        {
-            playerController.EquipWeapon(newWeapon);
-            Debug.Log(playerController);
-        }
-        Destroy(gameObject);
     }
 }

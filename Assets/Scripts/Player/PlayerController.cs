@@ -19,16 +19,17 @@ public class PlayerController : MonoBehaviourPun
     float turnspeed = 20;
 
     [Header("HUD")]
-    [SerializeField] public int id;
-    [SerializeField] public float currentHP;
-    [SerializeField] public float maxHP;
-    [SerializeField] public int armor;
+    public int id;
+    public float currentHP;
+    public float maxHP;
+    public int armor;
     public TextMeshProUGUI nametagText;
     public TextMeshProUGUI pickupText;
     public TextMeshProUGUI ammoText;
     public TextMeshProUGUI armorrText;
     public Image armorImage;
     public Player photonPlayer;
+    bool _isDead = false;
     [SerializeField] private Canvas cavansHUD;
 
     [Header("MOVEMENT")]
@@ -58,13 +59,15 @@ public class PlayerController : MonoBehaviourPun
     bool _isHolstered = false;
     bool _aiming = false;
     bool _isReloading = false;
-    bool dead = false;
 
     [Header("RIGGING")]
     [SerializeField] Animator rigController;
     [SerializeField] Transform leftHand;
     public WeaponAnimationEvents animationEvents;
+
+
     CharacterController _controller;
+    PlayerInventory _inventory;
     Animator _anim;
     public static PlayerController me;
     public enum WeaponSlot
@@ -89,8 +92,11 @@ public class PlayerController : MonoBehaviourPun
     {
         _controller = GetComponent<CharacterController>();
         _anim = GetComponent<Animator>();
+        _inventory = GetComponent<PlayerInventory>();
+
         CMfreelook = GetComponentInChildren<CinemachineFreeLook>();
         animationEvents = GetComponentInChildren<WeaponAnimationEvents>();
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -115,8 +121,8 @@ public class PlayerController : MonoBehaviourPun
     void Update()
     {
         if (!photonView.IsMine) return;
+        if (_isDead) return;
         HandleInput();
-        UpdateAimingState();
         CameraNameTag();
         UpdateArmorr(armor);
         _anim.SetBool("weaponActive", _weaponActive);
@@ -124,8 +130,10 @@ public class PlayerController : MonoBehaviourPun
     void FixedUpdate()
     {
         if (!photonView.IsMine) return;
+        if (_isDead) return;
 
         UpdateWeaponState();
+        UpdateAimingState();
 
         if (_weaponActive && !_isHolstered)
         {
@@ -213,14 +221,14 @@ public class PlayerController : MonoBehaviourPun
     }
     void Die()
     {
-        dead = true;
+        _isDead = true;
         Vector3 spawnPos = GameManager.gamemanager.spawnPoint[Random.Range(0, GameManager.gamemanager.spawnPoint.Length)].position;
         StartCoroutine(Spawn(spawnPos, GameManager.gamemanager.respawnTime));
     }
     IEnumerator Spawn(Vector3 spawnPos, float timeToSpawn)
     {
         yield return new WaitForSeconds(timeToSpawn);
-        dead = false;
+        _isDead = false;
         transform.position = spawnPos;
         currentHP = maxHP;
     }
@@ -254,19 +262,16 @@ public class PlayerController : MonoBehaviourPun
             if (Input.GetMouseButton(1))
             {
                 _aiming = true;
+
             }
             else
             {
                 _aiming = false;
             }
 
-            if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize)
+            if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize && !_isReloading)
             {
-                if (!_isReloading)
-                {
-                    rigController.SetTrigger("reload");                  
-                    StartCoroutine(DelayedReload());
-                }
+                Reload(); 
             }
             if (Input.GetKeyDown(KeyCode.G))
             {
@@ -374,6 +379,7 @@ public class PlayerController : MonoBehaviourPun
         var _weapon = GetWeapon(_activeWeaponIndex);
         if (_weapon != null && !_isHolstered)
         {
+            UpdateAmmo();
             _weaponActive = true;
         }
         else
@@ -408,6 +414,7 @@ public class PlayerController : MonoBehaviourPun
     {
         int weaponSlotIndex = (int)newWeapon.weaponSlot;
         var _weapon = GetWeapon(weaponSlotIndex);
+
         if (_weapon)
         {
             Destroy(_weapon.gameObject);
@@ -420,7 +427,6 @@ public class PlayerController : MonoBehaviourPun
         _weapon.transform.SetParent(weaponSlots[weaponSlotIndex], false);
         _equipWeapons[weaponSlotIndex] = _weapon;
         SetActiveWeapon(newWeapon.weaponSlot);
-        UpdateAmmo();
     }
     public void DropWeapon()
     {
@@ -448,8 +454,6 @@ public class PlayerController : MonoBehaviourPun
             // Cập nhật trạng thái vũ khí
             _weaponActive = false;
             _aiming = false;
-            // Cập nhật UI đạn
-            UpdateAmmo();
             rigController.Play("weapon_unarmed");
         }
     }
@@ -463,9 +467,15 @@ public class PlayerController : MonoBehaviourPun
             holsterIndex = -1;
         }
 
-        StartCoroutine(SwitchWeapon(holsterIndex, activateIndex));
+        StartCoroutine(SwitchWeapon(holsterIndex, activateIndex));   
     }
+
     void ToggleWeaponHolster()
+    {
+        photonView.RPC("WeaponHolster", RpcTarget.All);
+    }
+    [PunRPC]
+    public void WeaponHolster()
     {
         _aiming = false;
         bool _isHolster = rigController.GetBool("holster_weapon");
@@ -550,7 +560,6 @@ public class PlayerController : MonoBehaviourPun
         Destroy(magazineHand);
         weapon.ammoCount = weapon.magSize;
         rigController.ResetTrigger("reload");
-        UpdateAmmo();
     }
     void UpdateAmmo() // gọi hàm sau mỗi hành động liên quan đến weapon
     {
@@ -565,6 +574,17 @@ public class PlayerController : MonoBehaviourPun
         _isReloading = true;
         yield return new WaitForSeconds(1.8f);
         _isReloading = false;
+    }
+    void Reload()
+    {
+        rigController.SetTrigger("reload");
+        StartCoroutine(DelayedReload());
+        photonView.RPC("ReloadRPC", RpcTarget.All);
+    }
+    [PunRPC]
+    public void ReloadRPC()
+    {
+        rigController.SetTrigger("reload");
     }
     #endregion
     //

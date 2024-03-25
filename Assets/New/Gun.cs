@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class Gun : MonoBehaviourPun
 {
-    public PhotonView PV;
     public GameObject prefabsDrop;
     [Header("WEAPON INFOR")]
     public PlayerController.WeaponSlot weaponSlot;
@@ -23,7 +22,6 @@ public class Gun : MonoBehaviourPun
     public int magSize; // số viên đạn trong 1 băng
     public int mag; // băng đạn
     public GameObject magazine; // mag gameobject
-    public bool _canpickup = false;
 
     [SerializeField] float fireRate = 3f;
     public bool isFiring = false;
@@ -45,26 +43,21 @@ public class Gun : MonoBehaviourPun
 
     Ray _ray;
     RaycastHit _hit;
-    PlayerController activeWeapon;
+    PlayerController playerActive;
+    PlayerInventory playerInven;
 
     private void Awake()
     {
         recoil = GetComponent<GunRecoil>();
-        //mag = Random.Range(1, 3); // random băng đạn ngẫu nhiên
-        ammoCount = magSize; // ban đầu cho đạn = số viên đạn trong băng. VD: magSize = 30 => ammoCount = 30.
-
     }
 
     void Update()
     {
-        if (_canpickup == false)
+        if (isFiring && Time.time >= _nextFireTime)
         {
-            if (isFiring && Time.time >= _nextFireTime)
-            {
-                FireBullet();
-                _nextFireTime = Time.time + 1f / fireRate;
-            }
-        }   
+            FireBullet();
+            _nextFireTime = Time.time + 1f / fireRate;
+        }
     }
 
     public void StartFiring()
