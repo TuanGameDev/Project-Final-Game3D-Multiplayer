@@ -42,9 +42,10 @@ public class WeaponPickUp : MonoBehaviourPun
         {
             _canPickup = true;
             activeWeapon.pickupText.gameObject.SetActive(true);
-            activeWeapon.pickupText.text = " Press F To Pick Up: " + weaponFab.weaponName;
+            activeWeapon.pickupText.text = " Press F to pick up: " + weaponFab.weaponName;
         }
     }
+
 
     private void OnTriggerExit(Collider other)
     {
@@ -55,4 +56,5 @@ public class WeaponPickUp : MonoBehaviourPun
             activeWeapon.pickupText.gameObject.SetActive(false);
         }
     }
+
 }

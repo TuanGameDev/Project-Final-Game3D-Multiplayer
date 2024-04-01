@@ -43,8 +43,6 @@ public class Gun : MonoBehaviourPun
 
     Ray _ray;
     RaycastHit _hit;
-    PlayerController playerActive;
-    PlayerInventory playerInven;
 
     private void Awake()
     {
