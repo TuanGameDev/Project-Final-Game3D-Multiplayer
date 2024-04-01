@@ -67,7 +67,6 @@ public class PlayerController : MonoBehaviourPun
 
 
     CharacterController _controller;
-    PlayerInventory _inventory;
     Animator _anim;
     public static PlayerController me;
     public enum WeaponSlot
@@ -92,7 +91,6 @@ public class PlayerController : MonoBehaviourPun
     {
         _controller = GetComponent<CharacterController>();
         _anim = GetComponent<Animator>();
-        _inventory = GetComponent<PlayerInventory>();
 
         CMfreelook = GetComponentInChildren<CinemachineFreeLook>();
         animationEvents = GetComponentInChildren<WeaponAnimationEvents>();
@@ -435,12 +433,24 @@ public class PlayerController : MonoBehaviourPun
             Gun currentWeapon = GetActiveWeapon();
             if (currentWeapon != null)
             {
-                // Tạo một instance mới của vũ khí để drop
-                GameObject droppedWeapon = Instantiate(currentWeapon.prefabsDrop, currentWeapon.transform.position + transform.forward, Quaternion.identity);
-                UnEquipCurrentWeapon();
+                photonView.RPC("DropWeaponRPC", RpcTarget.All, currentWeapon.transform.position + transform.forward);
+
             }
         }
     }
+
+    [PunRPC]
+    public void DropWeaponRPC(Vector3 position)
+    {
+        Gun currentWeapon = GetActiveWeapon();
+        if (currentWeapon != null)
+        {
+            // Tạo một instance mới của vũ khí để drop
+            GameObject droppedWeapon = Instantiate(currentWeapon.prefabsDrop, position, Quaternion.identity);
+            UnEquipCurrentWeapon();
+        }
+    }
+
     void UnEquipCurrentWeapon()
     {
         Gun currentWeapon = GetActiveWeapon();
@@ -462,12 +472,21 @@ public class PlayerController : MonoBehaviourPun
         int holsterIndex = _activeWeaponIndex;
         int activateIndex = (int)weaponSlot;
 
+        if (photonView.IsMine)
+        {
+            photonView.RPC("SetActiveWeaponRPC", RpcTarget.All, holsterIndex, activateIndex);
+        }
+    }
+
+    [PunRPC]
+    public void SetActiveWeaponRPC(int holsterIndex, int activateIndex)
+    {
         if (holsterIndex == activateIndex)
         {
             holsterIndex = -1;
         }
 
-        StartCoroutine(SwitchWeapon(holsterIndex, activateIndex));   
+        StartCoroutine(SwitchWeapon(holsterIndex, activateIndex));
     }
 
     void ToggleWeaponHolster()
