@@ -16,7 +16,7 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] Camera _maincam;
     [SerializeField] Transform playerCam;
     CinemachineFreeLook CMfreelook;
-    float turnspeed = 20;
+    float turnspeed = 15;
 
     [Header("HUD")]
     public int id;
@@ -59,6 +59,8 @@ public class PlayerController : MonoBehaviourPun
     bool _isHolstered = false;
     bool _aiming = false;
     bool _isReloading = false;
+    private bool isDroppingWeapon = false;
+
 
     [Header("RIGGING")]
     [SerializeField] Animator rigController;
@@ -109,6 +111,7 @@ public class PlayerController : MonoBehaviourPun
         targetZoomDistance = defaultZoomDistance;
 
         animationEvents.WeaponAnimationEvent.AddListener(OnAnimationEvent);
+
         Gun existingweapon = GetComponentInChildren<Gun>();
          if (existingweapon)
          {
@@ -271,9 +274,10 @@ public class PlayerController : MonoBehaviourPun
             {
                 Reload(); 
             }
-            if (Input.GetKeyDown(KeyCode.G))
+            if (Input.GetKeyDown(KeyCode.G) && isDroppingWeapon)
             {
                 DropWeapon();
+                isDroppingWeapon = true;
             }
         }
 
@@ -292,7 +296,6 @@ public class PlayerController : MonoBehaviourPun
         if (Input.GetKeyDown(KeyCode.Space) && _controller.isGrounded && !_isJumping)
         {
             Jump();
-
         }
     }
     #endregion
@@ -303,10 +306,6 @@ public class PlayerController : MonoBehaviourPun
         _hor = Input.GetAxis("Horizontal");
         _ver = Input.GetAxis("Vertical");
         Vector3 direction = new Vector3(_hor, 0f, _ver).normalized;
-
-        Vector3 moveDirection = transform.TransformDirection(direction);
-
-        _controller.Move(moveDirection * speed * Time.deltaTime);
 
         if (direction.magnitude >= 0.1)
         {
@@ -330,10 +329,7 @@ public class PlayerController : MonoBehaviourPun
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + playerCam.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnCalmVelocity, _turnCalmTime);
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            float targetSpeed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : speed;
 
-            _controller.Move(moveDir.normalized * targetSpeed * Time.deltaTime);
             _anim.SetFloat("Speed", direction.magnitude * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : 1.0f));
 
         }
@@ -354,21 +350,15 @@ public class PlayerController : MonoBehaviourPun
             _isJumping = true;
             _anim.SetBool("isJumping", _isJumping);
             _velocity.y = Mathf.Sqrt(jumpHeight * -2f * Physics.gravity.y);
-
-            // Gửi thông điệp nhảy tới máy chủ
             photonView.RPC("JumpRPC", RpcTarget.All);
         }
     }
-
-    // Phương thức được gọi từ máy chủ và các máy khách khác để đồng bộ hóa hành động nhảy
     [PunRPC]
     public void JumpRPC()
     {
-        // Cập nhật trạng thái nhảy trên tất cả các máy khách
         _isJumping = true;
         _anim.SetBool("isJumping", _isJumping);
     }
-
     #endregion
     //
     #region WEAPON
@@ -434,11 +424,9 @@ public class PlayerController : MonoBehaviourPun
             if (currentWeapon != null)
             {
                 photonView.RPC("DropWeaponRPC", RpcTarget.All, currentWeapon.transform.position + transform.forward);
-
             }
         }
     }
-
     [PunRPC]
     public void DropWeaponRPC(Vector3 position)
     {
@@ -446,18 +434,17 @@ public class PlayerController : MonoBehaviourPun
         if (currentWeapon != null)
         {
             // Tạo một instance mới của vũ khí để drop
-            GameObject droppedWeapon = Instantiate(currentWeapon.prefabsDrop, position, Quaternion.identity);
+            GameObject droppedWeapon = PhotonNetwork.Instantiate(currentWeapon.prefabsDrop.name, position, Quaternion.identity);
             UnEquipCurrentWeapon();
         }
     }
-
     void UnEquipCurrentWeapon()
     {
         Gun currentWeapon = GetActiveWeapon();
         if (currentWeapon != null)
         {
             // Hủy bỏ vũ khí hiện tại
-            Destroy(currentWeapon.gameObject);
+            PhotonNetwork.Destroy(currentWeapon.gameObject);
             _equipWeapons[_activeWeaponIndex] = null;
             // Cập nhật chỉ số vũ khí hoạt động
             _activeWeaponIndex = -1;
@@ -465,6 +452,7 @@ public class PlayerController : MonoBehaviourPun
             _weaponActive = false;
             _aiming = false;
             rigController.Play("weapon_unarmed");
+            isDroppingWeapon = false;
         }
     }
     void SetActiveWeapon(WeaponSlot weaponSlot)
@@ -477,7 +465,6 @@ public class PlayerController : MonoBehaviourPun
             photonView.RPC("SetActiveWeaponRPC", RpcTarget.All, holsterIndex, activateIndex);
         }
     }
-
     [PunRPC]
     public void SetActiveWeaponRPC(int holsterIndex, int activateIndex)
     {
@@ -488,7 +475,6 @@ public class PlayerController : MonoBehaviourPun
 
         StartCoroutine(SwitchWeapon(holsterIndex, activateIndex));
     }
-
     void ToggleWeaponHolster()
     {
         photonView.RPC("WeaponHolster", RpcTarget.All);
