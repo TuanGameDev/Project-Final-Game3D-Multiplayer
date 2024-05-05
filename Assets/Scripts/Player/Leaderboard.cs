@@ -43,11 +43,11 @@ public class Leaderboard : MonoBehaviourPun
                 if (sortedPlayers[i].CustomProperties.ContainsKey("Health"))
                 {
                     float health = (float)sortedPlayers[i].CustomProperties["Health"];
-                    if (sliderhealthPlayer[i].value != health / me.maxHP)
+                    if (sliderhealthPlayer[i].value != health)
                     {
-                        sliderhealthPlayer[i].value = health / me.maxHP;
-                        healthPlayerText[i].text = health.ToString();
+                        sliderhealthPlayer[i].value = health;
                     }
+                    healthPlayerText[i].text = health.ToString();
                 }
                 else
                 {

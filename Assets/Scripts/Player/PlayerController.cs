@@ -20,16 +20,16 @@ public class PlayerController : MonoBehaviourPun
 
     [Header("HUD")]
     public int id;
-    public float currentHP;
-    public float maxHP;
-    public int armor;
+    public float _health = 100.0f;
+    private float maxhealthslider;
+    public float armor;
+    public Slider sliderhealth;
     public TextMeshProUGUI nametagText;
     public TextMeshProUGUI pickupText;
     public TextMeshProUGUI ammoText;
-    public TextMeshProUGUI armorrText;
-    public Image armorImage;
     public Player photonPlayer;
     bool _isDead = false;
+    [SerializeField] private CameraBloodEffect _cameraBloodEffect = null;
     [SerializeField] private Canvas cavansHUD;
 
     [Header("MOVEMENT")]
@@ -40,7 +40,6 @@ public class PlayerController : MonoBehaviourPun
     float _turnCalmTime = 0.1f;
     float _turnCalmVelocity;
     bool _isJumping = false;
-    bool hasArmor = true;
     Vector3 _velocity;
 
     [Header("WEAPON")]
@@ -69,7 +68,7 @@ public class PlayerController : MonoBehaviourPun
 
 
     CharacterController _controller;
-    Animator _anim;
+    public Animator _anim;
     public static PlayerController me;
     public enum WeaponSlot
     {
@@ -83,9 +82,9 @@ public class PlayerController : MonoBehaviourPun
         photonPlayer = player;
         UpdateNameTag(player.NickName);
         GameManager.gamemanager.playerCtrl[id - 1] = this;
-        currentHP = maxHP;
+        _health = 100.0f;
+        UpdateValue(_health);
         SetHashes();
-        UpdateArmorr(armor);
         if (player.IsLocal)
             me = this;
     }
@@ -125,7 +124,6 @@ public class PlayerController : MonoBehaviourPun
         if (_isDead) return;
         HandleInput();
         CameraNameTag();
-        UpdateArmorr(armor);
         _anim.SetBool("weaponActive", _weaponActive);
     }
     void FixedUpdate()
@@ -171,37 +169,19 @@ public class PlayerController : MonoBehaviourPun
     //
     #region HEALTH + ARMOR + SPAWNPLAYER
     [PunRPC]
-    public void TakeDamage(int damageAmount)
+    public void TakeDamage(float damageAmount)
     {
-        armor -= damageAmount;
-        if (armor <= 0)
+        _health -= damageAmount;
+        if (_cameraBloodEffect != null)
         {
-            currentHP += armor;
-            armor = 0;
-            hasArmor = false;
+            _cameraBloodEffect.minBloodAmount = (1.0f - _health / 100.0f);
+            _cameraBloodEffect.bloodAmount = Mathf.Min(_cameraBloodEffect.minBloodAmount + 0.2f, 1.0f);
         }
-        if (currentHP <= 0)
+        if (_health<=0)
         {
             Die();
         }
-        if (hasArmor)
-        {
-            Color newColor;
-            string hexColor = "#FFFFFF";
-            if (UnityEngine.ColorUtility.TryParseHtmlString(hexColor, out newColor))
-            {
-                armorImage.color = newColor;
-            }
-        }
-        else
-        {
-            Color newColor;
-            string hexColor = "#5E5E5E";
-            if (UnityEngine.ColorUtility.TryParseHtmlString(hexColor, out newColor))
-            {
-                armorImage.color = newColor;
-            }
-        }
+        UpdateValue(_health);
         if (!photonView.IsMine) return;
         {
             SetHashes();
@@ -212,8 +192,9 @@ public class PlayerController : MonoBehaviourPun
         try
         {
             Hashtable hash = new Hashtable();
-            hash["Health"] = currentHP;
+            hash["Health"] = _health;
             PhotonNetwork.LocalPlayer.SetCustomProperties(hash);
+            UpdateValue(_health);
         }
         catch
         {
@@ -231,15 +212,15 @@ public class PlayerController : MonoBehaviourPun
         yield return new WaitForSeconds(timeToSpawn);
         _isDead = false;
         transform.position = spawnPos;
-        currentHP = maxHP;
+        _health = 100.0f;
     }
     void UpdateNameTag(string name)
     {
         nametagText.text = name;
     }
-    void UpdateArmorr(int armor)
+    public void UpdateValue(float maxVal)
     {
-        armorrText.text = "" + armor;
+        sliderhealth.value = maxVal;
     }
     #endregion
     //
