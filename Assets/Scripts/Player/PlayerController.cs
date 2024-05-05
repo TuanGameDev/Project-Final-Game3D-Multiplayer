@@ -16,20 +16,20 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] Camera _maincam;
     [SerializeField] Transform playerCam;
     CinemachineFreeLook CMfreelook;
-    float turnspeed = 20;
+    float turnspeed = 15;
 
     [Header("HUD")]
     public int id;
-    public float currentHP;
-    public float maxHP;
-    public int armor;
+    public float _health = 100.0f;
+    private float maxhealthslider;
+    public float armor;
+    public Slider sliderhealth;
     public TextMeshProUGUI nametagText;
     public TextMeshProUGUI pickupText;
     public TextMeshProUGUI ammoText;
-    public TextMeshProUGUI armorrText;
-    public Image armorImage;
     public Player photonPlayer;
     bool _isDead = false;
+    [SerializeField] private CameraBloodEffect _cameraBloodEffect = null;
     [SerializeField] private Canvas cavansHUD;
 
     [Header("MOVEMENT")]
@@ -40,7 +40,6 @@ public class PlayerController : MonoBehaviourPun
     float _turnCalmTime = 0.1f;
     float _turnCalmVelocity;
     bool _isJumping = false;
-    bool hasArmor = true;
     Vector3 _velocity;
 
     [Header("WEAPON")]
@@ -59,6 +58,8 @@ public class PlayerController : MonoBehaviourPun
     bool _isHolstered = false;
     bool _aiming = false;
     bool _isReloading = false;
+    private bool isDroppingWeapon = false;
+
 
     [Header("RIGGING")]
     [SerializeField] Animator rigController;
@@ -67,7 +68,7 @@ public class PlayerController : MonoBehaviourPun
 
 
     CharacterController _controller;
-    Animator _anim;
+    public Animator _anim;
     public static PlayerController me;
     public enum WeaponSlot
     {
@@ -81,9 +82,9 @@ public class PlayerController : MonoBehaviourPun
         photonPlayer = player;
         UpdateNameTag(player.NickName);
         GameManager.gamemanager.playerCtrl[id - 1] = this;
-        currentHP = maxHP;
+        _health = 100.0f;
+        UpdateValue(_health);
         SetHashes();
-        UpdateArmorr(armor);
         if (player.IsLocal)
             me = this;
     }
@@ -109,6 +110,7 @@ public class PlayerController : MonoBehaviourPun
         targetZoomDistance = defaultZoomDistance;
 
         animationEvents.WeaponAnimationEvent.AddListener(OnAnimationEvent);
+
         Gun existingweapon = GetComponentInChildren<Gun>();
          if (existingweapon)
          {
@@ -122,7 +124,6 @@ public class PlayerController : MonoBehaviourPun
         if (_isDead) return;
         HandleInput();
         CameraNameTag();
-        UpdateArmorr(armor);
         _anim.SetBool("weaponActive", _weaponActive);
     }
     void FixedUpdate()
@@ -168,37 +169,19 @@ public class PlayerController : MonoBehaviourPun
     //
     #region HEALTH + ARMOR + SPAWNPLAYER
     [PunRPC]
-    public void TakeDamage(int damageAmount)
+    public void TakeDamage(float damageAmount)
     {
-        armor -= damageAmount;
-        if (armor <= 0)
+        _health -= damageAmount;
+        if (_cameraBloodEffect != null)
         {
-            currentHP += armor;
-            armor = 0;
-            hasArmor = false;
+            _cameraBloodEffect.minBloodAmount = (1.0f - _health / 100.0f);
+            _cameraBloodEffect.bloodAmount = Mathf.Min(_cameraBloodEffect.minBloodAmount + 0.2f, 1.0f);
         }
-        if (currentHP <= 0)
+        if (_health<=0)
         {
             Die();
         }
-        if (hasArmor)
-        {
-            Color newColor;
-            string hexColor = "#FFFFFF";
-            if (UnityEngine.ColorUtility.TryParseHtmlString(hexColor, out newColor))
-            {
-                armorImage.color = newColor;
-            }
-        }
-        else
-        {
-            Color newColor;
-            string hexColor = "#5E5E5E";
-            if (UnityEngine.ColorUtility.TryParseHtmlString(hexColor, out newColor))
-            {
-                armorImage.color = newColor;
-            }
-        }
+        UpdateValue(_health);
         if (!photonView.IsMine) return;
         {
             SetHashes();
@@ -209,8 +192,9 @@ public class PlayerController : MonoBehaviourPun
         try
         {
             Hashtable hash = new Hashtable();
-            hash["Health"] = currentHP;
+            hash["Health"] = _health;
             PhotonNetwork.LocalPlayer.SetCustomProperties(hash);
+            UpdateValue(_health);
         }
         catch
         {
@@ -228,15 +212,15 @@ public class PlayerController : MonoBehaviourPun
         yield return new WaitForSeconds(timeToSpawn);
         _isDead = false;
         transform.position = spawnPos;
-        currentHP = maxHP;
+        _health = 100.0f;
     }
     void UpdateNameTag(string name)
     {
         nametagText.text = name;
     }
-    void UpdateArmorr(int armor)
+    public void UpdateValue(float maxVal)
     {
-        armorrText.text = "" + armor;
+        sliderhealth.value = maxVal;
     }
     #endregion
     //
@@ -271,9 +255,10 @@ public class PlayerController : MonoBehaviourPun
             {
                 Reload(); 
             }
-            if (Input.GetKeyDown(KeyCode.G))
+            if (Input.GetKeyDown(KeyCode.G) && isDroppingWeapon)
             {
                 DropWeapon();
+                isDroppingWeapon = true;
             }
         }
 
@@ -292,7 +277,6 @@ public class PlayerController : MonoBehaviourPun
         if (Input.GetKeyDown(KeyCode.Space) && _controller.isGrounded && !_isJumping)
         {
             Jump();
-
         }
     }
     #endregion
@@ -303,10 +287,6 @@ public class PlayerController : MonoBehaviourPun
         _hor = Input.GetAxis("Horizontal");
         _ver = Input.GetAxis("Vertical");
         Vector3 direction = new Vector3(_hor, 0f, _ver).normalized;
-
-        Vector3 moveDirection = transform.TransformDirection(direction);
-
-        _controller.Move(moveDirection * speed * Time.deltaTime);
 
         if (direction.magnitude >= 0.1)
         {
@@ -330,10 +310,7 @@ public class PlayerController : MonoBehaviourPun
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + playerCam.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnCalmVelocity, _turnCalmTime);
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            float targetSpeed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : speed;
 
-            _controller.Move(moveDir.normalized * targetSpeed * Time.deltaTime);
             _anim.SetFloat("Speed", direction.magnitude * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : 1.0f));
 
         }
@@ -354,21 +331,15 @@ public class PlayerController : MonoBehaviourPun
             _isJumping = true;
             _anim.SetBool("isJumping", _isJumping);
             _velocity.y = Mathf.Sqrt(jumpHeight * -2f * Physics.gravity.y);
-
-            // Gửi thông điệp nhảy tới máy chủ
             photonView.RPC("JumpRPC", RpcTarget.All);
         }
     }
-
-    // Phương thức được gọi từ máy chủ và các máy khách khác để đồng bộ hóa hành động nhảy
     [PunRPC]
     public void JumpRPC()
     {
-        // Cập nhật trạng thái nhảy trên tất cả các máy khách
         _isJumping = true;
         _anim.SetBool("isJumping", _isJumping);
     }
-
     #endregion
     //
     #region WEAPON
@@ -434,11 +405,9 @@ public class PlayerController : MonoBehaviourPun
             if (currentWeapon != null)
             {
                 photonView.RPC("DropWeaponRPC", RpcTarget.All, currentWeapon.transform.position + transform.forward);
-
             }
         }
     }
-
     [PunRPC]
     public void DropWeaponRPC(Vector3 position)
     {
@@ -446,18 +415,17 @@ public class PlayerController : MonoBehaviourPun
         if (currentWeapon != null)
         {
             // Tạo một instance mới của vũ khí để drop
-            GameObject droppedWeapon = Instantiate(currentWeapon.prefabsDrop, position, Quaternion.identity);
+            GameObject droppedWeapon = PhotonNetwork.Instantiate(currentWeapon.prefabsDrop.name, position, Quaternion.identity);
             UnEquipCurrentWeapon();
         }
     }
-
     void UnEquipCurrentWeapon()
     {
         Gun currentWeapon = GetActiveWeapon();
         if (currentWeapon != null)
         {
             // Hủy bỏ vũ khí hiện tại
-            Destroy(currentWeapon.gameObject);
+            PhotonNetwork.Destroy(currentWeapon.gameObject);
             _equipWeapons[_activeWeaponIndex] = null;
             // Cập nhật chỉ số vũ khí hoạt động
             _activeWeaponIndex = -1;
@@ -465,6 +433,7 @@ public class PlayerController : MonoBehaviourPun
             _weaponActive = false;
             _aiming = false;
             rigController.Play("weapon_unarmed");
+            isDroppingWeapon = false;
         }
     }
     void SetActiveWeapon(WeaponSlot weaponSlot)
@@ -477,7 +446,6 @@ public class PlayerController : MonoBehaviourPun
             photonView.RPC("SetActiveWeaponRPC", RpcTarget.All, holsterIndex, activateIndex);
         }
     }
-
     [PunRPC]
     public void SetActiveWeaponRPC(int holsterIndex, int activateIndex)
     {
@@ -488,7 +456,6 @@ public class PlayerController : MonoBehaviourPun
 
         StartCoroutine(SwitchWeapon(holsterIndex, activateIndex));
     }
-
     void ToggleWeaponHolster()
     {
         photonView.RPC("WeaponHolster", RpcTarget.All);
