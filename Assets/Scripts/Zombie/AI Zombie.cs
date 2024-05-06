@@ -138,7 +138,10 @@ public class AIZombie : MonoBehaviourPun
         }
         anim.enabled = false;
         targetPlayer = null;
+        isPlayerDetected = false;
         attackRange = 0;
+        rb.useGravity = false;
+        chaseRange = 0;
         Destroy(gameObject, 3);
     }
     #endregion
