@@ -25,6 +25,7 @@ public class Gun : MonoBehaviourPun
     public int magSize; // số viên đạn trong 1 băng
     public int mag; // băng đạn
     public GameObject magazine; // mag gameobject
+    public GameObject bloodSplatterPrefab;
 
     [SerializeField] float fireRate = 3f;
     public bool isFiring = false;
@@ -119,6 +120,8 @@ public class Gun : MonoBehaviourPun
             if (_hit.collider.gameObject.layer == LayerMask.NameToLayer("Zombie"))
             {
                 Initialized(PlayerController.me.id, photonView.IsMine);
+                Instantiate(bloodSplatterPrefab, _hit.point, Quaternion.identity);
+                currentTrail.transform.position = _hit.point;
 
                 Debug.Log("Trúng zombie");
                 AIZombie zombieHealth = _hit.collider.GetComponent<AIZombie>();
