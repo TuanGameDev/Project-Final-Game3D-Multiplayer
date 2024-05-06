@@ -25,6 +25,7 @@ public class AIZombie : MonoBehaviourPun
     public float maxHP;
     public Animator anim;
     public Rigidbody rb;
+    public Rigidbody[] _ragdollRigibodies;
     private Coroutine moveCoroutine;
     public PlayerController targetPlayer;
     public PlayerController[] playerInScene;
@@ -60,6 +61,7 @@ public class AIZombie : MonoBehaviourPun
 
         MoveToTarget();
     }
+    #region HEALTH + ATTACK + MOVE
     private void MoveToTarget()
     {
         playerInScene = FindObjectsOfType<PlayerController>();
@@ -84,7 +86,6 @@ public class AIZombie : MonoBehaviourPun
             }
         }
     }
-
     void Attack()
     {
         lastAttackTime = Time.time;
@@ -105,6 +106,7 @@ public class AIZombie : MonoBehaviourPun
         if (currentHP <= 0)
         {
             Die();
+            photonView.RPC("EnableRagdoll", RpcTarget.All);
         }
     }
 
@@ -113,13 +115,34 @@ public class AIZombie : MonoBehaviourPun
     {
         currentHP = maxVal;
     }
-
+    #endregion
+    #region RAGDOLLRIGIBODIES
+    private void DisableRagdoll()
+    {
+        foreach(var rigibody in _ragdollRigibodies)
+        {
+            rigibody.isKinematic = true;
+        }
+    }
     void Die()
     {
         PlayerController player = GameManager.gamemanager.GetPlayer(curAttackerID);
-        PhotonNetwork.Destroy(gameObject);
         PhotonNetwork.Instantiate(dead, transform.position, Quaternion.identity);
     }
+    [PunRPC]
+    void EnableRagdoll()
+    {
+        foreach (var rigibody in _ragdollRigibodies)
+        {
+            rigibody.isKinematic = false;
+        }
+        anim.enabled = false;
+        targetPlayer = null;
+        attackRange = 0;
+        isPlayerDetected = false;
+        Destroy(gameObject, 3);
+    }
+    #endregion
 
     private void OnDrawGizmosSelected()
     {
