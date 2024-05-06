@@ -5,6 +5,7 @@ using UnityEngine.AI;
 using Photon.Pun;
 using TMPro;
 using Photon.Realtime;
+using Unity.Burst.Intrinsics;
 
 public class AIZombie : MonoBehaviourPun
 {
@@ -22,16 +23,15 @@ public class AIZombie : MonoBehaviourPun
     [Header("Máu")]
     public float currentHP;
     public float maxHP;
-    private Animator anim;
-    private Rigidbody rb;
+    public Animator anim;
+    public Rigidbody rb;
     private Coroutine moveCoroutine;
-    private PlayerController targetPlayer;
-    private PlayerController[] playerInScene;
-    private NavMeshAgent agent;
+    public PlayerController targetPlayer;
+    public PlayerController[] playerInScene;
+    public NavMeshAgent agent;
     private void Start()
     {
         UpdateHealth(maxHP);
-        GetReferences();
     }
 
     private void Update()
@@ -48,6 +48,7 @@ public class AIZombie : MonoBehaviourPun
                 anim.SetBool("Move", false);
             }
         }
+
         if (isPlayerDetected)
         {
             agent.speed = 1;
@@ -59,7 +60,6 @@ public class AIZombie : MonoBehaviourPun
 
         MoveToTarget();
     }
-
     private void MoveToTarget()
     {
         playerInScene = FindObjectsOfType<PlayerController>();
@@ -73,20 +73,28 @@ public class AIZombie : MonoBehaviourPun
                 anim.SetBool("Move", true);
                 isPlayerDetected = true;
             }
-            else if (distanceToPlayer > chaseRange)
+            else if (player == targetPlayer)
             {
-                anim.SetBool("Move", false);
-                isPlayerDetected = false;
-                targetPlayer = null;
+                if (distanceToPlayer > chaseRange)
+                {
+                    targetPlayer = null;
+                    anim.SetBool("Move", false);
+                    isPlayerDetected = false;
+                }
             }
         }
     }
 
     void Attack()
     {
-        anim.SetTrigger("Attack");
         lastAttackTime = Time.time;
         targetPlayer.photonView.RPC("TakeDamage", RpcTarget.All, damage);
+        photonView.RPC("TriggerAttackAnimation", RpcTarget.All);
+    }
+    [PunRPC]
+    void TriggerAttackAnimation()
+    {
+        anim.SetTrigger("Attack");
     }
     [PunRPC]
     public void TakeDamage(int attackerId, int damageAmount)
@@ -137,11 +145,5 @@ public class AIZombie : MonoBehaviourPun
                 agent.SetDestination(targetPlayer.transform.position);
             }
         }
-    }
-    private void GetReferences()
-    {
-        agent = GetComponent<NavMeshAgent>();
-        anim = GetComponent<Animator>();
-        rb = GetComponent<Rigidbody>();
     }
 }
