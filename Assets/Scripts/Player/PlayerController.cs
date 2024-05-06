@@ -47,6 +47,10 @@ public class PlayerController : MonoBehaviourPun
     Vector3 _velocity;
 
     [Header("WEAPON")]
+    [SerializeField] private float ReloadRate;
+    [SerializeField] private Image ReloadIMG;
+    [SerializeField] private Image cooldownReloadIMG;
+    [SerializeField] private Image crosshairIMG;
     [SerializeField] Transform[] weaponSlots;
     [SerializeField] Transform crosshairTarget;
     float aimZoomDistance = 30f;
@@ -566,9 +570,28 @@ public class PlayerController : MonoBehaviourPun
     }
     IEnumerator DelayedReload()
     {   
-        _isReloading = true;
-        yield return new WaitForSeconds(1.8f);
+        cooldownReloadIMG.fillAmount = 1f;
+        float startTime = Time.time;
+        float endTime = startTime + ReloadRate;
+
+        while (Time.time < endTime)
+        {
+            float remainingTime = endTime - Time.time;
+            float fillAmount = remainingTime / ReloadRate;
+            cooldownReloadIMG.fillAmount = fillAmount;
+            _isReloading = true;
+            ReloadIMG.gameObject.SetActive(true);
+            crosshairIMG.enabled = false;
+            yield return null;
+        }
+        cooldownReloadIMG.fillAmount = 0f;
+        ReloadIMG.gameObject.SetActive(false);
         _isReloading = false;
+        crosshairIMG.enabled = true;
+    }
+    public void SetCrosshairActive(bool isActive)
+    {
+        crosshairIMG.enabled = isActive;
     }
     void Reload()
     {
