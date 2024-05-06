@@ -27,6 +27,10 @@ public class PlayerController : MonoBehaviourPun
     public TextMeshProUGUI nametagText;
     public TextMeshProUGUI pickupText;
     public TextMeshProUGUI ammoText;
+    public TextMeshProUGUI magText;
+    public TextMeshProUGUI weaponName;
+    public RawImage weaponIcon;
+    
     public Player photonPlayer;
     bool _isDead = false;
     [SerializeField] private CameraBloodEffect _cameraBloodEffect = null;
@@ -116,7 +120,9 @@ public class PlayerController : MonoBehaviourPun
          {
             EquipWeapon(existingweapon);
          }
-        
+
+       
+
     }
     void Update()
     {
@@ -396,6 +402,8 @@ public class PlayerController : MonoBehaviourPun
         _weapon.transform.SetParent(weaponSlots[weaponSlotIndex], false);
         _equipWeapons[weaponSlotIndex] = _weapon;
         SetActiveWeapon(newWeapon.weaponSlot);
+
+      
     }
     public void DropWeapon()
     {
@@ -552,7 +560,8 @@ public class PlayerController : MonoBehaviourPun
         Gun weapon = GetActiveWeapon();
         if (weapon != null)
         {
-            ammoText.text = weapon.ammoCount + "/" + weapon.magSize;
+            ammoText.text = weapon.ammoCount + "";
+            magText.text = weapon.magSize + "";
         }
     }
     IEnumerator DelayedReload()

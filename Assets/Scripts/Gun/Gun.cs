@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class Gun : MonoBehaviourPun
 {
@@ -15,6 +17,7 @@ public class Gun : MonoBehaviourPun
     }
     public WeaponType weaponType;
     public string weaponName;
+    public RawImage gunIcon;
     private int warriorID;
     private bool isMine;
     public int damage;
