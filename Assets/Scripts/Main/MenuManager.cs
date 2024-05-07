@@ -165,7 +165,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         PhotonNetwork.CurrentRoom.IsOpen = false;
         PhotonNetwork.CurrentRoom.IsVisible = false;
-        photonView.RPC("ChangeScene", RpcTarget.All,"Scene Test");
+        photonView.RPC("ChangeScene", RpcTarget.All, "DeathVillage");
     }
     public void OnLeaveLobbyButton()
     {
