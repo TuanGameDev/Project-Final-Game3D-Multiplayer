@@ -18,4 +18,8 @@ public class MouseHoverText : MonoBehaviour, IPointerEnterHandler, IPointerExitH
     {
         textMeshPro.color = Color.grey;
     }
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        textMeshPro.color = Color.grey;
+    }
 }

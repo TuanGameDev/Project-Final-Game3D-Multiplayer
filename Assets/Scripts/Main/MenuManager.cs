@@ -92,6 +92,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         lobbyBrowserScreen.SetActive(true);
         createRoomSreen.SetActive(false);
+        UpdateLobbyBrowserUI();
     }
     public void OnCreateButton(TMP_InputField roomNameInput)
     {
@@ -165,7 +166,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         PhotonNetwork.CurrentRoom.IsOpen = false;
         PhotonNetwork.CurrentRoom.IsVisible = false;
-        photonView.RPC("ChangeScene", RpcTarget.All, "DeathVillage");
+        photonView.RPC("ChangeScene", RpcTarget.All, "Hospital");
     }
     public void OnLeaveLobbyButton()
     {

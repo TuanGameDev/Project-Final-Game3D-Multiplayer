@@ -30,13 +30,15 @@ public class PlayerController : MonoBehaviourPun
     public TextMeshProUGUI magText;
     public TextMeshProUGUI weaponName;
     public RawImage weaponIcon;
-    
+
     public Player photonPlayer;
     bool _isDead = false;
     [SerializeField] private CameraBloodEffect _cameraBloodEffect = null;
     [SerializeField] private Canvas cavansHUD;
 
     [Header("MOVEMENT")]
+    [SerializeField] public AudioSource footstepAudioSource;
+    [SerializeField] public AudioClip[] footstepSounds;
     [SerializeField] float speed;
     [SerializeField] float sprintSpeed;
     [SerializeField] float jumpHeight;
@@ -120,12 +122,12 @@ public class PlayerController : MonoBehaviourPun
         animationEvents.WeaponAnimationEvent.AddListener(OnAnimationEvent);
 
         Gun existingweapon = GetComponentInChildren<Gun>();
-         if (existingweapon)
-         {
+        if (existingweapon)
+        {
             EquipWeapon(existingweapon);
-         }
+        }
 
-       
+
 
     }
     void Update()
@@ -182,14 +184,16 @@ public class PlayerController : MonoBehaviourPun
     public void TakeDamage(float damageAmount)
     {
         _health -= damageAmount;
+        AudioManager._audioManager.PlaySFX(Random.Range(0, 7));
         if (_cameraBloodEffect != null)
         {
             _cameraBloodEffect.minBloodAmount = (1.0f - _health / 100.0f);
             _cameraBloodEffect.bloodAmount = Mathf.Min(_cameraBloodEffect.minBloodAmount + 0.2f, 1.0f);
         }
-        if (_health<=0)
+        if (_health <= 0)
         {
             Die();
+            AudioManager._audioManager.StopSFX(Random.Range(0, 7));
         }
         UpdateValue(_health);
         if (!photonView.IsMine) return;
@@ -263,7 +267,7 @@ public class PlayerController : MonoBehaviourPun
 
             if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize && !_isReloading)
             {
-                Reload(); 
+                Reload();
             }
             if (Input.GetKeyDown(KeyCode.G) && isDroppingWeapon)
             {
@@ -302,11 +306,18 @@ public class PlayerController : MonoBehaviourPun
         {
             _anim.SetFloat("xValue", _hor);
             _anim.SetFloat("zValue", _ver);
+            if (!footstepAudioSource.isPlaying) // Kiểm tra xem âm thanh có đang phát không
+            {
+                AudioClip randomFootstepSound = footstepSounds[Random.Range(0, footstepSounds.Length)]; // Chọn một âm thanh ngẫu nhiên từ mảng footstepSounds
+                footstepAudioSource.clip = randomFootstepSound; // Gán âm thanh bước chân vào thành phần Audio Source
+                footstepAudioSource.Play(); // Phát lại âm thanh bước chân
+            }
         }
         else
         {
             _anim.SetFloat("xValue", 0f);
             _anim.SetFloat("zValue", 0f);
+            footstepAudioSource.Stop(); // Dừng phát lại âm thanh bước chân
         }
     }
     void MovementWithoutWeapon()
@@ -322,11 +333,17 @@ public class PlayerController : MonoBehaviourPun
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             _anim.SetFloat("Speed", direction.magnitude * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : 1.0f));
-
+            if (!footstepAudioSource.isPlaying) // Kiểm tra xem âm thanh có đang phát không
+            {
+                AudioClip randomFootstepSound = footstepSounds[Random.Range(0, footstepSounds.Length)]; // Chọn một âm thanh ngẫu nhiên từ mảng footstepSounds
+                footstepAudioSource.clip = randomFootstepSound; // Gán âm thanh bước chân vào thành phần Audio Source
+                footstepAudioSource.Play(); // Phát lại âm thanh bước chân
+            }
         }
         else
         {
             _anim.SetFloat("Speed", 0f);
+            footstepAudioSource.Stop(); // Dừng phát lại âm thanh bước chân
         }
     }
     void SetCam_WithWeapon()
@@ -596,6 +613,7 @@ public class PlayerController : MonoBehaviourPun
     void Reload()
     {
         rigController.SetTrigger("reload");
+        AudioManager._audioManager.PlaySFX(8);
         StartCoroutine(DelayedReload());
         photonView.RPC("ReloadRPC", RpcTarget.All);
     }
