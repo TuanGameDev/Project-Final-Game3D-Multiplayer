@@ -29,7 +29,7 @@ public class WeaponPickUp : MonoBehaviourPun
             Gun newWeapon = Instantiate(weaponFab);
             activeWeapon.EquipWeapon(newWeapon);
             PhotonNetwork.Destroy(gameObject);
-            activeWeapon._anim.SetTrigger("PickUp");
+            //activeWeapon._anim.SetTrigger("PickUp");
             activeWeapon.pickupText.gameObject.SetActive(false);
         }
     }

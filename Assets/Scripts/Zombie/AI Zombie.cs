@@ -18,21 +18,22 @@ public class AIZombie : MonoBehaviourPun
     public float attackRange;
     public float attackRate;
     private bool isPlayerDetected = false;
-    public int curAttackerID;
+    private int curAttackerID;
     private float lastAttackTime;
     [Header("Máu")]
     public float currentHP;
     public float maxHP;
-    public Animator anim;
-    public Rigidbody rb;
+    private Animator anim;
+    private Rigidbody rb;
     public Rigidbody[] _ragdollRigibodies;
     private Coroutine moveCoroutine;
-    public PlayerController targetPlayer;
-    public PlayerController[] playerInScene;
-    public NavMeshAgent agent;
+    private PlayerController targetPlayer;
+    private PlayerController[] playerInScene;
+    private NavMeshAgent agent;
     private void Start()
     {
         UpdateHealth(maxHP);
+        GetCompoentHUD();
     }
 
     private void Update()
@@ -102,11 +103,13 @@ public class AIZombie : MonoBehaviourPun
     {
         currentHP -= damageAmount;
         curAttackerID = attackerId;
+        AudioManager._audioManager.PlaySFX(Random.Range(10,16));
         photonView.RPC("UpdateHealth", RpcTarget.All, currentHP);
         if (currentHP <= 0)
         {
             Die();
             photonView.RPC("EnableRagdoll", RpcTarget.All);
+            AudioManager._audioManager.PlaySFX(Random.Range(10, 16));
         }
     }
 
@@ -117,13 +120,6 @@ public class AIZombie : MonoBehaviourPun
     }
     #endregion
     #region RAGDOLLRIGIBODIES
-    private void DisableRagdoll()
-    {
-        foreach(var rigibody in _ragdollRigibodies)
-        {
-            rigibody.isKinematic = true;
-        }
-    }
     void Die()
     {
         PlayerController player = GameManager.gamemanager.GetPlayer(curAttackerID);
@@ -170,5 +166,11 @@ public class AIZombie : MonoBehaviourPun
                 agent.SetDestination(targetPlayer.transform.position);
             }
         }
+    }
+    void GetCompoentHUD()
+    {
+        anim = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody>();
+        agent = GetComponent<NavMeshAgent>();
     }
 }

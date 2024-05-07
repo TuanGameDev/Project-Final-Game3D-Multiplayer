@@ -147,6 +147,7 @@ public class Gun : MonoBehaviourPun
         }
 
         recoil.GenerateRecoil(weaponName);
+        AudioManager._audioManager.PlaySFX(9);
 
     }
     public void Initialized(int attackId, bool isMine)
