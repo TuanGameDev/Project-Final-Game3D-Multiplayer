@@ -39,9 +39,9 @@ public class PlayerController : MonoBehaviourPun
     [Header("MOVEMENT")]
     [SerializeField] public AudioSource footstepAudioSource;
     [SerializeField] public AudioClip[] footstepSounds;
-    [SerializeField] float speed;
-    [SerializeField] float sprintSpeed;
-    [SerializeField] float jumpHeight;
+    [SerializeField] public float speed;
+    [SerializeField] public float sprintSpeed;
+    [SerializeField] public float jumpHeight;
     float _hor, _ver;
     float _turnCalmTime = 0.1f;
     float _turnCalmVelocity;
