@@ -333,17 +333,17 @@ public class PlayerController : MonoBehaviourPun
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             _anim.SetFloat("Speed", direction.magnitude * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : 1.0f));
-            if (!footstepAudioSource.isPlaying) // Kiểm tra xem âm thanh có đang phát không
+            if (!footstepAudioSource.isPlaying)
             {
-                AudioClip randomFootstepSound = footstepSounds[Random.Range(0, footstepSounds.Length)]; // Chọn một âm thanh ngẫu nhiên từ mảng footstepSounds
-                footstepAudioSource.clip = randomFootstepSound; // Gán âm thanh bước chân vào thành phần Audio Source
-                footstepAudioSource.Play(); // Phát lại âm thanh bước chân
+                AudioClip randomFootstepSound = footstepSounds[Random.Range(0, footstepSounds.Length)];
+                footstepAudioSource.clip = randomFootstepSound;
+                footstepAudioSource.Play();
             }
         }
         else
         {
             _anim.SetFloat("Speed", 0f);
-            footstepAudioSource.Stop(); // Dừng phát lại âm thanh bước chân
+            footstepAudioSource.Stop();
         }
     }
     void SetCam_WithWeapon()
