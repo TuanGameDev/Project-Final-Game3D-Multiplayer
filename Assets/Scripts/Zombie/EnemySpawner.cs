@@ -10,7 +10,7 @@ public class EnemySpawner : MonoBehaviourPun
     private PlayerController targetPlayer;
     private PlayerController[] playerInScene;
     public float maxEnemies;
-    public float spawnRadius;
+    public Transform[] spawnenemyPoint;
     public float spawnCheckTime;
     public float spawnCollisionRadius;
     private float lastSpawnCheckTime;
@@ -40,11 +40,8 @@ public class EnemySpawner : MonoBehaviourPun
 
         if (currentEnemies.Count >= maxEnemies)
             return;
-
-        Vector3 randomInCircle = Random.insideUnitCircle * spawnRadius;
-        Vector3 spawnPosition = transform.position + randomInCircle;
         int randomIndex = Random.Range(0, enemyPrefabs.Length);
-        GameObject enemy = PhotonNetwork.Instantiate(enemyPrefabs[randomIndex].name, spawnPosition, Quaternion.identity);
+        GameObject enemy = PhotonNetwork.Instantiate(enemyPrefabs[randomIndex].name, spawnenemyPoint[Random.Range(0, spawnenemyPoint.Length)].position, Quaternion.identity);
         currentEnemies.Add(enemy);
     }
     private void OnDrawGizmosSelected()

@@ -10,6 +10,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
 {
     [Header("Sreens")]
     public int maxPlayers = 0;
+    public string nameScene;
     [SerializeField] private string playerName;
     [SerializeField] private GameObject nameInput;
     [SerializeField] private GameObject mainScreen;
@@ -166,7 +167,7 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         PhotonNetwork.CurrentRoom.IsOpen = false;
         PhotonNetwork.CurrentRoom.IsVisible = false;
-        photonView.RPC("ChangeScene", RpcTarget.All, "Hospital");
+        photonView.RPC("ChangeScene", RpcTarget.All, nameScene);
     }
     public void OnLeaveLobbyButton()
     {

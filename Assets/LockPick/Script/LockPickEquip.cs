@@ -1,15 +1,20 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using Photon.Pun;
 using UnityEngine;
 
-public class LockPickEquip : MonoBehaviour
+public class LockPickEquip : MonoBehaviourPunCallbacks
 {
     public GameObject paneEquip;
     public Highlight highlight;
+    private bool hasBeenPickedUp = false;
+
+    public void PickUp()
+    {
+        hasBeenPickedUp = true;
+    }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine && !hasBeenPickedUp)
         {
             paneEquip.SetActive(true);
             if (highlight != null)
@@ -21,7 +26,7 @@ public class LockPickEquip : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
         {
             paneEquip.SetActive(false);
             if (highlight != null)
