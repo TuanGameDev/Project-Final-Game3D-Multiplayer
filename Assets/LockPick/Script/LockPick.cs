@@ -6,7 +6,7 @@ public class LockPick : MonoBehaviour
     float pickPos;
     public float PickPos
     {
-        get { return pickPos;}
+        get { return pickPos; }
         set
         {
             pickPos = value;
@@ -16,7 +16,7 @@ public class LockPick : MonoBehaviour
     float cyllinderPos;
     public float CyllinderPos
     {
-        get { return cyllinderPos;}
+        get { return cyllinderPos; }
         set
         {
             cyllinderPos = value;
@@ -31,12 +31,13 @@ public class LockPick : MonoBehaviour
     [SerializeField] float leanency = 0.1f;
     float MaxRotationDistance
     {
-        get { return 1f - Mathf.Abs(targetPos - PickPos) + leanency;}
+        get { return 1f - Mathf.Abs(targetPos - PickPos) + leanency; }
 
     }
     bool shaking;
     float tension = 0f;
     [SerializeField] float tensionMutiplicator = 1f;
+    bool isBroken = false;
     private void Awake()
     {
         anim = GetComponent<Animator>();
@@ -69,10 +70,10 @@ public class LockPick : MonoBehaviour
     void Shaking()
     {
         shaking = MaxRotationDistance - cyllinderPos < 0.03f;
-        if(shaking)
+        if (shaking)
         {
             tension += Time.deltaTime * tensionMutiplicator;
-            if(tension > 1f)
+            if (tension > 1f)
             {
                 PickBreak();
             }
@@ -80,17 +81,22 @@ public class LockPick : MonoBehaviour
     }
     void PickBreak()
     {
-        Reset();
+        isBroken = true;
         DoorLockPick.instance.CloseMiniGame();
+        Reset();
         DoorLockPick.instance.StartCoroutine(ShowPanelBreak());
     }
+
     void Cyllinder()
     {
         CyllinderPos -= cyllinderRetentionSpeed * Time.deltaTime;
         CyllinderPos += Mathf.Abs(Input.GetAxisRaw("Vertical")) * Time.deltaTime * cyllinderRotationSpeed;
         if (CyllinderPos > 0.99f)
         {
-            UnLock();
+            if (!isBroken)
+            {
+                UnLock();
+            }
         }
     }
 
@@ -98,6 +104,7 @@ public class LockPick : MonoBehaviour
     {
         DoorLockPick.instance.CloseMiniGame();
         DoorLockPick.instance.StartCoroutine(ShowPanelWin());
+        DoorLockPick.instance.isUnLocked = true;
     }
     void Pick()
     {
@@ -112,12 +119,20 @@ public class LockPick : MonoBehaviour
     public IEnumerator ShowPanelBreak()
     {
         DoorLockPick.instance.panelBreak.SetActive(true);
+        DoorLockPick.instance.panelWarning.SetActive(false);
+        DoorLockPick.instance.panelLockPick.SetActive(false);
+        DoorLockPick.instance.panelOpen.SetActive(false);
+        DoorLockPick.instance.panelClose.SetActive(false);
         yield return new WaitForSeconds(2f);
         DoorLockPick.instance.panelBreak.SetActive(false);
     }
     public IEnumerator ShowPanelWin()
     {
         DoorLockPick.instance.panelWin.SetActive(true);
+        DoorLockPick.instance.panelWarning.SetActive(false);
+        DoorLockPick.instance.panelLockPick.SetActive(false);
+        DoorLockPick.instance.panelOpen.SetActive(false);
+        DoorLockPick.instance.panelClose.SetActive(false);
         yield return new WaitForSeconds(2f);
         DoorLockPick.instance.panelWin.SetActive(false);
     }

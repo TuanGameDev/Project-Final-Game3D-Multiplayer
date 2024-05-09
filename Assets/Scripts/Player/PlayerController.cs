@@ -39,9 +39,9 @@ public class PlayerController : MonoBehaviourPun
     [Header("MOVEMENT")]
     [SerializeField] public AudioSource footstepAudioSource;
     [SerializeField] public AudioClip[] footstepSounds;
-    [SerializeField] float speed;
-    [SerializeField] float sprintSpeed;
-    [SerializeField] float jumpHeight;
+    [SerializeField] public float speed;
+    [SerializeField] public float sprintSpeed;
+    [SerializeField] public float jumpHeight;
     float _hor, _ver;
     float _turnCalmTime = 0.1f;
     float _turnCalmVelocity;
@@ -306,18 +306,18 @@ public class PlayerController : MonoBehaviourPun
         {
             _anim.SetFloat("xValue", _hor);
             _anim.SetFloat("zValue", _ver);
-            if (!footstepAudioSource.isPlaying) // Kiểm tra xem âm thanh có đang phát không
+            if (!footstepAudioSource.isPlaying)
             {
-                AudioClip randomFootstepSound = footstepSounds[Random.Range(0, footstepSounds.Length)]; // Chọn một âm thanh ngẫu nhiên từ mảng footstepSounds
-                footstepAudioSource.clip = randomFootstepSound; // Gán âm thanh bước chân vào thành phần Audio Source
-                footstepAudioSource.Play(); // Phát lại âm thanh bước chân
+                AudioClip randomFootstepSound = footstepSounds[Random.Range(0, footstepSounds.Length)];
+                footstepAudioSource.clip = randomFootstepSound;
+                footstepAudioSource.Play();
             }
         }
         else
         {
             _anim.SetFloat("xValue", 0f);
             _anim.SetFloat("zValue", 0f);
-            footstepAudioSource.Stop(); // Dừng phát lại âm thanh bước chân
+            footstepAudioSource.Stop();
         }
     }
     void MovementWithoutWeapon()

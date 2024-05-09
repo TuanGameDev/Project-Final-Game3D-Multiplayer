@@ -53,7 +53,7 @@ public class AIZombie : MonoBehaviourPun
 
         if (isPlayerDetected)
         {
-            agent.speed = 1;
+            agent.speed = 3;
         }
         else
         {
