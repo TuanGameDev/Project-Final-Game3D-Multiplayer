@@ -17,6 +17,8 @@ public class MissionGenerator : MonoBehaviourPun
     [SerializeField] public AudioClip footstepSounds;
     [SerializeField] public GameObject uiWinGame;
     [SerializeField] public GameObject uiGenerator;
+    [SerializeField] public GameObject lingred;
+    [SerializeField] public GameObject linggreen;
     [Header("Boss Mission 3")]
     public GameObject bossPrefabs;
     public Transform spawnBossPoint;
@@ -129,6 +131,8 @@ public class MissionGenerator : MonoBehaviourPun
             footstepAudioSource.clip = footstepSounds;
             footstepAudioSource.Play();
         }
+        linggreen.gameObject.SetActive(true);
+        lingred.gameObject.SetActive(false);
         isGeneratorRunning = true;
         notificationText.text = "Đang khởi động...";
         notificationText.color = Color.yellow;
@@ -140,6 +144,8 @@ public class MissionGenerator : MonoBehaviourPun
     {
         footstepAudioSource.Stop();
         progressSlider.gameObject.SetActive(false);
+        lingred.gameObject.SetActive(true);
+        linggreen.gameObject.SetActive(false);
     }
     private IEnumerator UpdateSliderValue()
     {
