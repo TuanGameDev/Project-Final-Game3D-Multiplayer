@@ -7,6 +7,7 @@ using UnityEngine.UIElements;
 
 public class Gun : MonoBehaviourPun
 {
+    PhotonView photon;
     public GameObject prefabsDrop;
     [Header("WEAPON INFOR")]
     public PlayerController.WeaponSlot weaponSlot;
@@ -17,7 +18,7 @@ public class Gun : MonoBehaviourPun
     }
     public WeaponType weaponType;
     public string weaponName;
-    public RawImage gunIcon;
+    public Sprite gunIcon;
     private int warriorID;
     private bool isMine;
     public int damage;
@@ -40,6 +41,8 @@ public class Gun : MonoBehaviourPun
     //public ParticleSystem zombieHitEffect;
     public TrailRenderer trailEffect; // tia lửa 
     private TrailRenderer currentTrail;
+    public GameObject flashlight;
+    public bool flashActive = false;
 
     [Header("RAYCAST")]
     public Transform raycast;
@@ -50,7 +53,9 @@ public class Gun : MonoBehaviourPun
 
     private void Awake()
     {
+        photon = GetComponent<PhotonView>();
         recoil = GetComponent<GunRecoil>();
+        flashlight.gameObject.SetActive(false);
     }
 
     void Update()
@@ -60,12 +65,14 @@ public class Gun : MonoBehaviourPun
             FireBullet();
             _nextFireTime = Time.time + 1f / fireRate;
         }
+        
     }
 
     public void StartFiring()
     {
-        isFiring = true;  
+        isFiring = true;
         recoil.Reset();
+
     }
     public void StopFiring()
     {
@@ -103,7 +110,6 @@ public class Gun : MonoBehaviourPun
     else
     {
         // Di chuyển hiệu ứng trail hiện tại đến vị trí xuất phát mới
-
         currentTrail.transform.position = _ray.origin;
     }
 

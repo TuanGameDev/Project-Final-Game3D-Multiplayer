@@ -68,8 +68,6 @@ public class PlayerController : MonoBehaviourPun
     bool _isHolstered = false;
     bool _aiming = false;
     bool _isReloading = false;
-    private bool isDroppingWeapon = false;
-
 
     [Header("RIGGING")]
     [SerializeField] Animator rigController;
@@ -126,9 +124,6 @@ public class PlayerController : MonoBehaviourPun
         {
             EquipWeapon(existingweapon);
         }
-
-
-
     }
     void Update()
     {
@@ -247,32 +242,46 @@ public class PlayerController : MonoBehaviourPun
             _weaponActive = true;
             if (Input.GetMouseButton(0) && !_isReloading)
             {
-                _weapon.StartFiring();
+                //_weapon.StartFiring();
+                Shoot();
                 UpdateAmmo();
             }
             else
             {
-                _weapon.StopFiring();
+                Stop();
+                //_weapon.StopFiring();
             }
 
             if (Input.GetMouseButton(1))
             {
                 _aiming = true;
-
             }
             else
             {
                 _aiming = false;
             }
 
+            if (Input.GetKeyDown(KeyCode.E))
+            { 
+                if (_weapon.flashActive == false)
+                {
+                    _weapon.flashActive = true;
+                    _weapon.flashlight.gameObject.SetActive(true);
+                }
+                else
+                {
+                    _weapon.flashActive = false;
+                    _weapon.flashlight.gameObject.SetActive(false);
+                }
+            }
+
             if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize && !_isReloading)
             {
                 Reload();
             }
-            if (Input.GetKeyDown(KeyCode.G) && isDroppingWeapon)
+            if (Input.GetKeyDown(KeyCode.G))
             {
                 DropWeapon();
-                isDroppingWeapon = true;
             }
         }
 
@@ -394,7 +403,6 @@ public class PlayerController : MonoBehaviourPun
         else
         {
             CMfreelook.m_Lens.FieldOfView = Mathf.Lerp(CMfreelook.m_Lens.FieldOfView, defaultZoomDistance, Time.deltaTime * zoomSpeed);
-
         }
     }
     Gun GetWeapon(int index)
@@ -406,6 +414,35 @@ public class PlayerController : MonoBehaviourPun
         return _equipWeapons[index];
     }
     Gun GetActiveWeapon() => GetWeapon(_activeWeaponIndex);
+
+    public void Shoot()
+    {
+        photonView.RPC("StartShoot", RpcTarget.All);
+    }
+    public void Stop()
+    {
+        photonView.RPC("StopShoot", RpcTarget.All);
+    }
+    [PunRPC]
+    public void StartShoot()
+    {
+        var _weapon = GetWeapon(_activeWeaponIndex);
+        if ( _weapon != null )
+        {
+            _weapon.StartFiring();
+        }
+
+    }
+    [PunRPC]
+    public void StopShoot()
+    {
+        var _weapon = GetWeapon(_activeWeaponIndex);
+        if ( _weapon != null )
+        {
+            _weapon.StopFiring();
+        }
+
+    }
     public void EquipWeapon(Gun newWeapon)
     {
         int weaponSlotIndex = (int)newWeapon.weaponSlot;
@@ -413,7 +450,7 @@ public class PlayerController : MonoBehaviourPun
 
         if (_weapon)
         {
-            Destroy(_weapon.gameObject);
+            DropWeapon();
         }
 
         _weapon = newWeapon;
@@ -422,9 +459,7 @@ public class PlayerController : MonoBehaviourPun
         _weapon.recoil.rig = rigController;
         _weapon.transform.SetParent(weaponSlots[weaponSlotIndex], false);
         _equipWeapons[weaponSlotIndex] = _weapon;
-        SetActiveWeapon(newWeapon.weaponSlot);
-
-      
+        SetActiveWeapon(newWeapon.weaponSlot); 
     }
     public void DropWeapon()
     {
@@ -433,38 +468,42 @@ public class PlayerController : MonoBehaviourPun
             Gun currentWeapon = GetActiveWeapon();
             if (currentWeapon != null)
             {
-                photonView.RPC("DropWeaponRPC", RpcTarget.All, currentWeapon.transform.position + transform.forward);
+                Vector3 position = currentWeapon.transform.position + transform.forward;
+                photonView.RPC("DropWeaponRPC", RpcTarget.All, position);
+                photonView.RPC("SyncDropWeaponState", RpcTarget.All, position);
             }
         }
     }
     [PunRPC]
     public void DropWeaponRPC(Vector3 position)
     {
-        Gun currentWeapon = GetActiveWeapon();
-        if (currentWeapon != null)
+        if (photonView.IsMine)
         {
-            // Tạo một instance mới của vũ khí để drop
-            GameObject droppedWeapon = PhotonNetwork.Instantiate(currentWeapon.prefabsDrop.name, position, Quaternion.identity);
-            UnEquipCurrentWeapon();
+            Gun currentWeapon = GetActiveWeapon();
+            if (currentWeapon != null)
+            {
+                // Tạo một instance mới của vũ khí để drop
+                PhotonNetwork.Instantiate(currentWeapon.prefabsDrop.name, position, Quaternion.identity);
+            }
         }
     }
-    void UnEquipCurrentWeapon()
+    [PunRPC]
+    public void SyncDropWeaponState(Vector3 position)
     {
+        // Cập nhật trạng thái vũ khí trên tất cả các client
         Gun currentWeapon = GetActiveWeapon();
         if (currentWeapon != null)
         {
             // Hủy bỏ vũ khí hiện tại
-            PhotonNetwork.Destroy(currentWeapon.gameObject);
+            Destroy(currentWeapon.gameObject);
             _equipWeapons[_activeWeaponIndex] = null;
-            // Cập nhật chỉ số vũ khí hoạt động
             _activeWeaponIndex = -1;
-            // Cập nhật trạng thái vũ khí
             _weaponActive = false;
             _aiming = false;
             rigController.Play("weapon_unarmed");
-            isDroppingWeapon = false;
         }
     }
+
     void SetActiveWeapon(WeaponSlot weaponSlot)
     {
         int holsterIndex = _activeWeaponIndex;
@@ -487,7 +526,8 @@ public class PlayerController : MonoBehaviourPun
     }
     void ToggleWeaponHolster()
     {
-        photonView.RPC("WeaponHolster", RpcTarget.All);
+        //photonView.RPC("WeaponHolster", RpcTarget.All);
+        WeaponHolster();
     }
     [PunRPC]
     public void WeaponHolster()
