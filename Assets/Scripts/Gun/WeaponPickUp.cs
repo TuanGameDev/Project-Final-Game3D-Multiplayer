@@ -6,31 +6,31 @@ using Photon.Pun;
 
 public class WeaponPickUp : MonoBehaviourPun
 {
-    PhotonView view;
     [SerializeField] Gun weaponFab;
     PlayerController activeWeapon;
     public bool _canPickup = true;
-    private void Awake()
-    {
-        view = GetComponent<PhotonView>();
-    }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.F) && _canPickup)
         {
-            view.RPC("PickUpWeapon", RpcTarget.All);
+            photonView.RPC("PickUpWeapon", RpcTarget.All);
         }
     }
+
     [PunRPC]
-    public void PickUpWeapon()
+    void PickUpWeapon(PhotonMessageInfo info)
     {
         if (activeWeapon != null)
         {
             Gun newWeapon = Instantiate(weaponFab);
             activeWeapon.EquipWeapon(newWeapon);
-            PhotonNetwork.Destroy(gameObject);
             //activeWeapon._anim.SetTrigger("PickUp");
             activeWeapon.pickupText.gameObject.SetActive(false);
+            if (info.photonView.IsMine)
+            {
+                PhotonNetwork.Destroy(gameObject);
+            }
         }
     }
 
@@ -45,7 +45,6 @@ public class WeaponPickUp : MonoBehaviourPun
         }
     }
 
-
     private void OnTriggerExit(Collider other)
     {
         activeWeapon = other.gameObject.GetComponent<PlayerController>();
@@ -55,5 +54,4 @@ public class WeaponPickUp : MonoBehaviourPun
             activeWeapon.pickupText.gameObject.SetActive(false);
         }
     }
-
 }

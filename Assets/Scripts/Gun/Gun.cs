@@ -7,7 +7,6 @@ using UnityEngine.UIElements;
 
 public class Gun : MonoBehaviourPun
 {
-    PhotonView photon;
     public GameObject prefabsDrop;
     [Header("WEAPON INFOR")]
     public PlayerController.WeaponSlot weaponSlot;
@@ -53,7 +52,6 @@ public class Gun : MonoBehaviourPun
 
     private void Awake()
     {
-        photon = GetComponent<PhotonView>();
         recoil = GetComponent<GunRecoil>();
         flashlight.gameObject.SetActive(false);
     }

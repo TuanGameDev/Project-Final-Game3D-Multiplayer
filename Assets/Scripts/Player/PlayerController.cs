@@ -28,8 +28,8 @@ public class PlayerController : MonoBehaviourPun
     public TextMeshProUGUI pickupText;
     public TextMeshProUGUI ammoText;
     public TextMeshProUGUI magText;
-    public TextMeshProUGUI weaponName;
-    public RawImage weaponIcon;
+    public TextMeshProUGUI weaponNameText;
+    public Image weaponIcon;
 
     public Player photonPlayer;
     bool _isDead = false;
@@ -242,14 +242,12 @@ public class PlayerController : MonoBehaviourPun
             _weaponActive = true;
             if (Input.GetMouseButton(0) && !_isReloading)
             {
-                //_weapon.StartFiring();
-                Shoot();
+                _weapon.StartFiring();
                 UpdateAmmo();
             }
             else
             {
-                Stop();
-                //_weapon.StopFiring();
+               _weapon.StopFiring();
             }
 
             if (Input.GetMouseButton(1))
@@ -414,15 +412,6 @@ public class PlayerController : MonoBehaviourPun
         return _equipWeapons[index];
     }
     Gun GetActiveWeapon() => GetWeapon(_activeWeaponIndex);
-
-    public void Shoot()
-    {
-        photonView.RPC("StartShoot", RpcTarget.All);
-    }
-    public void Stop()
-    {
-        photonView.RPC("StopShoot", RpcTarget.All);
-    }
     [PunRPC]
     public void StartShoot()
     {
@@ -623,6 +612,8 @@ public class PlayerController : MonoBehaviourPun
         {
             ammoText.text = weapon.ammoCount + "";
             magText.text = weapon.magSize + "";
+            weaponNameText.text = "" + weapon.weaponName;
+            weaponIcon.sprite = weapon.gunIcon;
         }
     }
     IEnumerator DelayedReload()
