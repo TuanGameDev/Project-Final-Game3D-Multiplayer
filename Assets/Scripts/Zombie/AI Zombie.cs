@@ -71,7 +71,10 @@ public class AIZombie : MonoBehaviourPun
             float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
             if (distanceToPlayer < chaseRange)
             {
-                targetPlayer = player;
+                if(targetPlayer==null)
+                {
+                    targetPlayer = player;
+                }
                 agent.SetDestination(targetPlayer.transform.position);
                 anim.SetBool("Move", true);
                 isPlayerDetected = true;
