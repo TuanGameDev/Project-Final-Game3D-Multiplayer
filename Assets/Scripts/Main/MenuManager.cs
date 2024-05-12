@@ -93,7 +93,6 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     {
         lobbyBrowserScreen.SetActive(true);
         createRoomSreen.SetActive(false);
-        UpdateLobbyBrowserUI();
     }
     public void OnCreateButton(TMP_InputField roomNameInput)
     {
@@ -181,7 +180,8 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         roomButtons.Add(buttonObject);
         return buttonObject;
     }
-    void UpdateLobbyBrowserUI()
+
+    public void UpdateLobbyBrowserUI()
     {
         foreach (GameObject button in roomButtons)
         {
@@ -200,6 +200,22 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
             buttoncomp.onClick.AddListener(() => { OnJoinRoomButton(roomName); });
         }
     }
+
+    public override void OnRoomListUpdate(List<RoomInfo> allRooms)
+    {
+        roomList = allRooms;
+        ClearRoomList(); // Xóa danh sách phòng
+        UpdateLobbyBrowserUI(); // Cập nhật giao diện lobby
+    }
+
+    private void ClearRoomList()
+    {
+        foreach (GameObject button in roomButtons)
+        {
+            Destroy(button);
+        }
+        roomButtons.Clear();
+    }
     public void OnRefreshButton()
     {
         UpdateLobbyBrowserUI();
@@ -207,10 +223,6 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     public void OnJoinRoomButton(string roomName)
     {
         JoinRoom(roomName);
-    }
-    public override void OnRoomListUpdate(List<RoomInfo> allRooms)
-    {
-        roomList = allRooms;
     }
     public override void OnConnectedToMaster()
     {

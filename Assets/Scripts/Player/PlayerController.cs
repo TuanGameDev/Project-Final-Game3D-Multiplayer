@@ -98,6 +98,7 @@ public class PlayerController : MonoBehaviourPun
     }
     void Start()
     {
+        weaponIcon.gameObject.SetActive(false);
         _controller = GetComponent<CharacterController>();
         _anim = GetComponent<Animator>();
 
@@ -616,6 +617,7 @@ public class PlayerController : MonoBehaviourPun
             magText.text = weapon.magSize + "";
             weaponNameText.text = "" + weapon.weaponName;
             weaponIcon.sprite = weapon.gunIcon;
+            weaponIcon.gameObject.SetActive(true);
         }
     }
     IEnumerator DelayedReload()
