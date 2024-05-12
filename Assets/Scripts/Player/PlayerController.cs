@@ -546,6 +546,8 @@ public class PlayerController : MonoBehaviourPun
         var weapon = GetWeapon(index);
         if (weapon != null)
         {
+            weapon.flashlight.SetActive(false);
+            weapon.flashActive = false;
             rigController.SetBool("holster_weapon", true);
             do
             {
