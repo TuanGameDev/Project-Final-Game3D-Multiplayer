@@ -17,7 +17,7 @@ public class MissionGenerator : MonoBehaviourPun
     private float cooldownTimer = 0f;
     [SerializeField] public Slider progressSlider;
     [SerializeField] public TextMeshProUGUI notificationText;
-    [SerializeField] public TextMeshProUGUI playercountText;
+    [SerializeField] public TextMeshProUGUI generatorText;
     [SerializeField] public TextMeshProUGUI timerText;
     [Header("AudioEdit Generator")]
     [SerializeField] public AudioSource footstepAudioEdit;
@@ -37,8 +37,6 @@ public class MissionGenerator : MonoBehaviourPun
     public Transform spawnBossPoint;
     public float maxEnemies;
     private List<GameObject> currentEnemies = new List<GameObject>();
-    private PlayerController targetPlayer;
-    private PlayerController[] playerInScene;
     private bool isInsideTrigger = false;
     private bool isGeneratorRunning = false;
     private bool isStartupSuccessful = false;
@@ -57,13 +55,6 @@ public class MissionGenerator : MonoBehaviourPun
                 StartCooldown();
             }
         }
-        if (playerCount == maxPlayerCount)
-        {
-            notificationText.gameObject.SetActive(true);
-            timerText.gameObject.SetActive(false);
-            playercountText.gameObject.SetActive(false);
-            footstepAudioEdit.Stop();
-        }
         if (playerCount == maxPlayerCount && Input.GetKeyDown(KeyCode.Q))
         {
             photonView.RPC("AudioGeneratorStart", RpcTarget.All);
@@ -71,19 +62,13 @@ public class MissionGenerator : MonoBehaviourPun
         UpdateCooldown();
         if (!PhotonNetwork.IsMasterClient)
             return;
-        SpawnCheckGenerator();
-    }
-    private void SpawnCheckGenerator()
-    {
-        playerInScene = FindObjectsOfType<PlayerController>();
-        foreach (PlayerController player in playerInScene)
+        if (playerCount == maxPlayerCount)
         {
-            float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
-            if (distanceToPlayer < spawnCollisionRadius)
-            {
-                targetPlayer = player;
-                SpawnBoss();
-            }
+            notificationText.gameObject.SetActive(true);
+            timerText.gameObject.SetActive(false);
+            generatorText.gameObject.SetActive(false);
+            footstepAudioEdit.Stop();
+            SpawnBoss();
         }
     }
     void SpawnBoss()
@@ -165,7 +150,7 @@ public class MissionGenerator : MonoBehaviourPun
     [PunRPC]
     void UpdatePlayerCount(int count, int countMax)
     {
-        playercountText.text = "Members who need to repair generators: " + count + "/" + countMax;
+        generatorText.text = "Members who need to repair generators: " + count + "/" + countMax;
     }
     [PunRPC]
     void AudioGeneratorStart()

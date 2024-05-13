@@ -8,6 +8,7 @@ using Cinemachine;
 using Unity.VisualScripting;
 using UnityEngine.UI;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
+using UnityEngine.SceneManagement;
 
 
 public class PlayerController : MonoBehaviourPun
@@ -30,6 +31,7 @@ public class PlayerController : MonoBehaviourPun
     public TextMeshProUGUI magText;
     public TextMeshProUGUI weaponNameText;
     public Image weaponIcon;
+    public GameObject settingPopup;
 
     public Player photonPlayer;
     bool _isDead = false;
@@ -68,6 +70,7 @@ public class PlayerController : MonoBehaviourPun
     bool _isHolstered = false;
     bool _aiming = false;
     bool _isReloading = false;
+    bool isGamePaused = false;
 
     [Header("RIGGING")]
     [SerializeField] Animator rigController;
@@ -299,6 +302,25 @@ public class PlayerController : MonoBehaviourPun
         if (Input.GetKeyDown(KeyCode.Space) && _controller.isGrounded && !_isJumping)
         {
             Jump();
+        }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (isGamePaused)
+            {
+                ResumeGame();
+            }
+            else
+            {
+                PauseGame();
+            }
+        }
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            Main();
+        }
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            Exit();
         }
     }
     #endregion
@@ -664,6 +686,30 @@ public class PlayerController : MonoBehaviourPun
     public void ReloadRPC()
     {
         rigController.SetTrigger("reload");
+    }
+    #endregion
+    #region HUD
+    void PauseGame()
+    {
+        settingPopup.SetActive(true);
+        Time.timeScale = 0;
+        isGamePaused = true;
+    }
+
+    void ResumeGame()
+    {
+        settingPopup.SetActive(false);
+        Time.timeScale = 1;
+        isGamePaused = false;
+    }
+    public void Main()
+    {
+        PhotonNetwork.LeaveRoom();
+        SceneManager.LoadScene(0);
+    }
+    public void Exit()
+    {
+        Application.Quit();
     }
     #endregion
     //
