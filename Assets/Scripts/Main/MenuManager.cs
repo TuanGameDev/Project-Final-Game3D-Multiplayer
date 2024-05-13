@@ -36,6 +36,10 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     private List<GameObject> roomButtons = new List<GameObject>();
     private List<RoomInfo> roomList = new List<RoomInfo>();
     private List<string> joinedPlayerNames = new List<string>();
+    [Header("Setting")]
+    public GameObject settingPopup;
+    [Header("GuidePlay")]
+    public GameObject guideplayPopup;
     void Start()
     {
         playermultiplayerButton.interactable = false;
@@ -63,10 +67,22 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
         lobbyScreen.SetActive(false);
         createRoomSreen.SetActive(false);
         lobbyBrowserScreen.SetActive(false);
+        settingPopup.SetActive(false);
+        guideplayPopup.SetActive(false);
     }
     public void OnCreateRoomSreen()
     {
         createRoomSreen.SetActive(true);
+        mainScreen.SetActive(false);
+    }
+    public void Setting()
+    {
+        settingPopup.SetActive(true);
+        mainScreen.SetActive(false);
+    }
+    public void GuidePlay()
+    {
+        guideplayPopup.SetActive(true);
         mainScreen.SetActive(false);
     }
     public void OnPlayerNameChanged(TMP_InputField playerNameInput)
@@ -204,8 +220,8 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     public override void OnRoomListUpdate(List<RoomInfo> allRooms)
     {
         roomList = allRooms;
-        ClearRoomList(); // Xóa danh sách phòng
-        UpdateLobbyBrowserUI(); // Cập nhật giao diện lobby
+        ClearRoomList();
+        UpdateLobbyBrowserUI();
     }
 
     private void ClearRoomList()
@@ -247,6 +263,10 @@ public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
     public void ChangeScene(string sceneName)
     {
         PhotonNetwork.LoadLevel(sceneName);
+    }
+    public void ExitGame()
+    {
+        Application.Quit();
     }
     #region Team Modes
     public void Solo(int value)
