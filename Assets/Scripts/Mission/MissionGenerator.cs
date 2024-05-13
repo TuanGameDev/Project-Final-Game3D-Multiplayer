@@ -9,14 +9,27 @@ public class MissionGenerator : MonoBehaviourPun
 {
     [Header("Mission Generator")]
     [SerializeField] public string loadlevel;
+    public int playerCount = 0;
+    public int maxPlayerCount = 10;
     [SerializeField] public float duration;
     [SerializeField] public float spawnCollisionRadius;
+    [SerializeField] public float cooldownDuration = 1f;
+    private float cooldownTimer = 0f;
     [SerializeField] public Slider progressSlider;
     [SerializeField] public TextMeshProUGUI notificationText;
+    [SerializeField] public TextMeshProUGUI playercountText;
+    [SerializeField] public TextMeshProUGUI timerText;
+    [Header("AudioEdit Generator")]
+    [SerializeField] public AudioSource footstepAudioEdit;
+    [SerializeField] public AudioClip footstepSoundsEdit;
+    [Header("AudioStart Generator")]
     [SerializeField] public AudioSource footstepAudioSource;
     [SerializeField] public AudioClip footstepSounds;
-    [SerializeField] public GameObject uiWinGame;
-    [SerializeField] public GameObject uiGenerator;
+    [Header("AudioEnd Generator")]
+    [SerializeField] public AudioSource footstepAudioEnd;
+    [SerializeField] public AudioClip footstepEnd;
+
+    [SerializeField] public GameObject uiEndGame;
     [SerializeField] public GameObject lingred;
     [SerializeField] public GameObject linggreen;
     [Header("Boss Mission 3")]
@@ -35,13 +48,27 @@ public class MissionGenerator : MonoBehaviourPun
     }
     private void Update()
     {
+        photonView.RPC("UpdatePlayerCount", RpcTarget.All, playerCount, maxPlayerCount);
         if (isInsideTrigger)
         {
-            if (Input.GetKeyDown(KeyCode.Q))
+            if (cooldownTimer <= 0f && Input.GetKeyDown(KeyCode.F) && playerCount < maxPlayerCount)
             {
-                photonView.RPC("AudioGeneratorStart", RpcTarget.All);
+                photonView.RPC("IncreasePlayerCount", RpcTarget.All);
+                StartCooldown();
             }
         }
+        if (playerCount == maxPlayerCount)
+        {
+            notificationText.gameObject.SetActive(true);
+            timerText.gameObject.SetActive(false);
+            playercountText.gameObject.SetActive(false);
+            footstepAudioEdit.Stop();
+        }
+        if (playerCount == maxPlayerCount && Input.GetKeyDown(KeyCode.Q))
+        {
+            photonView.RPC("AudioGeneratorStart", RpcTarget.All);
+        }
+        UpdateCooldown();
         if (!PhotonNetwork.IsMasterClient)
             return;
         SpawnCheckGenerator();
@@ -81,24 +108,24 @@ public class MissionGenerator : MonoBehaviourPun
             PhotonView photonView = collision.GetComponent<PhotonView>();
             if (photonView != null && photonView.IsMine)
             {
-                uiGenerator.SetActive(true);
-                isInsideTrigger = true;
+                  isInsideTrigger = true;
+                timerText.gameObject.SetActive(true);
                 if (isGeneratorRunning)
                 {
                     if (isStartupSuccessful)
                     {
-                        notificationText.text = "Khởi động thành công!";
+                        notificationText.text = "Successful launch!";
                         notificationText.color = Color.green;
                     }
                     else
                     {
-                        notificationText.text = "Đang khởi động...";
+                        notificationText.text = "Starting up...";
                         notificationText.color = Color.yellow;
                     }
                 }
                 else
                 {
-                    notificationText.text = "Nhấn Q để khởi động";
+                    notificationText.text = "Press Q to start";
                     notificationText.color = Color.red;
                 }
             }
@@ -111,10 +138,9 @@ public class MissionGenerator : MonoBehaviourPun
             PhotonView photonView = collision.GetComponent<PhotonView>();
             if (photonView != null && photonView.IsMine)
             {
-                uiGenerator.SetActive(false);
-                isInsideTrigger = false;
                 isInsideTrigger = false;
                 notificationText.text = "";
+                timerText.gameObject.SetActive(false);
             }
         }
     }
@@ -122,6 +148,24 @@ public class MissionGenerator : MonoBehaviourPun
     {
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, spawnCollisionRadius);
+    }
+    [PunRPC]
+    void IncreasePlayerCount()
+    {
+        if (playerCount < maxPlayerCount)
+        {
+            playerCount++;
+        }
+        if (!footstepAudioEdit.isPlaying)
+        {
+            footstepAudioEdit.clip = footstepSoundsEdit;
+            footstepAudioEdit.Play();
+        }
+    }
+    [PunRPC]
+    void UpdatePlayerCount(int count, int countMax)
+    {
+        playercountText.text = "Members who need to repair generators: " + count + "/" + countMax;
     }
     [PunRPC]
     void AudioGeneratorStart()
@@ -134,7 +178,7 @@ public class MissionGenerator : MonoBehaviourPun
         linggreen.gameObject.SetActive(true);
         lingred.gameObject.SetActive(false);
         isGeneratorRunning = true;
-        notificationText.text = "Đang khởi động...";
+        notificationText.text = "Starting up...";
         notificationText.color = Color.yellow;
         progressSlider.gameObject.SetActive(true);
         StartCoroutine(UpdateSliderValue());
@@ -155,7 +199,7 @@ public class MissionGenerator : MonoBehaviourPun
             float progress = elapsedTime / duration;
             progressSlider.value = progress;
 
-            notificationText.text = string.Format("Đang khởi động... {0}%", Mathf.RoundToInt(progress * 100f));
+            notificationText.text = string.Format("Starting up... {0}%", Mathf.RoundToInt(progress * 100f));
             notificationText.color = Color.yellow;
 
             elapsedTime += Time.deltaTime;
@@ -164,12 +208,17 @@ public class MissionGenerator : MonoBehaviourPun
 
         progressSlider.value = 1f;
         photonView.RPC("AudioGeneratorStop", RpcTarget.All);
-        notificationText.text = "Khởi động thành công! 100%";
+        notificationText.text = "Successful launch! 100%";
         notificationText.color = Color.green;
 
         yield return new WaitForSeconds(5f);
 
-        uiWinGame.SetActive(true);
+        if (!footstepAudioEnd.isPlaying)
+        {
+            footstepAudioEnd.clip = footstepEnd;
+            footstepAudioEnd.Play();
+        }
+        uiEndGame.SetActive(true);
         Time.timeScale = 0;
 
         yield return new WaitForSecondsRealtime(11f);
@@ -179,5 +228,24 @@ public class MissionGenerator : MonoBehaviourPun
     {
         PhotonNetwork.LoadLevel(loadlevel);
         Time.timeScale = 1;
+    }
+    void StartCooldown()
+    {
+        cooldownTimer = cooldownDuration;
+    }
+
+    void UpdateCooldown()
+    {
+        if (cooldownTimer > 0f)
+        {
+            cooldownTimer -= Time.deltaTime;
+            timerText.text = "Time remaining: " + cooldownTimer.ToString("0.0");
+            timerText.color = Color.yellow;
+        }
+        else
+        {
+            timerText.text = "Press F to edit";
+            timerText.color = Color.green;
+        }
     }
 }
