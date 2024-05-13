@@ -184,7 +184,7 @@ public class PlayerController : MonoBehaviourPun
         if (_cameraBloodEffect != null)
         {
             _cameraBloodEffect.minBloodAmount = (1.0f - _health / 100.0f);
-            _cameraBloodEffect.bloodAmount = Mathf.Min(_cameraBloodEffect.minBloodAmount + 0.2f, 1.0f);
+            _cameraBloodEffect.bloodAmount = Mathf.Min(_cameraBloodEffect.minBloodAmount + 0.05f, 0.5f);
         }
         if (_health <= 0)
         {
@@ -576,10 +576,18 @@ public class PlayerController : MonoBehaviourPun
     {
         switch (eventName)
         {
-            case "detach_mag": DetachMag(); break;
-            case "drop_mag": DropMag(); break;
-            case "refill_mag": RefillMag(); break;
-            case "attach_mag": AttachMag(); break;
+            case "detach_mag":
+                DetachMag();
+                break;
+            case "drop_mag":
+                DropMag();
+                break;
+            case "refill_mag":
+                photonView.RPC("RefillMag",RpcTarget.All);
+                break;
+            case "attach_mag":
+                photonView.RPC("AttachMag", RpcTarget.All);
+                break;
         }
     }
     void DetachMag()
@@ -596,10 +604,12 @@ public class PlayerController : MonoBehaviourPun
         magazineHand.SetActive(false);
         Destroy(dropMag, 3f);
     }
+    [PunRPC]
     void RefillMag()
     {
         magazineHand.SetActive(true);
     }
+    [PunRPC]
     void AttachMag()
     {
         Gun weapon = GetActiveWeapon();
