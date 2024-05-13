@@ -583,10 +583,10 @@ public class PlayerController : MonoBehaviourPun
                 DropMag();
                 break;
             case "refill_mag":
-                photonView.RPC("RefillMag",RpcTarget.All);
+                RefillMag();
                 break;
             case "attach_mag":
-                photonView.RPC("AttachMag", RpcTarget.All);
+                AttachMag();
                 break;
         }
     }
@@ -604,12 +604,10 @@ public class PlayerController : MonoBehaviourPun
         magazineHand.SetActive(false);
         Destroy(dropMag, 3f);
     }
-    [PunRPC]
     void RefillMag()
     {
         magazineHand.SetActive(true);
     }
-    [PunRPC]
     void AttachMag()
     {
         Gun weapon = GetActiveWeapon();
