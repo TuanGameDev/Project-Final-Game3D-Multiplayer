@@ -76,10 +76,19 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] Animator rigController;
     [SerializeField] Transform leftHand;
     public WeaponAnimationEvents animationEvents;
-
-
-    CharacterController _controller;
     public Animator _anim;
+    CharacterController _controller;
+
+    [Header("Items")]
+    public int Bandage;
+    private float cooldownDuration = 5f;
+    public Image cooldownImage;
+    public TextMeshProUGUI bandageText;
+    public TextMeshProUGUI addbandageText;
+    public TextMeshProUGUI addbandagecooldownText;
+    private bool isCooldown = false;
+    private bool hasBandage = false;
+
     public static PlayerController me;
     public enum WeaponSlot
     {
@@ -131,6 +140,8 @@ public class PlayerController : MonoBehaviourPun
     }
     void Update()
     {
+        UpdateBandageText(Bandage);
+        UpdateValue(_health);
         if (!photonView.IsMine) return;
         if (_isDead) return;
         HandleInput();
@@ -302,6 +313,11 @@ public class PlayerController : MonoBehaviourPun
         if (Input.GetKeyDown(KeyCode.Space) && _controller.isGrounded && !_isJumping)
         {
             Jump();
+        }
+        if (_health < 100 && Input.GetKeyDown(KeyCode.I)&& !isCooldown)
+        {
+            UseBandage();
+            StartCoroutine(StartCooldown());
         }
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -688,6 +704,7 @@ public class PlayerController : MonoBehaviourPun
         rigController.SetTrigger("reload");
     }
     #endregion
+    //
     #region HUD
     void PauseGame()
     {
@@ -710,6 +727,64 @@ public class PlayerController : MonoBehaviourPun
     public void Exit()
     {
         Application.Quit();
+    }
+    #endregion
+    //
+    #region PickUpItems
+    void UseBandage()
+    {
+        int BandageAmount = 1;
+        if (Bandage >= BandageAmount)
+        {
+            Bandage -= BandageAmount;
+            _health += 50;
+
+            if (_health > 100)
+            {
+                _health = 100;
+            }
+        }
+        addbandageText.text = "+50Hp";
+        addbandageText.color = Color.green;
+        StartCoroutine(HideAndShowText(3));
+    }
+    [PunRPC]
+    void GetBandage(int item)
+    {
+        Bandage += item;
+    }
+     void UpdateBandageText(int amount)
+    {
+        bandageText.text = "" + amount;
+    }
+    private IEnumerator HideAndShowText(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        addbandageText.gameObject.SetActive(false);
+
+        yield return new WaitForSeconds(delay);
+        addbandageText.text = "";
+        addbandageText.gameObject.SetActive(true);
+    }
+    private IEnumerator StartCooldown()
+    {
+        isCooldown = true;
+        float cooldownTimer = cooldownDuration;
+
+        while (cooldownTimer > 0)
+        {
+            cooldownTimer -= Time.deltaTime;
+            float fillAmount = cooldownTimer / cooldownDuration;
+            cooldownImage.fillAmount = fillAmount;
+
+            int cooldownTime = Mathf.CeilToInt(cooldownTimer);
+            addbandagecooldownText.text = "" + cooldownTime.ToString();
+
+            yield return null;
+        }
+        isCooldown = false;
+        addbandagecooldownText.text = "";
     }
     #endregion
     //
