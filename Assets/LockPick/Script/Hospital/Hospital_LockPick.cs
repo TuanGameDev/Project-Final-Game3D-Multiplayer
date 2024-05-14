@@ -23,6 +23,7 @@ public class Hospital_LockPick : MonoBehaviourPunCallbacks
     Animator anim;
     float targetPos;
     [SerializeField] float leanency = 0.1f;
+    public GameObject panelBreak;
     float MaxRotationDistance
     {
         get { return 1f - Mathf.Abs(targetPos - PickPos) + leanency; }
@@ -102,20 +103,14 @@ public class Hospital_LockPick : MonoBehaviourPunCallbacks
 
     void UnLock()
     {
-        Hospital_DoorLockPick.instance.CloseMiniGame();
         photonView.RPC("UnlockOnNetwork", RpcTarget.AllBuffered);
+        Hospital_DoorLockPick.instance.CloseMiniGame();
     }
 
     [PunRPC]
     void UnlockOnNetwork()
     {
-        photonView.RPC("SetUnlockState", RpcTarget.AllBuffered, true);
-    }
-
-    [PunRPC]
-    void SetUnlockState(bool state)
-    {
-        Hospital_DoorLockPick.instance.isUnLocked = state;
+        Hospital_DoorLockPick.instance.SetUnlockState(true);
     }
 
     void Pick()

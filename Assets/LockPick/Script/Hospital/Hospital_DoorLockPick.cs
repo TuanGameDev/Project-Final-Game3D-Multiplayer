@@ -55,6 +55,11 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
             lock2.SetActive(true);
             cameraLockpick.SetActive(true);
             isInMiniGame = true;
+
+            if (PhotonNetwork.IsMasterClient)
+            {
+                minigameLockPick.GetPhotonView().TransferOwnership(PhotonNetwork.LocalPlayer);
+            }
         }
     }
 
@@ -121,11 +126,27 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
         }
     }
 
+    public void SetUnlockState(bool state)
+    {
+        isUnLocked = state;
+        if (state)
+        {
+            photonView.RPC("ShowWinPanel", RpcTarget.AllBuffered);
+        }
+    }
+
+    [PunRPC]
+    void ShowWinPanel()
+    {
+        panelWin.SetActive(true);
+    }
+
     private bool IsLocalPlayerNearDoor()
     {
         int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber;
         return playerNearDoorMap.ContainsKey(localPlayerId) && playerNearDoorMap[localPlayerId];
     }
+
     private bool IsAnyPlayerNearDoor()
     {
         foreach (var playerNearDoor in playerNearDoorMap)
