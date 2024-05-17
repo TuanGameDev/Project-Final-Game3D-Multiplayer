@@ -302,10 +302,18 @@ public class PlayerController : MonoBehaviourPun
 
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
+            if (_weapon.isFiring)
+            {
+                _weapon.StopFiring();
+            }
             SetActiveWeapon(WeaponSlot.Primary);
         }
         if (Input.GetKeyDown(KeyCode.Alpha2))
         {
+            if (_weapon.isFiring)
+            {
+                _weapon.StopFiring();
+            }
             SetActiveWeapon(WeaponSlot.Secondary);
         }
         if (Input.GetKeyDown(KeyCode.X))
@@ -318,6 +326,10 @@ public class PlayerController : MonoBehaviourPun
         }
         if (Input.GetKeyDown(KeyCode.Space) && _controller.isGrounded && !_isJumping)
         {
+            if (_weapon.isFiring)
+            {
+                _weapon.StopFiring();
+            }
             Jump();
         }
         if (_health < 100 && Input.GetKeyDown(KeyCode.I)&& !isCooldown)
