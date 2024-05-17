@@ -302,34 +302,18 @@ public class PlayerController : MonoBehaviourPun
 
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            if (_weapon.isFiring)
-            {
-                _weapon.StopFiring();
-            }
             SetActiveWeapon(WeaponSlot.Primary);
         }
         if (Input.GetKeyDown(KeyCode.Alpha2))
         {
-            if (_weapon.isFiring)
-            {
-                _weapon.StopFiring();
-            }
             SetActiveWeapon(WeaponSlot.Secondary);
         }
         if (Input.GetKeyDown(KeyCode.X))
         {
-            ToggleWeaponHolster();
-            if (_weapon.isFiring)
-            {
-                _weapon.StopFiring();
-            }
+            ToggleWeaponHolster();          
         }
         if (Input.GetKeyDown(KeyCode.Space) && _controller.isGrounded && !_isJumping)
         {
-            if (_weapon.isFiring)
-            {
-                _weapon.StopFiring();
-            }
             Jump();
         }
         if (_health < 100 && Input.GetKeyDown(KeyCode.I)&& !isCooldown)
@@ -422,7 +406,6 @@ public class PlayerController : MonoBehaviourPun
             _isJumping = true;
             _anim.SetBool("isJumping", _isJumping);
 
-            // Thêm lực đẩy về phía trước và lên
             Vector3 forwardVelocity = transform.forward * speed * 1.5f;
             _velocity.y = Mathf.Sqrt(jumpHeight * -2f * Physics.gravity.y);
             _velocity += forwardVelocity;
@@ -582,12 +565,19 @@ public class PlayerController : MonoBehaviourPun
     [PunRPC]
     public void SetActiveWeaponRPC(int holsterIndex, int activateIndex)
     {
+        var weapon = GetWeapon(holsterIndex);
+        if (weapon != null)
+        {
+            weapon.StopFiring();
+        }
+
         if (holsterIndex == activateIndex)
         {
             holsterIndex = -1;
         }
 
         StartCoroutine(SwitchWeapon(holsterIndex, activateIndex));
+        
     }
     void ToggleWeaponHolster()
     {
