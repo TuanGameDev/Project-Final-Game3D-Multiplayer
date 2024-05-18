@@ -8,8 +8,6 @@ public class PlayerEquipLockPick : MonoBehaviourPunCallbacks, IPunObservable
 
     private void OnTriggerStay(Collider other)
     {
-        if (!photonView.IsMine) return;
-
         if (Input.GetKeyDown(KeyCode.E))
         {
             LockPickEquip lockPickEquip = other.GetComponent<LockPickEquip>();
@@ -21,6 +19,27 @@ public class PlayerEquipLockPick : MonoBehaviourPunCallbacks, IPunObservable
                     int lockPickViewID = lockPickPhotonView.ViewID;
                     photonView.RPC("EquipLockPick", RpcTarget.AllBuffered, lockPickViewID);
                     lockPickEquip.PickUp();
+                }
+            }
+            else
+            {
+                PainKiller painKiller = other.GetComponent<PainKiller>();
+                if (painKiller != null)
+                {
+                    PhotonView painKillerPhotonView = painKiller.GetComponent<PhotonView>();
+                    if (painKillerPhotonView != null)
+                    {
+                        int painKillerViewID = painKillerPhotonView.ViewID;
+                        photonView.RPC("EquipPainKiller", RpcTarget.AllBuffered, painKillerViewID);
+                        if (photonView.IsMine)
+                        {
+                            Quest_Mission1 questMission = FindObjectOfType<Quest_Mission1>();
+                            if (questMission != null)
+                            {
+                                questMission.photonView.RPC("IncreasePainKillerCount", RpcTarget.AllBuffered);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -39,6 +58,21 @@ public class PlayerEquipLockPick : MonoBehaviourPunCallbacks, IPunObservable
             lockPickEquip.transform.localRotation = Quaternion.identity;
             lockPickEquip.gameObject.SetActive(false);
             hasLockPick = true;
+        }
+    }
+
+    [PunRPC]
+    private void EquipPainKiller(int painKillerViewID)
+    {
+        GameObject painKillerObj = PhotonView.Find(painKillerViewID).gameObject;
+        PainKiller painKillerEquip = painKillerObj.GetComponent<PainKiller>();
+
+        if (painKillerEquip != null)
+        {
+            painKillerEquip.transform.parent = inventoryTransform;
+            painKillerEquip.transform.localPosition = Vector3.zero;
+            painKillerEquip.transform.localRotation = Quaternion.identity;
+            painKillerEquip.gameObject.SetActive(false);
         }
     }
 
