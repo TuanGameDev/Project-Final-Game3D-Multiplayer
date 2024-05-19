@@ -19,6 +19,12 @@ public class PlayerEquipLockPick : MonoBehaviourPunCallbacks, IPunObservable
                     int lockPickViewID = lockPickPhotonView.ViewID;
                     photonView.RPC("EquipLockPick", RpcTarget.AllBuffered, lockPickViewID);
                     lockPickEquip.PickUp();
+
+                    Quest_Mission1 questMission = FindObjectOfType<Quest_Mission1>();
+                    if (questMission != null)
+                    {
+                        questMission.photonView.RPC("LockPickPickedUp", RpcTarget.AllBuffered);
+                    }
                 }
             }
             else

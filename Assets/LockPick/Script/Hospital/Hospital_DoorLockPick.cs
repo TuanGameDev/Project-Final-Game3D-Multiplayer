@@ -21,7 +21,8 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
     public bool isUnLocked = false;
     private bool isPlayerNearDoor = false;
     private Dictionary<int, bool> playerNearDoorMap = new Dictionary<int, bool>();
-
+    public GameObject warningQuest;
+    bool isBreak = false;
     private void Awake()
     {
         if (instance == null)
@@ -32,16 +33,21 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
 
     private void Update()
     {
-        if (!isUnLocked)
+        Quest_Mission1 quest_Mission = FindObjectOfType<Quest_Mission1>();
+        if (!isUnLocked && isPlayerNearDoor && playerEquipLockPick != null && playerEquipLockPick.HasLockPick())
         {
-            if (Input.GetKeyDown(KeyCode.E) && playerEquipLockPick != null && playerEquipLockPick.HasLockPick() && !isInMiniGame && isPlayerNearDoor)
+            if (Input.GetKeyDown(KeyCode.E) && !isInMiniGame && quest_Mission != null && quest_Mission.painKillerCount >= quest_Mission.painKiller && !isBreak)
             {
                 photonView.RPC("OpenMiniGame", RpcTarget.All, PhotonNetwork.LocalPlayer.ActorNumber);
             }
-            if (Input.GetKeyDown(KeyCode.Escape) && isInMiniGame)
+            else if (Input.GetKeyDown(KeyCode.E) && quest_Mission != null && quest_Mission.painKillerCount < quest_Mission.painKiller)
             {
-                CloseMiniGame();
+                warningQuest.SetActive(true);
             }
+        }
+        if (Input.GetKeyDown(KeyCode.Escape) && isInMiniGame)
+        {
+            CloseMiniGame();
         }
     }
 
@@ -76,25 +82,41 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
     {
         if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
         {
-            isPlayerNearDoor = true;
-            playerEquipLockPick = other.GetComponent<PlayerEquipLockPick>();
-            playerController = other.GetComponent<PlayerController>();
-            if (playerEquipLockPick != null && playerController != null)
+            if (!isBreak)
             {
-                if (!isUnLocked)
+                isPlayerNearDoor = true;
+                playerEquipLockPick = other.GetComponent<PlayerEquipLockPick>();
+                playerController = other.GetComponent<PlayerController>();
+                if (playerEquipLockPick != null && playerController != null)
                 {
-                    if (playerEquipLockPick.HasLockPick())
+                    Quest_Mission1 quest_Mission = FindObjectOfType<Quest_Mission1>();
+
+                    if (playerEquipLockPick.HasLockPick() && quest_Mission != null && quest_Mission.painKillerCount >= quest_Mission.painKiller)
                     {
                         panelLockPick.SetActive(true);
                         panelWarning.SetActive(false);
+                        warningQuest.SetActive(false);
+                        quest_Mission.photonView.RPC("ShowPanelGuideFirstTime", RpcTarget.All);
+                    }
+                    else if (playerEquipLockPick.HasLockPick() && quest_Mission != null && quest_Mission.painKillerCount < quest_Mission.painKiller)
+                    {
+                        panelLockPick.SetActive(false);
+                        panelWarning.SetActive(false);
+                        warningQuest.SetActive(true);
                     }
                     else
                     {
                         panelLockPick.SetActive(false);
                         panelWarning.SetActive(true);
+                        warningQuest.SetActive(false);
                     }
                 }
             }
+            else 
+            {
+                panelLockPick.SetActive(false);
+            }
+            
         }
     }
 
@@ -107,6 +129,7 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
             playerController = null;
             panelLockPick.SetActive(false);
             panelWarning.SetActive(false);
+            warningQuest.SetActive(false);
         }
     }
 
@@ -130,12 +153,13 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
             photonView.RPC("GameIsWin", RpcTarget.AllBuffered);
         }
     }
+
     [PunRPC]
     void GameIsWin()
     {
         StartCoroutine(ShowWinPanel());
     }
-    
+
     IEnumerator ShowWinPanel()
     {
         panelWin.SetActive(true);
@@ -144,11 +168,27 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
         yield return new WaitForSecondsRealtime(11f);
         Loadlevel();
     }
+
+    public void IsBreak()
+    {
+        StartCoroutine(ShowPanelBreak());
+    }
+    IEnumerator ShowPanelBreak()
+    {
+        isBreak = true;
+        panelLockPick.SetActive(false);
+        panelBreak.SetActive(true);
+        yield return new WaitForSecondsRealtime(5f);
+        panelBreak.SetActive(false);
+        isBreak = false;
+    }
+
     public void Loadlevel()
     {
         PhotonNetwork.LoadLevel(loadlevel);
         Time.timeScale = 1;
     }
+
     private bool IsLocalPlayerNearDoor()
     {
         int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber;
