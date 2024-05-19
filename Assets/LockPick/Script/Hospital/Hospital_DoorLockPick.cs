@@ -7,6 +7,7 @@ using UnityEngine;
 public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
 {
     public static Hospital_DoorLockPick instance;
+    public string loadlevel;
     public GameObject panelLockPick;
     public GameObject panelWarning;
     public GameObject minigameLockPick;
@@ -55,11 +56,6 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
             lock2.SetActive(true);
             cameraLockpick.SetActive(true);
             isInMiniGame = true;
-
-            if (PhotonNetwork.IsMasterClient)
-            {
-                minigameLockPick.GetPhotonView().TransferOwnership(PhotonNetwork.LocalPlayer);
-            }
         }
     }
 
@@ -131,16 +127,28 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
         isUnLocked = state;
         if (state)
         {
-            photonView.RPC("ShowWinPanel", RpcTarget.AllBuffered);
+            photonView.RPC("GameIsWin", RpcTarget.AllBuffered);
         }
     }
-
     [PunRPC]
-    void ShowWinPanel()
+    void GameIsWin()
+    {
+        StartCoroutine(ShowWinPanel());
+    }
+    
+    IEnumerator ShowWinPanel()
     {
         panelWin.SetActive(true);
-    }
+        Time.timeScale = 0;
 
+        yield return new WaitForSecondsRealtime(11f);
+        Loadlevel();
+    }
+    public void Loadlevel()
+    {
+        PhotonNetwork.LoadLevel(loadlevel);
+        Time.timeScale = 1;
+    }
     private bool IsLocalPlayerNearDoor()
     {
         int localPlayerId = PhotonNetwork.LocalPlayer.ActorNumber;

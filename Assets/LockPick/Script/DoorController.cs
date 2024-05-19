@@ -17,7 +17,7 @@ public class DoorController : MonoBehaviourPunCallbacks, IPunObservable
     {
         if (Input.GetKeyDown(KeyCode.E) && IsLocalPlayerNearDoor())
         {
-            photonView.RPC("ToggleDoor", RpcTarget.All);
+            photonView.RPC("ToggleDoor", RpcTarget.AllBuffered);
         }
     }
 

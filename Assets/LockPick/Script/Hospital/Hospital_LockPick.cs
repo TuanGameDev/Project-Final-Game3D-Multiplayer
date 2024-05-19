@@ -87,7 +87,6 @@ public class Hospital_LockPick : MonoBehaviourPunCallbacks
         Hospital_DoorLockPick.instance.CloseMiniGame();
         Reset();
     }
-
     void Cyllinder()
     {
         CyllinderPos -= cyllinderRetentionSpeed * Time.deltaTime;
