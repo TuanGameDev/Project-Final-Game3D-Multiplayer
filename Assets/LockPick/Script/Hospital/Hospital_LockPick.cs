@@ -23,7 +23,6 @@ public class Hospital_LockPick : MonoBehaviourPunCallbacks
     Animator anim;
     float targetPos;
     [SerializeField] float leanency = 0.1f;
-    public GameObject panelBreak;
     float MaxRotationDistance
     {
         get { return 1f - Mathf.Abs(targetPos - PickPos) + leanency; }
@@ -84,6 +83,7 @@ public class Hospital_LockPick : MonoBehaviourPunCallbacks
     void PickBreak()
     {
         isBroken = true;
+        Hospital_DoorLockPick.instance.IsBreak();
         Hospital_DoorLockPick.instance.CloseMiniGame();
         Reset();
     }
