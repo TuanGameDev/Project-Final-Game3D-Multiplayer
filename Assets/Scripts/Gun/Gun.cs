@@ -13,7 +13,7 @@ public class Gun : MonoBehaviourPun
     public enum WeaponType
     {
         Rifle,
-        Pistol
+        SMG_Pistol
     }
     public WeaponType weaponType;
     public string weaponName;
@@ -101,26 +101,21 @@ public class Gun : MonoBehaviourPun
 
     if (currentTrail == null)
     {
-        // Tạo hiệu ứng trail mới nếu không có hiệu ứng trail nào tồn tại
 
         currentTrail = Instantiate(trailEffect, _ray.origin, Quaternion.identity);
     }
     else
     {
-        // Di chuyển hiệu ứng trail hiện tại đến vị trí xuất phát mới
         currentTrail.transform.position = _ray.origin;
     }
 
-    // Đặt điểm xuất phát của hiệu ứng trail tại vị trí xuất phát của raycast
     currentTrail.Clear();
     currentTrail.AddPosition(_ray.origin);
 
         if (Physics.Raycast(_ray, out _hit))
         {
             ParticleSystem selectedHitEffect = hitEffect;          
-
             // Kiểm tra nếu đối tượng va chạm có layer là "Zombie"
-
             if (_hit.collider.gameObject.layer == LayerMask.NameToLayer("Zombie"))
             {
                 Initialized(PlayerController.me.id, photonView.IsMine);
@@ -134,19 +129,21 @@ public class Gun : MonoBehaviourPun
                     zombieHealth.photonView.RPC("TakeDamage", RpcTarget.MasterClient,warriorID, damage);
                 }
             }
+            else
+            {
+                selectedHitEffect.transform.position = _hit.point;
+                selectedHitEffect.transform.forward = _hit.normal;
+                selectedHitEffect.Emit(1);
+            }
 
-            selectedHitEffect.transform.position = _hit.point;
-            selectedHitEffect.transform.forward = _hit.normal;
-            selectedHitEffect.Emit(1);
+
 
             // Di chuyển hiệu ứng trail đến hit point
-
             currentTrail.transform.position = _hit.point;
         }
         else
         {
             // Nếu không có va chạm, di chuyển hiệu ứng trail theo raycast
-
             currentTrail.transform.position = _ray.origin + _ray.direction * 100f;
         }
 

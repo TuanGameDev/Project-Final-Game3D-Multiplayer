@@ -9,6 +9,8 @@ public class GunRecoil : MonoBehaviour
     [HideInInspector] public CinemachineImpulseSource cameraShake;
     [HideInInspector] public Animator rig;
     [HideInInspector] public float recoilModifier = 1f;
+    [SerializeField] public float aimRecoil = 1f;
+    [SerializeField] public float noaimRecoil = 1f;
 
     [SerializeField] Vector2[] recoilPattern;
     [SerializeField] float duration;
