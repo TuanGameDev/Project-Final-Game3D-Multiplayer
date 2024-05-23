@@ -9,6 +9,8 @@ using Unity.VisualScripting;
 using UnityEngine.UI;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 using UnityEngine.SceneManagement;
+using static Gun;
+using static AmmoPickUp;
 
 
 public class PlayerController : MonoBehaviourPun
@@ -50,6 +52,10 @@ public class PlayerController : MonoBehaviourPun
     bool _isJumping = false;
     Vector3 _velocity;
 
+    public float groundDistance = 1f;
+    public LayerMask groundMask;
+    public bool isGrounded;
+
     [Header("WEAPON")]
     [SerializeField] private float ReloadRate;
     [SerializeField] private Image ReloadIMG;
@@ -88,6 +94,10 @@ public class PlayerController : MonoBehaviourPun
     public TextMeshProUGUI addbandagecooldownText;
     private bool isCooldown = false;
     private bool hasBandage = false;
+
+
+    public int rifleAmmo;
+    public int smgPistolAmmo;
 
     public static PlayerController me;
     public enum WeaponSlot
@@ -152,7 +162,7 @@ public class PlayerController : MonoBehaviourPun
     {
         if (!photonView.IsMine) return;
         if (_isDead) return;
-
+        
         UpdateWeaponState();
         UpdateAimingState();
 
@@ -175,8 +185,8 @@ public class PlayerController : MonoBehaviourPun
                 _isJumping = false;
                 _anim.SetBool("isJumping", _isJumping);
                 _velocity = Vector3.zero;
-            }
-        }
+            }         
+        }       
     }
 
     #region CameraNametag
@@ -276,7 +286,7 @@ public class PlayerController : MonoBehaviourPun
                 _aiming = false;
             }
 
-            if (Input.GetKeyDown(KeyCode.E))
+            if (Input.GetKeyDown(KeyCode.G))
             { 
                 if (_weapon.flashActive == false)
                 {
@@ -293,10 +303,6 @@ public class PlayerController : MonoBehaviourPun
             if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize && !_isReloading)
             {
                 Reload();
-            }
-            if (Input.GetKeyDown(KeyCode.G))
-            {
-                DropWeapon();
             }
         }
 
@@ -417,11 +423,7 @@ public class PlayerController : MonoBehaviourPun
     [PunRPC]
     public void JumpRPC()
     {
-        _isJumping = true;
-        _anim.SetBool("isJumping", _isJumping);
-        _velocity.y = Mathf.Sqrt(jumpHeight * -2f * Physics.gravity.y);
-        Vector3 forwardVelocity = transform.forward * speed;
-        _velocity += forwardVelocity;
+        _anim.SetBool("isJumping", _isJumping);      
     }
     #endregion
     //
@@ -444,7 +446,7 @@ public class PlayerController : MonoBehaviourPun
         var _weapon = GetWeapon(_activeWeaponIndex);
         if (_aiming)
         {
-            _weapon.recoil.recoilModifier = _aiming ? 0.3f : .1f;
+            _weapon.recoil.recoilModifier = _aiming ? _weapon.recoil.aimRecoil : _weapon.recoil.noaimRecoil;
             CMfreelook.m_Lens.FieldOfView = Mathf.Lerp(CMfreelook.m_Lens.FieldOfView, aimZoomDistance, Time.deltaTime * zoomSpeed);
         }
         else
@@ -495,10 +497,10 @@ public class PlayerController : MonoBehaviourPun
 
     private IEnumerator EquipNewWeaponAfterDrop(Gun newWeapon, int weaponSlotIndex)
     {
-        yield return new WaitForEndOfFrame(); // Chờ một khung hình để đảm bảo đồng bộ hóa trạng thái
+        yield return new WaitForEndOfFrame();
 
         var weapon = GetWeapon(weaponSlotIndex);
-        if (weapon == null) // Nếu đã thả vũ khí cũ thành công
+        if (weapon == null)
         {
             weapon = newWeapon;
             weapon.raycastDestination = crosshairTarget;
@@ -538,11 +540,9 @@ public class PlayerController : MonoBehaviourPun
 
     void SyncDropWeaponState(int weaponIndex)
     {
-        // Cập nhật trạng thái vũ khí trên tất cả các client
         Gun currentWeapon = GetWeapon(weaponIndex);
         if (currentWeapon != null)
         {
-            // Hủy bỏ vũ khí hiện tại
             Destroy(currentWeapon.gameObject);
             _equipWeapons[weaponIndex] = null;
             _activeWeaponIndex = -1;
@@ -674,26 +674,39 @@ public class PlayerController : MonoBehaviourPun
     }
     void AttachMag()
     {
-        Gun weapon = GetActiveWeapon();
-        weapon.magazine.SetActive(true);
-        Destroy(magazineHand);
-        weapon.ammoCount = weapon.magSize;
-        rigController.ResetTrigger("reload");
-    }
-    void UpdateAmmo() // gọi hàm sau mỗi hành động liên quan đến weapon
-    {
-        Gun weapon = GetActiveWeapon();
+        Gun weapon = GetActiveWeapon();        
         if (weapon != null)
         {
-            ammoText.text = weapon.ammoCount + "";
-            magText.text = weapon.magSize + "";
-            weaponNameText.text = "" + weapon.weaponName;
-            weaponIcon.sprite = weapon.gunIcon;
-            weaponIcon.gameObject.SetActive(true);
+            if (weapon.weaponType == WeaponType.Rifle && rifleAmmo > 0)
+            {
+                int ammoNeeded = weapon.magSize - weapon.ammoCount;
+                weapon.ammoCount += ammoNeeded;
+                rifleAmmo -= ammoNeeded;
+            }
+            else if (weapon.weaponType == WeaponType.SMG_Pistol && smgPistolAmmo > 0)
+            {
+                int ammoNeeded = weapon.magSize - weapon.ammoCount;
+                weapon.ammoCount += ammoNeeded;
+                smgPistolAmmo -= ammoNeeded;
+            }
         }
+        weapon.magazine.SetActive(true);
+        Destroy(magazineHand);
+        rigController.ResetTrigger("reload");
+    }
+    
+    public void SetCrosshairActive(bool isActive)
+    {
+        crosshairIMG.enabled = isActive;
+    }
+    void Reload()
+    {
+        AudioManager._audioManager.PlaySFX(8);
+        StartCoroutine(DelayedReload());
+        photonView.RPC("ReloadRPC", RpcTarget.All);
     }
     IEnumerator DelayedReload()
-    {   
+    {
         cooldownReloadIMG.fillAmount = 1f;
         float startTime = Time.time;
         float endTime = startTime + ReloadRate;
@@ -713,22 +726,48 @@ public class PlayerController : MonoBehaviourPun
         _isReloading = false;
         crosshairIMG.enabled = true;
     }
-    public void SetCrosshairActive(bool isActive)
-    {
-        crosshairIMG.enabled = isActive;
-    }
-    void Reload()
-    {
-        rigController.SetTrigger("reload");
-        AudioManager._audioManager.PlaySFX(8);
-        StartCoroutine(DelayedReload());
-        photonView.RPC("ReloadRPC", RpcTarget.All);
-    }
+
     [PunRPC]
     public void ReloadRPC()
     {
         rigController.SetTrigger("reload");
     }
+
+    void UpdateAmmo()
+    {
+        Gun weapon = GetActiveWeapon();
+        if (weapon != null)
+        {
+            ammoText.text = weapon.ammoCount + "";
+            weaponNameText.text = "" + weapon.weaponName;
+            weaponIcon.sprite = weapon.gunIcon;
+            weaponIcon.gameObject.SetActive(true);
+
+            if (weapon.weaponType == WeaponType.Rifle)
+            {
+                magText.text = rifleAmmo + "";
+            }
+            else if (weapon.weaponType == WeaponType.SMG_Pistol)
+            {
+                magText.text = smgPistolAmmo + "";
+            }
+        }
+    }
+    [PunRPC]
+    public void PickUpAmmo(AmmoType type, int amount)
+    {
+        switch (type)
+        {
+            case AmmoType.RifleAmmo:
+                rifleAmmo += amount;
+                break;
+            case AmmoType.SMG_PistolAmmo:
+                smgPistolAmmo += amount;
+                break;
+        }
+    }
+    
+    
     #endregion
     //
     #region HUD

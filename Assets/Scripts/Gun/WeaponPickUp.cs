@@ -15,6 +15,7 @@ public class WeaponPickUp : MonoBehaviourPun
         if (Input.GetKeyDown(KeyCode.F) && _canPickup)
         {
             photonView.RPC("PickUpWeapon", RpcTarget.All);
+            
         }
     }
 
