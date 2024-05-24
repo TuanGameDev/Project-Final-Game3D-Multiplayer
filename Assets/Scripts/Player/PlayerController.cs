@@ -93,8 +93,6 @@ public class PlayerController : MonoBehaviourPun
     public TextMeshProUGUI addbandageText;
     public TextMeshProUGUI addbandagecooldownText;
     private bool isCooldown = false;
-    private bool hasBandage = false;
-
 
     public int rifleAmmo;
     public int smgPistolAmmo;

@@ -9,8 +9,8 @@ using TMPro;
 public class MenuManager : MonoBehaviourPunCallbacks, ILobbyCallbacks
 {
     [Header("Sreens")]
-    public int maxPlayers = 0;
-    public string nameScene;
+    [SerializeField] public int maxPlayers = 0;
+    [SerializeField] public string nameScene;
     [SerializeField] private string playerName;
     [SerializeField] private GameObject nameInput;
     [SerializeField] private GameObject mainScreen;

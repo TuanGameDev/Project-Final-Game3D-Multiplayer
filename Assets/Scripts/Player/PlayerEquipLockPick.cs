@@ -20,7 +20,7 @@ public class PlayerEquipLockPick : MonoBehaviourPunCallbacks, IPunObservable
                     photonView.RPC("EquipLockPick", RpcTarget.AllBuffered, lockPickViewID);
                     lockPickEquip.PickUp();
 
-                    Quest_Mission1 questMission = FindObjectOfType<Quest_Mission1>();
+                    MissionHospital questMission = FindObjectOfType<MissionHospital>();
                     if (questMission != null)
                     {
                         questMission.photonView.RPC("LockPickPickedUp", RpcTarget.AllBuffered);
@@ -39,7 +39,7 @@ public class PlayerEquipLockPick : MonoBehaviourPunCallbacks, IPunObservable
                         photonView.RPC("EquipPainKiller", RpcTarget.AllBuffered, painKillerViewID);
                         if (photonView.IsMine)
                         {
-                            Quest_Mission1 questMission = FindObjectOfType<Quest_Mission1>();
+                            MissionHospital questMission = FindObjectOfType<MissionHospital>();
                             if (questMission != null)
                             {
                                 questMission.photonView.RPC("IncreasePainKillerCount", RpcTarget.AllBuffered);

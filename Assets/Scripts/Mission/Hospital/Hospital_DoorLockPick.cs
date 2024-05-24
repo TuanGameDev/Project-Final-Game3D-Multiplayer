@@ -33,7 +33,7 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
 
     private void Update()
     {
-        Quest_Mission1 quest_Mission = FindObjectOfType<Quest_Mission1>();
+        MissionHospital quest_Mission = FindObjectOfType<MissionHospital>();
         if (!isUnLocked && isPlayerNearDoor && playerEquipLockPick != null && playerEquipLockPick.HasLockPick())
         {
             if (Input.GetKeyDown(KeyCode.E) && !isInMiniGame && quest_Mission != null && quest_Mission.painKillerCount >= quest_Mission.painKiller && !isBreak)
@@ -89,7 +89,7 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
                 playerController = other.GetComponent<PlayerController>();
                 if (playerEquipLockPick != null && playerController != null)
                 {
-                    Quest_Mission1 quest_Mission = FindObjectOfType<Quest_Mission1>();
+                    MissionHospital quest_Mission = FindObjectOfType<MissionHospital>();
 
                     if (playerEquipLockPick.HasLockPick() && quest_Mission != null && quest_Mission.painKillerCount >= quest_Mission.painKiller)
                     {
