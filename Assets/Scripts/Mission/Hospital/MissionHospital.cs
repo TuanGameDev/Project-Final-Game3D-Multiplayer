@@ -2,7 +2,7 @@
 using TMPro;
 using Photon.Pun;
 
-public class Quest_Mission1 : MonoBehaviourPunCallbacks
+public class MissionHospital : MonoBehaviourPunCallbacks
 {
     [Header("PanelQuest")]
     public GameObject FindPainKiller;
