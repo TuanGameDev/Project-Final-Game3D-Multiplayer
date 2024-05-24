@@ -160,7 +160,7 @@ public class PlayerController : MonoBehaviourPun
     {
         if (!photonView.IsMine) return;
         if (_isDead) return;
-        
+
         UpdateWeaponState();
         UpdateAimingState();
 
@@ -183,8 +183,8 @@ public class PlayerController : MonoBehaviourPun
                 _isJumping = false;
                 _anim.SetBool("isJumping", _isJumping);
                 _velocity = Vector3.zero;
-            }         
-        }       
+            }
+        }
     }
 
     #region CameraNametag
@@ -272,7 +272,7 @@ public class PlayerController : MonoBehaviourPun
             }
             else
             {
-               _weapon.StopFiring();
+                _weapon.StopFiring();
             }
 
             if (Input.GetMouseButton(1))
@@ -285,7 +285,7 @@ public class PlayerController : MonoBehaviourPun
             }
 
             if (Input.GetKeyDown(KeyCode.G))
-            { 
+            {
                 if (_weapon.flashActive == false)
                 {
                     _weapon.flashActive = true;
@@ -300,7 +300,14 @@ public class PlayerController : MonoBehaviourPun
 
             if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize && !_isReloading)
             {
-                Reload();
+                if (_weapon.weaponType == WeaponType.Rifle && rifleAmmo > 0)
+                {
+                    Reload();
+                }
+                else if (_weapon.weaponType == WeaponType.SMG_Pistol && smgPistolAmmo > 0)
+                {
+                    Reload();
+                }
             }
         }
 
@@ -314,13 +321,13 @@ public class PlayerController : MonoBehaviourPun
         }
         if (Input.GetKeyDown(KeyCode.X))
         {
-            ToggleWeaponHolster();          
+            ToggleWeaponHolster();
         }
         if (Input.GetKeyDown(KeyCode.Space) && _controller.isGrounded && !_isJumping)
         {
             Jump();
         }
-        if (_health < 100 && Input.GetKeyDown(KeyCode.I)&& !isCooldown)
+        if (_health < 100 && Input.GetKeyDown(KeyCode.I) && !isCooldown)
         {
             UseBandage();
             StartCoroutine(StartCooldown());
@@ -421,7 +428,7 @@ public class PlayerController : MonoBehaviourPun
     [PunRPC]
     public void JumpRPC()
     {
-        _anim.SetBool("isJumping", _isJumping);      
+        _anim.SetBool("isJumping", _isJumping);
     }
     #endregion
     //
@@ -465,7 +472,7 @@ public class PlayerController : MonoBehaviourPun
     public void StartShoot()
     {
         var _weapon = GetWeapon(_activeWeaponIndex);
-        if ( _weapon != null )
+        if (_weapon != null)
         {
             _weapon.StartFiring();
         }
@@ -475,7 +482,7 @@ public class PlayerController : MonoBehaviourPun
     public void StopShoot()
     {
         var _weapon = GetWeapon(_activeWeaponIndex);
-        if ( _weapon != null )
+        if (_weapon != null)
         {
             _weapon.StopFiring();
         }
@@ -575,7 +582,7 @@ public class PlayerController : MonoBehaviourPun
         }
 
         StartCoroutine(SwitchWeapon(holsterIndex, activateIndex));
-        
+
     }
     void ToggleWeaponHolster()
     {
@@ -672,27 +679,38 @@ public class PlayerController : MonoBehaviourPun
     }
     void AttachMag()
     {
-        Gun weapon = GetActiveWeapon();        
+        Gun weapon = GetActiveWeapon();
         if (weapon != null)
         {
-            if (weapon.weaponType == WeaponType.Rifle && rifleAmmo > 0)
+            int ammoNeeded = weapon.magSize - weapon.ammoCount;
+
+            if (weapon.weaponType == WeaponType.Rifle)
             {
-                int ammoNeeded = weapon.magSize - weapon.ammoCount;
-                weapon.ammoCount += ammoNeeded;
-                rifleAmmo -= ammoNeeded;
+                int ammoToLoad = ammoNeeded;
+                if (ammoToLoad > rifleAmmo)
+                {
+                    ammoToLoad = rifleAmmo;
+                }
+                weapon.ammoCount += ammoToLoad;
+                rifleAmmo -= ammoToLoad;
             }
-            else if (weapon.weaponType == WeaponType.SMG_Pistol && smgPistolAmmo > 0)
+            else if (weapon.weaponType == WeaponType.SMG_Pistol)
             {
-                int ammoNeeded = weapon.magSize - weapon.ammoCount;
-                weapon.ammoCount += ammoNeeded;
-                smgPistolAmmo -= ammoNeeded;
+                int ammoToLoad = ammoNeeded;
+                if (ammoToLoad > smgPistolAmmo)
+                {
+                    ammoToLoad = smgPistolAmmo;
+                }
+                weapon.ammoCount += ammoToLoad;
+                smgPistolAmmo -= ammoToLoad;
             }
+
+            weapon.magazine.SetActive(true);
+            Destroy(magazineHand);
+            rigController.ResetTrigger("reload");
         }
-        weapon.magazine.SetActive(true);
-        Destroy(magazineHand);
-        rigController.ResetTrigger("reload");
     }
-    
+
     public void SetCrosshairActive(bool isActive)
     {
         crosshairIMG.enabled = isActive;
@@ -764,8 +782,8 @@ public class PlayerController : MonoBehaviourPun
                 break;
         }
     }
-    
-    
+
+
     #endregion
     //
     #region HUD
@@ -816,7 +834,7 @@ public class PlayerController : MonoBehaviourPun
     {
         Bandage += item;
     }
-     void UpdateBandageText(int amount)
+    void UpdateBandageText(int amount)
     {
         bandageText.text = "" + amount;
     }
