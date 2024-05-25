@@ -5,6 +5,9 @@ using Photon.Pun;
 public class Hospital_LockPick : MonoBehaviourPunCallbacks
 {
     float pickPos;
+    [Header("Audio LockPick")]
+    [SerializeField] public AudioSource footstepAudioSource;
+    [SerializeField] public AudioClip footstepSounds;
     public float PickPos
     {
         get { return pickPos; }
@@ -61,6 +64,11 @@ public class Hospital_LockPick : MonoBehaviourPunCallbacks
         if (Input.GetAxisRaw("Vertical") == 0)
         {
             Pick();
+            if (!footstepAudioSource.isPlaying)
+            {
+                footstepAudioSource.clip = footstepSounds;
+                footstepAudioSource.Play();
+            }
         }
         Shaking();
         Cyllinder();

@@ -13,7 +13,6 @@ public class MissionHospital : MonoBehaviourPunCallbacks
     public GameObject panelGuide_FindPainKiller, panelGuide_FindLockPick, panelGuide_FindUnlock_Location, panelGuide_LockPick;
 
     public TextMeshProUGUI txtFindPainKiller;
-    public GameObject panelQuest;
     public int painKiller = 2;
     public int painKillerCount;
     private bool hasShownGuide = false;
@@ -29,10 +28,6 @@ public class MissionHospital : MonoBehaviourPunCallbacks
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            TogglePanel(panelQuest);
-        }
         if (Input.GetKeyDown(KeyCode.P))
         {
             TogglePanel(panelGuide);
@@ -56,7 +51,6 @@ public class MissionHospital : MonoBehaviourPunCallbacks
             FindPainKiller.SetActive(false);
             FindLockPick.SetActive(true);
             FindUnlock_Location.SetActive(false);
-            panelQuest.SetActive(true);
             panelGuide.SetActive(true);
             panelGuide_FindPainKiller.SetActive(false);
             panelGuide_FindLockPick.SetActive(true);
@@ -67,7 +61,6 @@ public class MissionHospital : MonoBehaviourPunCallbacks
                 FindPainKiller.SetActive(false);
                 FindLockPick.SetActive(false);
                 FindUnlock_Location.SetActive(true);
-                panelQuest.SetActive(true);
                 panelGuide.SetActive(true);
                 panelGuide_FindPainKiller.SetActive(false);
                 panelGuide_FindLockPick.SetActive(false);
@@ -89,7 +82,6 @@ public class MissionHospital : MonoBehaviourPunCallbacks
             FindPainKiller.SetActive(false);
             FindLockPick.SetActive(false);
             FindUnlock_Location.SetActive(true);
-            panelQuest.SetActive(true);
             panelGuide.SetActive(true);
             panelGuide_FindPainKiller.SetActive(false);
             panelGuide_FindLockPick.SetActive(false);
@@ -117,7 +109,6 @@ public class MissionHospital : MonoBehaviourPunCallbacks
             panelGuide_LockPick.SetActive(true);
         }
     }
-
     private void TogglePanel(GameObject panel)
     {
         if (panel != null)

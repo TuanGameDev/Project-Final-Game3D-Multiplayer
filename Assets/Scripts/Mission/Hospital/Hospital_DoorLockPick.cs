@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
 {
+    [Header("Hospital DoorLockPick ")]
     public static Hospital_DoorLockPick instance;
     public string loadlevel;
     public GameObject panelLockPick;
@@ -16,13 +17,16 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
     public GameObject lock1;
     public GameObject lock2;
     public GameObject cameraLockpick;
-    public GameObject panelWin, panelBreak;
+    public GameObject panelWin, panelBreak,panelMissios;
     private bool isInMiniGame = false;
     public bool isUnLocked = false;
     private bool isPlayerNearDoor = false;
     private Dictionary<int, bool> playerNearDoorMap = new Dictionary<int, bool>();
     public GameObject warningQuest;
     bool isBreak = false;
+    [Header("AudioEnd Hospital")]
+    [SerializeField] public AudioSource footstepAudioEnd;
+    [SerializeField] public AudioClip footstepEnd;
     private void Awake()
     {
         if (instance == null)
@@ -162,7 +166,13 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
 
     IEnumerator ShowWinPanel()
     {
+        if (!footstepAudioEnd.isPlaying)
+        {
+            footstepAudioEnd.clip = footstepEnd;
+            footstepAudioEnd.Play();
+        }
         panelWin.SetActive(true);
+        panelMissios.SetActive(false);
         Time.timeScale = 0;
 
         yield return new WaitForSecondsRealtime(11f);

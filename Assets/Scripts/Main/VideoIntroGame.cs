@@ -8,6 +8,7 @@ public class VideoIntroGame : MonoBehaviour
 {
     public VideoPlayer videoPlayer;
     public GameObject objectToHide;
+    public GameObject objectMission;
 
     private void Start()
     {
@@ -17,5 +18,6 @@ public class VideoIntroGame : MonoBehaviour
     private void OnVideoFinished(VideoPlayer vp)
     {
         objectToHide.SetActive(false);
+        objectMission.SetActive(true);
     }
 }
