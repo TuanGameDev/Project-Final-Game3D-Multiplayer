@@ -32,6 +32,8 @@ public class MissionGenerator : MonoBehaviourPun
     [SerializeField] public GameObject uiEndGame;
     [SerializeField] public GameObject lingred;
     [SerializeField] public GameObject linggreen;
+    [Header("PanelGuide")]
+    public GameObject panelGuide;
     [Header("Boss Mission 3")]
     public GameObject bossPrefabs;
     public Transform spawnBossPoint;
@@ -47,6 +49,10 @@ public class MissionGenerator : MonoBehaviourPun
     private void Update()
     {
         photonView.RPC("UpdatePlayerCount", RpcTarget.All, playerCount, maxPlayerCount);
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            TogglePanel(panelGuide);
+        }
         if (isInsideTrigger)
         {
             if (cooldownTimer <= 0f && Input.GetKeyDown(KeyCode.F) && playerCount < maxPlayerCount)
@@ -231,6 +237,13 @@ public class MissionGenerator : MonoBehaviourPun
         {
             timerText.text = "Press F to edit";
             timerText.color = Color.green;
+        }
+    }
+    private void TogglePanel(GameObject panel)
+    {
+        if (panel != null)
+        {
+            panel.SetActive(!panel.activeSelf);
         }
     }
 }
