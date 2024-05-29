@@ -23,7 +23,6 @@ public class Gun : MonoBehaviourPun
     public int damage;
     public int ammoCount; // đạn
     public int magSize; // số viên đạn trong 1 băng
-    public int mag; // băng đạn
     public GameObject magazine; // mag gameobject
     public GameObject bloodSplatterPrefab;
 
