@@ -43,8 +43,6 @@ public class PlayerController : MonoBehaviourPun
     [Header("MOVEMENT")]
     [SerializeField] public AudioSource footstepAudioSource;
     [SerializeField] public AudioClip[] footstepSounds;
-    [SerializeField] public float speed;
-    [SerializeField] public float sprintSpeed;
     [SerializeField] public float jumpHeight;
     float _hor, _ver;
     float _turnCalmTime = 0.1f;
@@ -52,9 +50,6 @@ public class PlayerController : MonoBehaviourPun
     bool _isJumping = false;
     Vector3 _velocity;
 
-    public float groundDistance = 1f;
-    public LayerMask groundMask;
-    public bool isGrounded;
 
     [Header("WEAPON")]
     [SerializeField] private float ReloadRate;
@@ -304,7 +299,7 @@ public class PlayerController : MonoBehaviourPun
                 {
                     Reload();
                 }
-                else if (_weapon.weaponType == WeaponType.SMG_Pistol && smgPistolAmmo > 0)
+                else if (_weapon.weaponType == WeaponType.SMG_Pistol)
                 {
                     Reload();
                 }
@@ -391,7 +386,7 @@ public class PlayerController : MonoBehaviourPun
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnCalmVelocity, _turnCalmTime);
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
-            _anim.SetFloat("Speed", direction.magnitude * (Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : 1.0f));
+            _anim.SetFloat("Speed", direction.magnitude * (Input.GetKey(KeyCode.LeftShift) ? _anim.speed = 1.4f : _anim.speed = 1f));
             if (!footstepAudioSource.isPlaying)
             {
                 AudioClip randomFootstepSound = footstepSounds[Random.Range(0, footstepSounds.Length)];
@@ -417,7 +412,7 @@ public class PlayerController : MonoBehaviourPun
             _isJumping = true;
             _anim.SetBool("isJumping", _isJumping);
 
-            Vector3 forwardVelocity = transform.forward * speed * 1.5f;
+            Vector3 forwardVelocity = transform.forward * 1f * 1.5f;
             _velocity.y = Mathf.Sqrt(jumpHeight * -2f * Physics.gravity.y);
             _velocity += forwardVelocity;
 
@@ -696,13 +691,14 @@ public class PlayerController : MonoBehaviourPun
             }
             else if (weapon.weaponType == WeaponType.SMG_Pistol)
             {
-                int ammoToLoad = ammoNeeded;
+                /*int ammoToLoad = ammoNeeded;
                 if (ammoToLoad > smgPistolAmmo)
                 {
                     ammoToLoad = smgPistolAmmo;
                 }
                 weapon.ammoCount += ammoToLoad;
-                smgPistolAmmo -= ammoToLoad;
+                smgPistolAmmo -= ammoToLoad;*/
+                weapon.ammoCount = weapon.magSize;
             }
 
             weapon.magazine.SetActive(true);
