@@ -147,7 +147,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
     }
     private IEnumerator RepairProcess(int playerViewID)
     {
-        float repairTime = 1f;
+        float repairTime = 10f;
         repairSlider.maxValue = repairTime;
         repairSlider.value = 0;
         while (repairSlider.value < repairTime)
@@ -231,10 +231,10 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
     }
     private IEnumerator StartShipProcess()
     {
-        float repairTime = 10f;
-        startShipSlider.maxValue = repairTime;
+        float startShipTime = 7f;
+        startShipSlider.maxValue = startShipTime;
         startShipSlider.value = 0;
-        while (startShipSlider.value < repairTime)
+        while (startShipSlider.value < startShipTime)
         {
             startShipSlider.value += Time.deltaTime;
             yield return null;
