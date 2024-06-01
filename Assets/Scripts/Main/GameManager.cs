@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviourPun
     public PlayerController[] playerCtrl;
     public Transform[] spawnPoint;
     public float respawnTime;
-    private int playersInGame;
+    public int playersInGame;
 
     [Header("Spawn Gun")]
     public GameObject[] gun;
@@ -31,7 +31,7 @@ public class GameManager : MonoBehaviourPun
         photonView.RPC("ImInGame", RpcTarget.AllBuffered);
     }
     [PunRPC]
-    void ImInGame()
+    public void ImInGame()
     {
         playersInGame++;
         if (playersInGame == PhotonNetwork.PlayerList.Length)
