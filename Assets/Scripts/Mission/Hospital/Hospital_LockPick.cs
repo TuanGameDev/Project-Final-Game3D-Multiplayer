@@ -57,6 +57,7 @@ public class Hospital_LockPick : MonoBehaviourPunCallbacks
         CyllinderPos = 0;
         PickPos = 0;
         tension = 0f;
+        isBroken = false;
     }
 
     private void Update()
@@ -107,19 +108,16 @@ public class Hospital_LockPick : MonoBehaviourPunCallbacks
             }
         }
     }
-
     void UnLock()
     {
         photonView.RPC("UnlockOnNetwork", RpcTarget.AllBuffered);
         Hospital_DoorLockPick.instance.CloseMiniGame();
     }
-
     [PunRPC]
     void UnlockOnNetwork()
     {
         Hospital_DoorLockPick.instance.SetUnlockState(true);
     }
-
     void Pick()
     {
         PickPos += Input.GetAxisRaw("Horizontal") * Time.deltaTime * 0.5f;

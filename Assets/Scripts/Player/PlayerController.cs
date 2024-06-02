@@ -33,6 +33,8 @@ public class PlayerController : MonoBehaviourPun
     public TextMeshProUGUI magText;
     public TextMeshProUGUI weaponNameText;
     public Image weaponIcon;
+    public RawImage runIcon;
+    public RawImage flashlightIcon;
     public GameObject settingPopup;
 
     public Player photonPlayer;
@@ -90,7 +92,7 @@ public class PlayerController : MonoBehaviourPun
     private bool isCooldown = false;
 
     public int rifleAmmo;
-    public int smgPistolAmmo;
+    public int smgAmmo;
 
     public static PlayerController me;
     public enum WeaponSlot
@@ -169,7 +171,7 @@ public class PlayerController : MonoBehaviourPun
             MovementWithoutWeapon();
         }
 
-        if (_isJumping)
+        if (_isJumping && _controller.isGrounded)
         {
             _velocity.y += Physics.gravity.y * Time.fixedDeltaTime;
             _controller.Move(_velocity * Time.fixedDeltaTime);
@@ -285,11 +287,13 @@ public class PlayerController : MonoBehaviourPun
                 {
                     _weapon.flashActive = true;
                     _weapon.flashlight.gameObject.SetActive(true);
+                    flashlightIcon.color = Color.white;
                 }
                 else
                 {
                     _weapon.flashActive = false;
                     _weapon.flashlight.gameObject.SetActive(false);
+                    flashlightIcon.color = new Color(0.42f, 0.42f, 0.42f); // = 6B6B6B
                 }
             }
 
@@ -387,6 +391,16 @@ public class PlayerController : MonoBehaviourPun
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
             _anim.SetFloat("Speed", direction.magnitude * (Input.GetKey(KeyCode.LeftShift) ? _anim.speed = 1.4f : _anim.speed = 1f));
+
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                runIcon.color = Color.white;
+            }
+            else
+            {
+                runIcon.color = new Color(0.42f, 0.42f, 0.42f); // = 6B6B6B
+            }
+
             if (!footstepAudioSource.isPlaying)
             {
                 AudioClip randomFootstepSound = footstepSounds[Random.Range(0, footstepSounds.Length)];
@@ -761,7 +775,7 @@ public class PlayerController : MonoBehaviourPun
             }
             else if (weapon.weaponType == WeaponType.SMG_Pistol)
             {
-                magText.text = smgPistolAmmo + "";
+                magText.text = smgAmmo + "";
             }
         }
     }
@@ -774,7 +788,7 @@ public class PlayerController : MonoBehaviourPun
                 rifleAmmo += amount;
                 break;
             case AmmoType.SMG_PistolAmmo:
-                smgPistolAmmo += amount;
+                smgAmmo += amount;
                 break;
         }
     }

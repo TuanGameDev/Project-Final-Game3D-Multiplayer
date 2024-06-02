@@ -12,10 +12,10 @@ public class DoorController : MonoBehaviourPunCallbacks, IPunObservable
     private Dictionary<int, bool> playerNearDoorMap = new Dictionary<int, bool>();
 
     private bool isDoorOpen = false;
-
+    bool isOpening;
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E) && IsLocalPlayerNearDoor())
+        if (!isOpening && Input.GetKeyDown(KeyCode.E) && IsLocalPlayerNearDoor())
         {
             photonView.RPC("ToggleDoor", RpcTarget.AllBuffered);
         }
@@ -36,6 +36,7 @@ public class DoorController : MonoBehaviourPunCallbacks, IPunObservable
 
     private IEnumerator OpenDoor()
     {
+        isOpening = true;
         float timer = 0f;
         float openTime = 1.5f;
         Quaternion startRotation = door.transform.rotation;
@@ -51,10 +52,12 @@ public class DoorController : MonoBehaviourPunCallbacks, IPunObservable
         }
 
         isDoorOpen = true;
+        isOpening = false;
     }
 
     private IEnumerator CloseDoor()
     {
+        isOpening = true;
         float timer = 0f;
         float closeTime = 1.5f;
         Quaternion startRotation = door.transform.rotation;
@@ -70,6 +73,7 @@ public class DoorController : MonoBehaviourPunCallbacks, IPunObservable
         }
 
         isDoorOpen = false;
+        isOpening = false;
     }
 
     private bool IsLocalPlayerNearDoor()

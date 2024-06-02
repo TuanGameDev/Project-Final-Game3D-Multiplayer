@@ -100,7 +100,7 @@ public class Hospital_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservable
                         panelLockPick.SetActive(true);
                         panelWarning.SetActive(false);
                         warningQuest.SetActive(false);
-                        quest_Mission.photonView.RPC("ShowPanelGuideFirstTime", RpcTarget.All);
+                        quest_Mission.ShowPanelGuideFirstTime();
                     }
                     else if (playerEquipLockPick.HasLockPick() && quest_Mission != null && quest_Mission.painKillerCount < quest_Mission.painKiller)
                     {
