@@ -33,7 +33,7 @@ public class DeathVillage_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservab
     bool isOpening = false;
     private void Update()
     {
-        Mission_DeathVillage quest_Mission = FindObjectOfType<Mission_DeathVillage>();
+        MissionDeathVillage quest_Mission = FindObjectOfType<MissionDeathVillage>();
         if (!isUnLocked && isPlayerNearDoor && playerEquipLockPick != null && playerEquipLockPick.HasLockPick())
         {
             if (Input.GetKeyDown(KeyCode.E) && !isInMiniGame && quest_Mission != null && !isBreak)
@@ -91,7 +91,7 @@ public class DeathVillage_DoorLockPick : MonoBehaviourPunCallbacks, IPunObservab
                 playerController = other.GetComponent<PlayerController>();
                 if (playerEquipLockPick != null && playerController != null)
                 {
-                    Mission_DeathVillage quest_Mission = FindObjectOfType<Mission_DeathVillage>();
+                    MissionDeathVillage quest_Mission = FindObjectOfType<MissionDeathVillage>();
 
                     if (playerEquipLockPick.HasLockPick() && !isUnLocked && quest_Mission != null)
                     {

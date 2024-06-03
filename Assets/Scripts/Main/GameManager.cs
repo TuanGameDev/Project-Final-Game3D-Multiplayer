@@ -14,10 +14,6 @@ public class GameManager : MonoBehaviourPun
     public float respawnTime;
     public int playersInGame;
 
-    [Header("Spawn Gun")]
-    public GameObject[] gun;
-    public Transform[] spawnGun;
-
     public static GameManager gamemanager;
 
     private void Awake()
@@ -37,15 +33,6 @@ public class GameManager : MonoBehaviourPun
         if (playersInGame == PhotonNetwork.PlayerList.Length)
             SpawnPlayer();
     }
-
-    private void SpawnGun()
-    {
-        for (int i = 0; i < gun.Length; i++)
-        {
-            PhotonNetwork.Instantiate(gun[i % gun.Length].name, spawnGun[i].position, spawnGun[i].rotation);
-        }
-    }
-
     void SpawnPlayer()
     {
         GameObject playerObject = PhotonNetwork.Instantiate(PlayerSelection.playerselection.playerPrefabName, spawnPoint[Random.Range(0, spawnPoint.Length)].position, Quaternion.identity);

@@ -33,7 +33,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
             PlayerEquip_Repair playerEquip = other.GetComponent<PlayerEquip_Repair>();
             if (playerEquip != null)
             {
-                Mission_DeathVillage mission = FindObjectOfType<Mission_DeathVillage>();
+                MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
                 if (mission != null && mission.repairCount < mission.repair)
                 {
                     if (paneltxtRepair != null)
@@ -64,7 +64,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
 
     private void OnTriggerExit(Collider other)
     {
-        Mission_DeathVillage mission = FindObjectOfType<Mission_DeathVillage>();
+        MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
         if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
         {
             paneltxtNotRepair.SetActive(false);
@@ -93,7 +93,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
     {
         if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
         {
-            Mission_DeathVillage mission = FindObjectOfType<Mission_DeathVillage>();
+            MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
             PlayerEquip_Repair playerEquip = other.GetComponent<PlayerEquip_Repair>();
             if (playerEquip != null && playerEquip.hasPickUp && Input.GetKeyDown(KeyCode.E))
             {
@@ -193,7 +193,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
     [PunRPC]
     public void NotifyRepairFinished()
     {
-        Mission_DeathVillage mission = FindObjectOfType<Mission_DeathVillage>();
+        MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
         if (mission != null)
         {
             mission.IncreaseRepairCount();
@@ -202,7 +202,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
     [PunRPC]
     public void NotifyPlayerOnShipCountPlus()
     {
-        Mission_DeathVillage mission = FindObjectOfType<Mission_DeathVillage>();
+        MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
         if (mission != null)
         {
             mission.IncreasePlayerOnShipCountPlus();
@@ -211,7 +211,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
     [PunRPC]
     public void NotifyPlayerOnShipCountMinus()
     {
-        Mission_DeathVillage mission = FindObjectOfType<Mission_DeathVillage>();
+        MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
         if (mission != null)
         {
             mission.IncreasePlayerOnShipCountMinus();
@@ -220,7 +220,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
     [PunRPC]
     public void StartShip()
     {
-        Mission_DeathVillage mission = FindObjectOfType<Mission_DeathVillage>();
+        MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
         if (mission.playerCount>=mission.player)
         {
             isBeingStartShip = true;
