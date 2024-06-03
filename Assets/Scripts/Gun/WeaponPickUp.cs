@@ -25,7 +25,7 @@ public class WeaponPickUp : MonoBehaviourPun
         if (activeWeapon != null)
         {
             Gun newWeapon = Instantiate(weaponFab);
-            activeWeapon.EquipWeapon(newWeapon);
+            //activeWeapon.EquipWeapon(newWeapon);
             //activeWeapon._anim.SetTrigger("PickUp");
             activeWeapon.pickupText.gameObject.SetActive(false);
             if (info.photonView.IsMine)
