@@ -7,7 +7,6 @@ using UnityEngine.UIElements;
 
 public class Gun : MonoBehaviourPun
 {
-    public GameObject prefabsDrop;
     [Header("WEAPON INFOR")]
     public PlayerController.WeaponSlot weaponSlot;
     public enum WeaponType
@@ -53,6 +52,10 @@ public class Gun : MonoBehaviourPun
     {
         recoil = GetComponent<GunRecoil>();
         flashlight.gameObject.SetActive(false);
+        if (weaponType == WeaponType.Rifle)
+        {
+            ammoCount = Random.Range(1, magSize); // random "ammocount" at the beginning if it is Rifle.
+        }
     }
 
     void Update()
