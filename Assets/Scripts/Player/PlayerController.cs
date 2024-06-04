@@ -147,7 +147,7 @@ public class PlayerController : MonoBehaviourPun
         Gun existingweapon = GetComponentInChildren<Gun>();
         if (existingweapon)
         {
-            photonView.RPC("EquipWeapon", RpcTarget.AllBuffered, existingweapon.GetComponent<PhotonView>().ViewID);
+            photonView.RPC("PickUpWeapon", RpcTarget.AllBuffered, existingweapon.GetComponent<PhotonView>().ViewID);
         }
     }
     void Update()
@@ -182,38 +182,34 @@ public class PlayerController : MonoBehaviourPun
         if (_isJumping)
         {
             _velocity.y += Physics.gravity.y * Time.fixedDeltaTime;
-
-            // Áp dụng tốc độ ngang và dọc
             _controller.Move(_velocity * Time.fixedDeltaTime);
 
-            // Kiểm tra nếu nhân vật chạm đất
             if (_controller.isGrounded && !IsGrounded())
             {
                 _isJumping = false;
                 _anim.SetBool("isJumping", _isJumping);
-                _velocity = Vector3.zero; // Đặt lại tốc độ khi chạm đất
+                _velocity = Vector3.zero;
+                Debug.Log("dang tren mat dat");
             }
         }
-        /*else
+        else
         {
-            if (IsGrounded())
+            _velocity.y += Physics.gravity.y * Time.fixedDeltaTime;
+            _controller.Move(_velocity * Time.fixedDeltaTime);
+            if (_controller.isGrounded && IsGrounded())
             {
                 _isJumping = true;
                 _anim.SetBool("isJumping", _isJumping);
-
+                _velocity = Vector3.zero;
+                Debug.Log("dang tren khong");
             }
-        }*/
-        
+        }
     }
     public bool IsGrounded()
     {
         return Physics.Raycast(transform.position, Vector3.down, groundDistance, groundMask);
     }
-    /*private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawRay(transform.position, -Vector3.up * groundDis);
-    }*/
+
     #region CameraNametag
     public void CameraNameTag()
     {
@@ -340,13 +336,13 @@ public class PlayerController : MonoBehaviourPun
         {
             if (detectedGun != null)
             {
-                photonView.RPC("EquipWeapon", RpcTarget.AllBuffered, detectedGun.GetComponent<PhotonView>().ViewID);
+                PickUpWeapon(detectedGun);
                 detectedGun = null;
             }
 
             if (detectedAmmo != null)
             {
-                photonView.RPC("PickUpAmmoRPC", RpcTarget.AllBuffered, detectedAmmo.photonView.ViewID);
+                detectedAmmo.PickUp(me);
                 detectedAmmo = null;
             }
         }                                       // pick up item if detected
@@ -526,13 +522,13 @@ public class PlayerController : MonoBehaviourPun
             {
                 detectedGun = gun;
                 pickupText.gameObject.SetActive(true);
-                pickupText.text = "Press F to pick up: " + gun.weaponName;
+                pickupText.text = "Pick up: " + gun.weaponName;
             }
             else if (ammoObj != null)
             {
                 detectedAmmo = ammoObj;
                 pickupText.gameObject.SetActive(true);
-                pickupText.text = "Press F to take: " + detectedAmmo.amount + " " + detectedAmmo.ammoType;
+                pickupText.text = "Take: " + detectedAmmo.amount + " bullets " + detectedAmmo.ammoName;
             }
             else
             {
@@ -577,23 +573,27 @@ public class PlayerController : MonoBehaviourPun
         }
 
     }
+    void PickUpWeapon(Gun gun)
+    {
+        photonView.RPC("PickUpWeaponRPC", RpcTarget.AllBuffered, gun.GetComponent<PhotonView>().ViewID);
+    }
     [PunRPC]
-    public void EquipWeapon(int weaponViewID)
+    public void PickUpWeaponRPC(int weaponViewID)
     {
         PhotonView weaponPhotonView = PhotonView.Find(weaponViewID);
         Gun newWeapon = weaponPhotonView.GetComponent<Gun>();
         int weaponSlotIndex = (int)newWeapon.weaponSlot;
-        var currentWeapon = GetWeapon(weaponSlotIndex);
+        var currentWeapon = GetActiveWeapon();
 
-        if (currentWeapon)
+        if (currentWeapon != null && currentWeapon.weaponType == newWeapon.weaponType)
         {
             DropWeapon();
         }
 
-        photonView.RPC("EquipNewWeaponRPC", RpcTarget.AllBuffered, weaponViewID, weaponSlotIndex);
+        photonView.RPC("EquipWeapon", RpcTarget.AllBuffered, weaponViewID, weaponSlotIndex);
     }
     [PunRPC]
-    public void EquipNewWeaponRPC(int weaponViewID, int weaponSlotIndex)
+    public void EquipWeapon(int weaponViewID, int weaponSlotIndex)
     {
         PhotonView weaponPhotonView = PhotonView.Find(weaponViewID);
         Gun newWeapon = weaponPhotonView.GetComponent<Gun>();
@@ -794,16 +794,8 @@ public class PlayerController : MonoBehaviourPun
             }
             else if (weapon.weaponType == WeaponType.SMG_Pistol)
             {
-                /*int ammoToLoad = ammoNeeded;
-                if (ammoToLoad > smgPistolAmmo)
-                {
-                    ammoToLoad = smgPistolAmmo;
-                }
-                weapon.ammoCount += ammoToLoad;
-                smgPistolAmmo -= ammoToLoad;*/
                 weapon.ammoCount = weapon.magSize;
             }
-
             weapon.magazine.SetActive(true);
             Destroy(magazineHand);
             rigController.ResetTrigger("reload");
@@ -864,32 +856,6 @@ public class PlayerController : MonoBehaviourPun
                 magText.text = smgAmmo + "";
             }
         }
-    }
-    [PunRPC]
-    void PickUpAmmoRPC(int viewId)
-    {
-        GameObject obj = PhotonView.Find(viewId).gameObject;
-        AmmoPickUp ammo = obj.GetComponent<AmmoPickUp>();
-        if (ammo != null)
-        {
-            PickUpAmmo(ammo);
-        }
-    }
-    void PickUpAmmo(AmmoPickUp ammo)
-    {
-        switch (ammo.ammoType)
-        {
-            case AmmoPickUp.AmmoType.RifleAmmo:
-                rifleAmmo += ammo.amount;
-                break;
-            case AmmoPickUp.AmmoType.SMGAmmo:
-                smgAmmo += ammo.amount;
-                break;
-            default:
-                Debug.LogWarning("Unknown ammo type: " + ammo.ammoType);
-                break;
-        }
-        ammo.DestroyObj();
     }
     #endregion
     //

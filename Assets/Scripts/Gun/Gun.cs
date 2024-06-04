@@ -12,7 +12,7 @@ public class Gun : MonoBehaviourPun
     public enum WeaponType
     {
         Rifle,
-        SMG_Pistol
+        SMG_Pistol,
     }
     public WeaponType weaponType;
     public string weaponName;
@@ -20,8 +20,8 @@ public class Gun : MonoBehaviourPun
     private int warriorID;
     private bool isMine;
     public int damage;
-    public int ammoCount; // đạn
-    public int magSize; // số viên đạn trong 1 băng
+    public int ammoCount;
+    public int magSize;
     public GameObject magazine; // mag gameobject
     public GameObject bloodSplatterPrefab;
 
@@ -35,7 +35,6 @@ public class Gun : MonoBehaviourPun
     [Header("EFFECTS")]
     public ParticleSystem[] muzzleFlash;
     public ParticleSystem hitEffect;
-    //public ParticleSystem zombieHitEffect;
     public TrailRenderer trailEffect; // tia lửa 
     private TrailRenderer currentTrail;
     public GameObject flashlight;

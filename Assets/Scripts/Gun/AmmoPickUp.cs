@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Photon.Pun;
 
 public class AmmoPickUp : MonoBehaviourPun
@@ -11,6 +9,7 @@ public class AmmoPickUp : MonoBehaviourPun
         SMGAmmo
     }
     public AmmoType ammoType;
+    public string ammoName;
     public int amount;
 
     int maxAmount = 30;
@@ -20,8 +19,36 @@ public class AmmoPickUp : MonoBehaviourPun
     {
         amount = Random.Range(minAmount, maxAmount + 1);
     }
-    public void DestroyObj()
+
+    public void PickUp(PlayerController player)
     {
-        PhotonNetwork.Destroy(gameObject);
+        int playerID = player.photonView.ViewID;
+        photonView.RPC("NotifyAmmoPickedUp", RpcTarget.All, playerID);
+    }
+
+    [PunRPC]
+    void NotifyAmmoPickedUp(int playerID, PhotonMessageInfo info)
+    {
+        PlayerController player = PhotonView.Find(playerID).GetComponent<PlayerController>();
+        if (player != null && info.photonView.IsMine)
+        {
+            AddAmmo(player);
+            PhotonNetwork.Destroy(gameObject);
+        }
+    }
+
+    void AddAmmo(PlayerController player)
+    {
+        switch (ammoType)
+        {
+            case AmmoType.RifleAmmo:
+                player.rifleAmmo += amount;
+                break;
+            case AmmoType.SMGAmmo:
+                player.smgAmmo += amount;
+                break;
+            default:
+                break;
+        }
     }
 }
