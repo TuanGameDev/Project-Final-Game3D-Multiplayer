@@ -9,63 +9,30 @@ public class MissionDeadCity : MonoBehaviourPun
     [Header("Mission DeadCity")]
     public int fuelMin;
     public int fuelMax;
-    [SerializeField] public string loadlevel;
-    public TextMeshProUGUI battleBusText;
     public TextMeshProUGUI missionText;
     [Header("PanelGuide")]
     public GameObject panelGuide;
-    private bool isInsideTrigger = false;
-    public void Update()
+
+    private void Start()
     {
-        photonView.RPC("UpdatefuelCount", RpcTarget.All, fuelMin, fuelMax);
+        UpdateRefuelText();
+    }
+    private void Update()
+    {
         if (Input.GetKeyDown(KeyCode.P))
         {
             TogglePanel(panelGuide);
         }
-        if (isInsideTrigger)
-        {
-            if (Input.GetKeyDown(KeyCode.F) && fuelMin < fuelMax)
-            {
-                photonView.RPC("IncreaseRefuel", RpcTarget.All);
-            }
-        }
-    }
-    private void OnTriggerEnter(Collider collision)
-    {
-        if (collision.CompareTag("Player"))
-        {
-            PhotonView photonView = collision.GetComponent<PhotonView>();
-            if (photonView != null && photonView.IsMine)
-            {
-                isInsideTrigger = true;
-                battleBusText.text = "Press F to Refuel";
-            }
-        }
-    }
-    private void OnTriggerExit(Collider collision)
-    {
-        if (collision.CompareTag("Player"))
-        {
-            PhotonView photonView = collision.GetComponent<PhotonView>();
-            if (photonView != null && photonView.IsMine)
-            {
-                isInsideTrigger = false;
-                battleBusText.text = "";
-            }
-        }
     }
     [PunRPC]
-    void IncreaseRefuel()
+    public void IncreaseRefuelCount()
     {
-        if (fuelMin < fuelMax)
-        {
-            fuelMin++;
-        }
+        fuelMin++;
+        UpdateRefuelText();
     }
-    [PunRPC]
-    void UpdatefuelCount(int count, int countMax)
+    public void UpdateRefuelText()
     {
-        missionText.text = "\r\nAmount of fuel required: " + count + "/" + countMax;
+        missionText.text = "Bus Refuel: " + fuelMin + "/" + fuelMax;
     }
     private void TogglePanel(GameObject panel)
     {

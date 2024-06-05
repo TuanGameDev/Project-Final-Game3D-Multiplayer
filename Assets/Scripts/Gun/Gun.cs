@@ -40,9 +40,11 @@ public class Gun : MonoBehaviourPun
     public Transform raycast;
     public Transform raycastDestination;
 
+    public Highlight highlight;
+
     Ray _ray;
     RaycastHit _hit;
-
+    public bool isPickedUp = false;
     private void Awake()
     {
         recoil = GetComponent<GunRecoil>();
