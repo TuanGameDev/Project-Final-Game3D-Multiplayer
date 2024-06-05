@@ -16,6 +16,9 @@ using Unity.Burst.CompilerServices;
 
 public class PlayerController : MonoBehaviourPun
 {
+    CharacterController _controller;
+    public static PlayerController me;
+
     [Header("CAMERA")]
     [SerializeField] Camera _maincam;
     [SerializeField] Transform playerCam;
@@ -47,8 +50,6 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] public AudioSource footstepAudioSource;
     [SerializeField] public AudioClip[] footstepSounds;
     [SerializeField] public float jumpHeight;
-    public float groundDistance = 5f;
-    public LayerMask groundMask;
     float _hor, _ver;
     float _turnCalmTime = 0.1f;
     float _turnCalmVelocity;
@@ -57,6 +58,8 @@ public class PlayerController : MonoBehaviourPun
 
 
     [Header("WEAPON")]
+    public int rifleAmmo;
+    public int smgAmmo;
     [SerializeField] Gun detectedGun;
     [SerializeField] AmmoPickUp detectedAmmo;
     [SerializeField] Transform detectPos;
@@ -85,9 +88,11 @@ public class PlayerController : MonoBehaviourPun
     [Header("RIGGING")]
     [SerializeField] Animator rigController;
     [SerializeField] Transform leftHand;
+    [SerializeField] GameObject head;
+    [SerializeField] GameObject spine1;
+    [SerializeField] GameObject spine2;
     public WeaponAnimationEvents animationEvents;
     public Animator _anim;
-    CharacterController _controller;
 
     [Header("Items")]
     public int Bandage;
@@ -98,10 +103,6 @@ public class PlayerController : MonoBehaviourPun
     public TextMeshProUGUI addbandagecooldownText;
     private bool isCooldown = false;
 
-    public int rifleAmmo;
-    public int smgAmmo;
-
-    public static PlayerController me;
     public enum WeaponSlot
     {
         Primary = 0,
@@ -147,7 +148,7 @@ public class PlayerController : MonoBehaviourPun
         Gun existingweapon = GetComponentInChildren<Gun>();
         if (existingweapon)
         {
-            photonView.RPC("EquipWeapon", RpcTarget.AllBuffered, existingweapon.GetComponent<PhotonView>().ViewID);
+            photonView.RPC("PickUpWeapon", RpcTarget.AllBuffered, existingweapon.GetComponent<PhotonView>().ViewID);
         }
     }
     void Update()
@@ -173,47 +174,43 @@ public class PlayerController : MonoBehaviourPun
         {
             SetCam_WithWeapon();
             MovementWithWeapon();
+            head.gameObject.SetActive(true);
+            spine1.gameObject.SetActive(true);
+            spine2.gameObject.SetActive(true);
         }
         else
         {
             MovementWithoutWeapon();
+            head.gameObject.SetActive(false);
+            spine1.gameObject.SetActive(false);
+            spine2.gameObject.SetActive(false);
         }
 
         if (_isJumping)
         {
             _velocity.y += Physics.gravity.y * Time.fixedDeltaTime;
-
-            // Áp dụng tốc độ ngang và dọc
             _controller.Move(_velocity * Time.fixedDeltaTime);
 
-            // Kiểm tra nếu nhân vật chạm đất
-            if (_controller.isGrounded && !IsGrounded())
+            if (_controller.isGrounded)
             {
                 _isJumping = false;
                 _anim.SetBool("isJumping", _isJumping);
-                _velocity = Vector3.zero; // Đặt lại tốc độ khi chạm đất
+                _velocity = Vector3.zero;
             }
         }
-        /*else
+        else
         {
-            if (IsGrounded())
+            _velocity.y += Physics.gravity.y * Time.fixedDeltaTime;
+            _controller.Move(_velocity * Time.fixedDeltaTime);
+            if (!_controller.isGrounded)
             {
                 _isJumping = true;
                 _anim.SetBool("isJumping", _isJumping);
-
+                _velocity = Vector3.zero;
             }
-        }*/
-        
+        }
     }
-    public bool IsGrounded()
-    {
-        return Physics.Raycast(transform.position, Vector3.down, groundDistance, groundMask);
-    }
-    /*private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawRay(transform.position, -Vector3.up * groundDis);
-    }*/
+
     #region CameraNametag
     public void CameraNameTag()
     {
@@ -294,13 +291,14 @@ public class PlayerController : MonoBehaviourPun
             _weaponActive = true;
             if (Input.GetMouseButton(0) && !_isReloading)
             {
-                _weapon.StartFiring();
+                _weapon.photonView.RPC("StartFiring", RpcTarget.All);
                 UpdateAmmo();
             }
             else
             {
-                _weapon.StopFiring();
+                _weapon.photonView.RPC("StopFiring", RpcTarget.All);
             }
+
             if (Input.GetMouseButton(1))
             {
                 _aiming = true;
@@ -311,18 +309,20 @@ public class PlayerController : MonoBehaviourPun
             }
             if (Input.GetKeyDown(KeyCode.G))
             {
-                if (_weapon.flashActive == false)
+                /*if (_weapon.flashActive == false)
                 {
+                    bool flashed = _weapon.flashActive;
                     _weapon.flashActive = true;
-                    _weapon.flashlight.gameObject.SetActive(true);
+                    _weapon.photonView.RPC("ToggleFlashlight", RpcTarget.All, flashed);
                     flashlightIcon.color = Color.white;
                 }
                 else
                 {
+                    bool flashed = _weapon.flashActive;
                     _weapon.flashActive = false;
-                    _weapon.flashlight.gameObject.SetActive(false);
+                    _weapon.photonView.RPC("ToggleFlashlight", RpcTarget.All, flashed);
                     flashlightIcon.color = new Color(0.42f, 0.42f, 0.42f); // = 6B6B6B
-                }
+                }*/
             }
             if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize && !_isReloading)
             {
@@ -340,13 +340,13 @@ public class PlayerController : MonoBehaviourPun
         {
             if (detectedGun != null)
             {
-                photonView.RPC("EquipWeapon", RpcTarget.AllBuffered, detectedGun.GetComponent<PhotonView>().ViewID);
+                PickUpWeapon(detectedGun);
                 detectedGun = null;
             }
 
             if (detectedAmmo != null)
             {
-                photonView.RPC("PickUpAmmoRPC", RpcTarget.AllBuffered, detectedAmmo.photonView.ViewID);
+                detectedAmmo.PickUp(me);
                 detectedAmmo = null;
             }
         }                                       // pick up item if detected
@@ -526,13 +526,13 @@ public class PlayerController : MonoBehaviourPun
             {
                 detectedGun = gun;
                 pickupText.gameObject.SetActive(true);
-                pickupText.text = "Press F to pick up: " + gun.weaponName;
+                pickupText.text = "Pick up: " + gun.weaponName;
             }
             else if (ammoObj != null)
             {
                 detectedAmmo = ammoObj;
                 pickupText.gameObject.SetActive(true);
-                pickupText.text = "Press F to take: " + detectedAmmo.amount + " " + detectedAmmo.ammoType;
+                pickupText.text = "Take: " + detectedAmmo.amount + " bullets " + detectedAmmo.ammoName;
             }
             else
             {
@@ -577,23 +577,27 @@ public class PlayerController : MonoBehaviourPun
         }
 
     }
+    void PickUpWeapon(Gun gun)
+    {
+        photonView.RPC("PickUpWeaponRPC", RpcTarget.AllBuffered, gun.GetComponent<PhotonView>().ViewID);
+    }
     [PunRPC]
-    public void EquipWeapon(int weaponViewID)
+    public void PickUpWeaponRPC(int weaponViewID)
     {
         PhotonView weaponPhotonView = PhotonView.Find(weaponViewID);
         Gun newWeapon = weaponPhotonView.GetComponent<Gun>();
         int weaponSlotIndex = (int)newWeapon.weaponSlot;
-        var currentWeapon = GetWeapon(weaponSlotIndex);
+        var currentWeapon = GetActiveWeapon();
 
-        if (currentWeapon)
+        if (currentWeapon != null && currentWeapon.weaponType == newWeapon.weaponType)
         {
             DropWeapon();
         }
 
-        photonView.RPC("EquipNewWeaponRPC", RpcTarget.AllBuffered, weaponViewID, weaponSlotIndex);
+        photonView.RPC("EquipWeapon", RpcTarget.AllBuffered, weaponViewID, weaponSlotIndex);
     }
     [PunRPC]
-    public void EquipNewWeaponRPC(int weaponViewID, int weaponSlotIndex)
+    public void EquipWeapon(int weaponViewID, int weaponSlotIndex)
     {
         PhotonView weaponPhotonView = PhotonView.Find(weaponViewID);
         Gun newWeapon = weaponPhotonView.GetComponent<Gun>();
@@ -794,16 +798,8 @@ public class PlayerController : MonoBehaviourPun
             }
             else if (weapon.weaponType == WeaponType.SMG_Pistol)
             {
-                /*int ammoToLoad = ammoNeeded;
-                if (ammoToLoad > smgPistolAmmo)
-                {
-                    ammoToLoad = smgPistolAmmo;
-                }
-                weapon.ammoCount += ammoToLoad;
-                smgPistolAmmo -= ammoToLoad;*/
                 weapon.ammoCount = weapon.magSize;
             }
-
             weapon.magazine.SetActive(true);
             Destroy(magazineHand);
             rigController.ResetTrigger("reload");
@@ -864,32 +860,6 @@ public class PlayerController : MonoBehaviourPun
                 magText.text = smgAmmo + "";
             }
         }
-    }
-    [PunRPC]
-    void PickUpAmmoRPC(int viewId)
-    {
-        GameObject obj = PhotonView.Find(viewId).gameObject;
-        AmmoPickUp ammo = obj.GetComponent<AmmoPickUp>();
-        if (ammo != null)
-        {
-            PickUpAmmo(ammo);
-        }
-    }
-    void PickUpAmmo(AmmoPickUp ammo)
-    {
-        switch (ammo.ammoType)
-        {
-            case AmmoPickUp.AmmoType.RifleAmmo:
-                rifleAmmo += ammo.amount;
-                break;
-            case AmmoPickUp.AmmoType.SMGAmmo:
-                smgAmmo += ammo.amount;
-                break;
-            default:
-                Debug.LogWarning("Unknown ammo type: " + ammo.ammoType);
-                break;
-        }
-        ammo.DestroyObj();
     }
     #endregion
     //

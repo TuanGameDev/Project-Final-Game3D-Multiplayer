@@ -1,18 +1,15 @@
 ﻿using Photon.Pun;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.UIElements;
 
 public class Gun : MonoBehaviourPun
 {
-    [Header("WEAPON INFOR")]
+    [Header("Weapon Info")]
     public PlayerController.WeaponSlot weaponSlot;
     public enum WeaponType
     {
         Rifle,
-        SMG_Pistol
+        SMG_Pistol,
     }
     public WeaponType weaponType;
     public string weaponName;
@@ -20,9 +17,9 @@ public class Gun : MonoBehaviourPun
     private int warriorID;
     private bool isMine;
     public int damage;
-    public int ammoCount; // đạn
-    public int magSize; // số viên đạn trong 1 băng
-    public GameObject magazine; // mag gameobject
+    public int ammoCount;
+    public int magSize;
+    public GameObject magazine;
     public GameObject bloodSplatterPrefab;
 
     [SerializeField] float fireRate = 3f;
@@ -31,17 +28,15 @@ public class Gun : MonoBehaviourPun
     float _nextFireTime = 0f;
     [HideInInspector] public GunRecoil recoil;
 
-
-    [Header("EFFECTS")]
+    [Header("Effects")]
     public ParticleSystem[] muzzleFlash;
     public ParticleSystem hitEffect;
-    //public ParticleSystem zombieHitEffect;
-    public TrailRenderer trailEffect; // tia lửa 
+    public TrailRenderer trailEffect;
     private TrailRenderer currentTrail;
     public GameObject flashlight;
     public bool flashActive = false;
 
-    [Header("RAYCAST")]
+    [Header("Raycast")]
     public Transform raycast;
     public Transform raycastDestination;
 
@@ -54,7 +49,7 @@ public class Gun : MonoBehaviourPun
         flashlight.gameObject.SetActive(false);
         if (weaponType == WeaponType.Rifle)
         {
-            ammoCount = Random.Range(1, magSize); // random "ammocount" at the beginning if it is Rifle.
+            ammoCount = Random.Range(1, magSize);
         }
     }
 
@@ -62,73 +57,81 @@ public class Gun : MonoBehaviourPun
     {
         if (isFiring && Time.time >= _nextFireTime)
         {
-            FireBullet();
+            CmdFireBullet();
             _nextFireTime = Time.time + 1f / fireRate;
         }
-        
     }
-
+    [PunRPC]
     public void StartFiring()
     {
         isFiring = true;
         recoil.Reset();
-
     }
+
+    [PunRPC]
     public void StopFiring()
     {
-        isFiring= false;
+        isFiring = false;
     }
 
     public int GetAmmoCount()
     {
         return ammoCount;
     }
+
     public void SetAmmoCount(int count)
     {
         ammoCount = count;
     }
-
-    void FireBullet()
+    void CmdFireBullet()
     {
-    if (ammoCount <= 0) return;
-    ammoCount--;
-
-    foreach (var particle in muzzleFlash)
-    {
-        particle.Emit(1);
+        if (photonView.IsMine)
+        {
+            Vector3 origin = raycast.position;
+            Vector3 direction = raycastDestination.position - raycast.position;
+            photonView.RPC("FireBullet", RpcTarget.All, origin, direction);
+        }
     }
 
-    _ray.origin = raycast.position;
-    _ray.direction = raycastDestination.position - raycast.position;
-
-    if (currentTrail == null)
+    [PunRPC]
+    void FireBullet(Vector3 origin, Vector3 dir)
     {
+        if (ammoCount <= 0) return;
+        ammoCount--;
 
-        currentTrail = Instantiate(trailEffect, _ray.origin, Quaternion.identity);
-    }
-    else
-    {
-        currentTrail.transform.position = _ray.origin;
-    }
+        foreach (var particle in muzzleFlash)
+        {
+            particle.Emit(1);
+        }
 
-    currentTrail.Clear();
-    currentTrail.AddPosition(_ray.origin);
+        _ray.origin = origin;
+        _ray.direction = dir;
+
+        if (currentTrail == null)
+        {
+            currentTrail = Instantiate(trailEffect, _ray.origin, Quaternion.identity);
+        }
+        else
+        {
+            currentTrail.transform.position = _ray.origin;
+        }
+
+        currentTrail.Clear();
+        currentTrail.AddPosition(_ray.origin);
 
         if (Physics.Raycast(_ray, out _hit))
         {
-            ParticleSystem selectedHitEffect = hitEffect;          
-            // Kiểm tra nếu đối tượng va chạm có layer là "Zombie"
+            ParticleSystem selectedHitEffect = hitEffect;
             if (_hit.collider.gameObject.layer == LayerMask.NameToLayer("Zombie"))
             {
                 Initialized(PlayerController.me.id, photonView.IsMine);
                 Instantiate(bloodSplatterPrefab, _hit.point, Quaternion.identity);
                 currentTrail.transform.position = _hit.point;
 
-                Debug.Log("Trúng zombie");
                 AIZombie zombieHealth = _hit.collider.GetComponent<AIZombie>();
                 if (zombieHealth != null && photonView.IsMine)
                 {
-                    zombieHealth.photonView.RPC("TakeDamage", RpcTarget.MasterClient,warriorID, damage);
+                    zombieHealth.photonView.RPC("TakeDamage", RpcTarget.MasterClient, warriorID, damage);
                 }
             }
             else
@@ -138,21 +141,23 @@ public class Gun : MonoBehaviourPun
                 selectedHitEffect.Emit(1);
             }
 
-
-
-            // Di chuyển hiệu ứng trail đến hit point
             currentTrail.transform.position = _hit.point;
         }
         else
         {
-            // Nếu không có va chạm, di chuyển hiệu ứng trail theo raycast
             currentTrail.transform.position = _ray.origin + _ray.direction * 100f;
         }
 
         recoil.GenerateRecoil(weaponName);
         AudioManager._audioManager.PlaySFX(9);
-
     }
+    [PunRPC]
+    public void ToggleFlashlight(bool isActive)
+    {
+        flashActive = isActive;
+        flashlight.gameObject.SetActive(isActive);
+    }
+
     public void Initialized(int attackId, bool isMine)
     {
         this.warriorID = attackId;
