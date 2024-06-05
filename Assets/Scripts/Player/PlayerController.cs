@@ -16,6 +16,9 @@ using Unity.Burst.CompilerServices;
 
 public class PlayerController : MonoBehaviourPun
 {
+    CharacterController _controller;
+    public static PlayerController me;
+
     [Header("CAMERA")]
     [SerializeField] Camera _maincam;
     [SerializeField] Transform playerCam;
@@ -47,8 +50,6 @@ public class PlayerController : MonoBehaviourPun
     [SerializeField] public AudioSource footstepAudioSource;
     [SerializeField] public AudioClip[] footstepSounds;
     [SerializeField] public float jumpHeight;
-    public float groundDistance = 5f;
-    public LayerMask groundMask;
     float _hor, _ver;
     float _turnCalmTime = 0.1f;
     float _turnCalmVelocity;
@@ -57,6 +58,8 @@ public class PlayerController : MonoBehaviourPun
 
 
     [Header("WEAPON")]
+    public int rifleAmmo;
+    public int smgAmmo;
     [SerializeField] Gun detectedGun;
     [SerializeField] AmmoPickUp detectedAmmo;
     [SerializeField] Transform detectPos;
@@ -85,9 +88,11 @@ public class PlayerController : MonoBehaviourPun
     [Header("RIGGING")]
     [SerializeField] Animator rigController;
     [SerializeField] Transform leftHand;
+    [SerializeField] GameObject head;
+    [SerializeField] GameObject spine1;
+    [SerializeField] GameObject spine2;
     public WeaponAnimationEvents animationEvents;
     public Animator _anim;
-    CharacterController _controller;
 
     [Header("Items")]
     public int Bandage;
@@ -98,10 +103,6 @@ public class PlayerController : MonoBehaviourPun
     public TextMeshProUGUI addbandagecooldownText;
     private bool isCooldown = false;
 
-    public int rifleAmmo;
-    public int smgAmmo;
-
-    public static PlayerController me;
     public enum WeaponSlot
     {
         Primary = 0,
@@ -173,10 +174,16 @@ public class PlayerController : MonoBehaviourPun
         {
             SetCam_WithWeapon();
             MovementWithWeapon();
+            head.gameObject.SetActive(true);
+            spine1.gameObject.SetActive(true);
+            spine2.gameObject.SetActive(true);
         }
         else
         {
             MovementWithoutWeapon();
+            head.gameObject.SetActive(false);
+            spine1.gameObject.SetActive(false);
+            spine2.gameObject.SetActive(false);
         }
 
         if (_isJumping)
@@ -184,30 +191,24 @@ public class PlayerController : MonoBehaviourPun
             _velocity.y += Physics.gravity.y * Time.fixedDeltaTime;
             _controller.Move(_velocity * Time.fixedDeltaTime);
 
-            if (_controller.isGrounded && !IsGrounded())
+            if (_controller.isGrounded)
             {
                 _isJumping = false;
                 _anim.SetBool("isJumping", _isJumping);
                 _velocity = Vector3.zero;
-                Debug.Log("dang tren mat dat");
             }
         }
         else
         {
             _velocity.y += Physics.gravity.y * Time.fixedDeltaTime;
             _controller.Move(_velocity * Time.fixedDeltaTime);
-            if (_controller.isGrounded && IsGrounded())
+            if (!_controller.isGrounded)
             {
                 _isJumping = true;
                 _anim.SetBool("isJumping", _isJumping);
                 _velocity = Vector3.zero;
-                Debug.Log("dang tren khong");
             }
         }
-    }
-    public bool IsGrounded()
-    {
-        return Physics.Raycast(transform.position, Vector3.down, groundDistance, groundMask);
     }
 
     #region CameraNametag
@@ -290,13 +291,14 @@ public class PlayerController : MonoBehaviourPun
             _weaponActive = true;
             if (Input.GetMouseButton(0) && !_isReloading)
             {
-                _weapon.StartFiring();
+                _weapon.photonView.RPC("StartFiring", RpcTarget.All);
                 UpdateAmmo();
             }
             else
             {
-                _weapon.StopFiring();
+                _weapon.photonView.RPC("StopFiring", RpcTarget.All);
             }
+
             if (Input.GetMouseButton(1))
             {
                 _aiming = true;
@@ -307,18 +309,20 @@ public class PlayerController : MonoBehaviourPun
             }
             if (Input.GetKeyDown(KeyCode.G))
             {
-                if (_weapon.flashActive == false)
+                /*if (_weapon.flashActive == false)
                 {
+                    bool flashed = _weapon.flashActive;
                     _weapon.flashActive = true;
-                    _weapon.flashlight.gameObject.SetActive(true);
+                    _weapon.photonView.RPC("ToggleFlashlight", RpcTarget.All, flashed);
                     flashlightIcon.color = Color.white;
                 }
                 else
                 {
+                    bool flashed = _weapon.flashActive;
                     _weapon.flashActive = false;
-                    _weapon.flashlight.gameObject.SetActive(false);
+                    _weapon.photonView.RPC("ToggleFlashlight", RpcTarget.All, flashed);
                     flashlightIcon.color = new Color(0.42f, 0.42f, 0.42f); // = 6B6B6B
-                }
+                }*/
             }
             if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize && !_isReloading)
             {

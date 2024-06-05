@@ -15,7 +15,6 @@ public class Highlight : MonoBehaviour
             materials.AddRange(new List<Material>(r.materials));
         }
     }
-
     public void ToggleHighlight(bool val)
     {
         if(val)

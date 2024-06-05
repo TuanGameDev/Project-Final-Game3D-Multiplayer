@@ -30,25 +30,22 @@ public class AmmoPickUp : MonoBehaviourPun
     void NotifyAmmoPickedUp(int playerID, PhotonMessageInfo info)
     {
         PlayerController player = PhotonView.Find(playerID).GetComponent<PlayerController>();
+        Debug.Log("Ammo picked up by player with ID: " + playerID);
         if (player != null && info.photonView.IsMine)
         {
-            AddAmmo(player);
+            switch (ammoType)
+            {
+                case AmmoType.RifleAmmo:
+                    player.rifleAmmo += amount;
+                    break;
+                case AmmoType.SMGAmmo:
+                    player.smgAmmo += amount;
+                    break;
+                default:
+                    break;
+            }
             PhotonNetwork.Destroy(gameObject);
         }
     }
 
-    void AddAmmo(PlayerController player)
-    {
-        switch (ammoType)
-        {
-            case AmmoType.RifleAmmo:
-                player.rifleAmmo += amount;
-                break;
-            case AmmoType.SMGAmmo:
-                player.smgAmmo += amount;
-                break;
-            default:
-                break;
-        }
-    }
 }

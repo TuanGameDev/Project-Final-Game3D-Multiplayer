@@ -4,25 +4,30 @@ using UnityEngine;
 
 public class CrossHairTarget : MonoBehaviour
 {
-    Camera _cam;
+    public Camera _cam;
     Ray _ray;
     RaycastHit _hit;
-
-    private void Awake()
-    {
-        _cam = GetComponentInParent<Camera>();
-    }
+    public bool haveTarget = true;
 
     void Update()
     {
         _ray = _cam.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
-        if (Physics.Raycast(_ray, out _hit))
+
+        if (haveTarget)
         {
-            transform.position = _hit.point;
+            if (Physics.Raycast(_ray, out _hit))
+            {
+                transform.position = _hit.point;
+            }
+            else
+            {
+                transform.position = _ray.GetPoint(1000.0f);
+            }
         }
         else
         {
             transform.position = _ray.GetPoint(1000.0f);
         }
+
     }
 }
