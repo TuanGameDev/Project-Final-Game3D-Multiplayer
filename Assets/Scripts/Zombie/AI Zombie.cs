@@ -141,10 +141,14 @@ public class AIZombie : MonoBehaviourPun
         attackRange = 0;
         rb.useGravity = false;
         chaseRange = 0;
-        Destroy(gameObject, 3);
+        Destroy(gameObject, 3f);
     }
     #endregion
-
+    public IEnumerator HideZombie(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        gameObject.SetActive(false);
+    }
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.white;

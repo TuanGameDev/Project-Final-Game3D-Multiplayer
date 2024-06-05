@@ -2,20 +2,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using Photon.Pun;
 using System.Collections;
+using TMPro;
 
 public class Bus_Refuel : MonoBehaviourPunCallbacks
 {
-    public string loadlevel;
-    public GameObject refuelSliderUI;
-    public Slider repairSlider;
     public GameObject paneltxtRefuel;
     public GameObject paneltxtNotRefuel;
     private bool isBeingRefuel = false;
+    public TextMeshProUGUI repairSliderText;
     private Coroutine refuelCoroutine;
-    private bool isPlayerPressingE = false;
-    public GameObject panelWin;
-    public GameObject panelMission;
-    [Header("AudioEnd Hospital")]
+    [Header("AudioEnd DeadCity")]
     [SerializeField] public AudioSource footstepAudioEnd;
     [SerializeField] public AudioClip footstepEnd;
     private void OnTriggerEnter(Collider other)
@@ -47,10 +43,8 @@ public class Bus_Refuel : MonoBehaviourPunCallbacks
             }
         }
     }
-
     private void OnTriggerExit(Collider other)
     {
-        MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
         if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
         {
             paneltxtNotRefuel.SetActive(false);
@@ -59,23 +53,29 @@ public class Bus_Refuel : MonoBehaviourPunCallbacks
             {
                 ResetRefuel();
             }
-            isPlayerPressingE = false;
+            MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
+            {
+                if (mission != null)
+                {
+                    mission.isPlayerPressingE = false;
+                }
+            }
         }
     }
-
     private void OnTriggerStay(Collider other)
     {
         if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
         {
             PlayerEquip_Repair playerEquip = other.GetComponent<PlayerEquip_Repair>();
-            if (playerEquip != null && playerEquip.hasPickUp && Input.GetKeyDown(KeyCode.E))
+            MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
+            if (mission!=null &&playerEquip != null && playerEquip.hasPickUp && Input.GetKeyDown(KeyCode.E))
             {
                 if (!isBeingRefuel && playerEquip.hasPickUp)
                 {
                     bool isSpecificPlayer = other.GetComponent<PhotonView>().IsMine;
                     if (isSpecificPlayer)
                     {
-                        isPlayerPressingE = true;
+                        mission.isPlayerPressingE = true;
                         photonView.RPC("StartRefuel", RpcTarget.All, other.GetComponent<PhotonView>().ViewID);
                     }
                 }
@@ -90,10 +90,10 @@ public class Bus_Refuel : MonoBehaviourPunCallbacks
     {
         PhotonView playerPhotonView = PhotonView.Find(playerViewID);
         PlayerEquip_Repair playerEquip = playerPhotonView.GetComponent<PlayerEquip_Repair>();
-        if (!isBeingRefuel && isPlayerPressingE && playerEquip.hasPickUp)
+        MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
+        if (!isBeingRefuel && mission.isPlayerPressingE && playerEquip.hasPickUp)
         {
             isBeingRefuel = true;
-            refuelSliderUI.SetActive(true);
             paneltxtRefuel.SetActive(false);
             refuelCoroutine = StartCoroutine(RefuelProcess(playerViewID));
         }
@@ -101,18 +101,23 @@ public class Bus_Refuel : MonoBehaviourPunCallbacks
     private IEnumerator RefuelProcess(int playerViewID)
     {
         float refuelTime = 10f;
-        repairSlider.maxValue = refuelTime;
-        repairSlider.value = 0;
-        while (repairSlider.value < refuelTime)
+        float currentRefuelTime = 0f;
+        repairSliderText.gameObject.SetActive(true);
+
+        while (currentRefuelTime < refuelTime)
         {
-            repairSlider.value += Time.deltaTime;
+            currentRefuelTime += Time.deltaTime;
+            float refuelPercentage = (currentRefuelTime / refuelTime) * 100f;
+            repairSliderText.text = "Refueling: " + Mathf.RoundToInt(refuelPercentage) + "%";
             yield return null;
         }
+
+        repairSliderText.gameObject.SetActive(false);
         FinishRefuel(playerViewID);
     }
     private void FinishRefuel(int playerViewID)
     {
-        refuelSliderUI.SetActive(false);
+        repairSliderText.gameObject.SetActive(false);
         isBeingRefuel = false;
         PhotonView playerPhotonView = PhotonView.Find(playerViewID);
         PlayerEquip_Repair playerEquip = playerPhotonView.GetComponent<PlayerEquip_Repair>();
@@ -138,8 +143,7 @@ public class Bus_Refuel : MonoBehaviourPunCallbacks
         StopCoroutine(refuelCoroutine);
         refuelCoroutine = null;
         isBeingRefuel = false;
-        refuelSliderUI.SetActive(false);
-        repairSlider.value = 0;
+        repairSliderText.gameObject.SetActive(false);
         paneltxtRefuel.SetActive(false);
         paneltxtNotRefuel.SetActive(false);
     }
