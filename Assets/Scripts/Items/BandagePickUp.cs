@@ -9,6 +9,8 @@ public class BandagePickUp : MonoBehaviourPun
     PlayerController activeItems;
     public bool _canPickup = true;
     public int value;
+    public Highlight highlight;
+    public GameObject panelPickUp;
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.F) && _canPickup)
@@ -34,21 +36,22 @@ public class BandagePickUp : MonoBehaviourPun
     private void OnTriggerEnter(Collider other)
     {
         activeItems = other.gameObject.GetComponent<PlayerController>();
-        if (activeItems)
+        if (activeItems && other.gameObject.GetComponent<PhotonView>().IsMine)
         {
             _canPickup = true;
-            activeItems.pickupText.gameObject.SetActive(true);
-            activeItems.pickupText.text = " Press F to pick up: Bandage";
+            highlight.ToggleHighlight(true);
+            panelPickUp.SetActive(true);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
         activeItems = other.gameObject.GetComponent<PlayerController>();
-        if (activeItems)
+        if (activeItems && other.gameObject.GetComponent<PhotonView>().IsMine)
         {
             _canPickup = false;
-            activeItems.pickupText.gameObject.SetActive(false);
+            highlight.ToggleHighlight(false);
+            panelPickUp.SetActive(false);
         }
     }
 }

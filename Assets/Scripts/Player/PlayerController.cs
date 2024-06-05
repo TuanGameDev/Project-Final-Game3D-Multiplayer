@@ -102,7 +102,6 @@ public class PlayerController : MonoBehaviourPun
     public TextMeshProUGUI addbandageText;
     public TextMeshProUGUI addbandagecooldownText;
     private bool isCooldown = false;
-
     public enum WeaponSlot
     {
         Primary = 0,
@@ -341,12 +340,14 @@ public class PlayerController : MonoBehaviourPun
             if (detectedGun != null)
             {
                 PickUpWeapon(detectedGun);
+                detectedGun.highlight.ToggleHighlight(false);
                 detectedGun = null;
             }
 
             if (detectedAmmo != null)
             {
                 detectedAmmo.PickUp(me);
+                detectedAmmo.highlight.ToggleHighlight(false);
                 detectedAmmo = null;
             }
         }                                       // pick up item if detected
@@ -524,28 +525,55 @@ public class PlayerController : MonoBehaviourPun
 
             if (gun != null)
             {
-                detectedGun = gun;
+                if (detectedGun != gun)
+                {
+                    if (detectedGun != null && !gun.isPickedUp)
+                    {
+                        detectedGun.highlight.ToggleHighlight(false);
+                    }
+                    detectedGun = gun;
+                    detectedGun.highlight.ToggleHighlight(true);
+                }
+
                 pickupText.gameObject.SetActive(true);
                 pickupText.text = "Pick up: " + gun.weaponName;
+                detectedAmmo = null;
             }
             else if (ammoObj != null)
             {
+                if (detectedAmmo != null)
+                {
+                    detectedAmmo.highlight.ToggleHighlight(false);
+                    detectedAmmo = null;
+                }
+
                 detectedAmmo = ammoObj;
                 pickupText.gameObject.SetActive(true);
+                detectedAmmo.highlight.ToggleHighlight(true);
                 pickupText.text = "Take: " + detectedAmmo.amount + " bullets " + detectedAmmo.ammoName;
             }
             else
             {
-                pickupText.gameObject.SetActive(false);
+                if (detectedGun != null)
+                {
+                    detectedGun.highlight.ToggleHighlight(false);
+                    detectedGun = null;
+                }
+
                 detectedGun = null;
-                detectedAmmo = null;
+                pickupText.gameObject.SetActive(false);
             }
         }
         else
         {
-            pickupText.gameObject.SetActive(false);
-            detectedGun = null;
+            if (detectedAmmo != null)
+            {
+                detectedAmmo.highlight.ToggleHighlight(false);
+                detectedAmmo = null;
+            }
+
             detectedAmmo = null;
+            pickupText.gameObject.SetActive(false);
         }
     }
     Gun GetWeapon(int index)
@@ -611,7 +639,7 @@ public class PlayerController : MonoBehaviourPun
             newWeapon.transform.localRotation = Quaternion.identity;
             newWeapon.GetComponent<BoxCollider>().enabled = false;
             newWeapon.GetComponent<Rigidbody>().isKinematic = true;
-
+            newWeapon.isPickedUp = true;
             weapon.raycastDestination = crosshairTarget;
             weapon.recoil.playerCamera = CMfreelook;
             weapon.recoil.rig = rigController;
@@ -642,7 +670,7 @@ public class PlayerController : MonoBehaviourPun
             currentWeapon.transform.position = position;
             currentWeapon.GetComponent<BoxCollider>().enabled = true;
             currentWeapon.GetComponent<Rigidbody>().isKinematic = false;
-
+            currentWeapon.isPickedUp = false;
             Rigidbody rb = currentWeapon.GetComponent<Rigidbody>();
             rb.AddForce((position - currentWeapon.transform.position).normalized * 2f, ForceMode.Impulse);
 

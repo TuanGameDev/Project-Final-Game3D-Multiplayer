@@ -3,13 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using Photon.Pun;
+using UnityEditor;
 
 public class WeaponPickUp : MonoBehaviourPun
 {
     [SerializeField] Gun weaponFab;
     PlayerController activeWeapon;
     public bool _canPickup = true;
+    public Highlight highlight;
 
+    private void Start()
+    {
+        highlight = GetComponent<Highlight>();
+    }
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.F) && _canPickup)
@@ -44,6 +50,13 @@ public class WeaponPickUp : MonoBehaviourPun
             activeWeapon.pickupText.gameObject.SetActive(true);
             activeWeapon.pickupText.text = " Press F to pick up: " + weaponFab.weaponName;
         }
+        if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
+        {
+            if (highlight != null)
+            {
+                highlight.ToggleHighlight(true);
+            }
+        }
     }
 
     private void OnTriggerExit(Collider other)
@@ -53,6 +66,13 @@ public class WeaponPickUp : MonoBehaviourPun
         {
             _canPickup = false;
             activeWeapon.pickupText.gameObject.SetActive(false);
+        }
+        if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
+        {
+            if (highlight != null)
+            {
+                highlight.ToggleHighlight(false);
+            }
         }
     }
 }
