@@ -23,16 +23,15 @@ public class AmmoPickUp : MonoBehaviourPun
 
     public void PickUp(PlayerController player)
     {
-        int playerID = player.photonView.ViewID;
-        photonView.RPC("NotifyAmmoPickedUp", RpcTarget.All, playerID);
+        photonView.RPC("NotifyAmmoPickedUp", RpcTarget.All, player.photonView.ViewID);
     }
 
     [PunRPC]
-    void NotifyAmmoPickedUp(int playerID, PhotonMessageInfo info)
+    void NotifyAmmoPickedUp(int playerID)
     {
         PlayerController player = PhotonView.Find(playerID).GetComponent<PlayerController>();
         Debug.Log("Ammo picked up by player with ID: " + playerID);
-        if (player != null && info.photonView.IsMine)
+        if (player != null)
         {
             switch (ammoType)
             {
@@ -45,8 +44,7 @@ public class AmmoPickUp : MonoBehaviourPun
                 default:
                     break;
             }
-            PhotonNetwork.Destroy(gameObject);
+            Destroy(gameObject);
         }
     }
-
 }
