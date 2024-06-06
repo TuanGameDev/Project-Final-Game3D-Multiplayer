@@ -418,6 +418,8 @@ public class PlayerController : MonoBehaviourPun
             _anim.SetFloat("zValue", 0f);
             footstepAudioSource.Stop();
         }
+        _anim.speed = 1f;
+        runIcon.color = new Color(0.42f, 0.42f, 0.42f); // = 6B6B6B
     }
     void MovementWithoutWeapon()
     {
