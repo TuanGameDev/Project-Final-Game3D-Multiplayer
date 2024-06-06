@@ -53,13 +53,13 @@ public class Bus_Refuel : MonoBehaviourPunCallbacks
             {
                 ResetRefuel();
             }
-            MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
+/*            MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
             {
                 if (mission != null)
                 {
                     mission.isPlayerPressingE = false;
                 }
-            }
+            }*/
         }
     }
     private void OnTriggerStay(Collider other)
@@ -67,15 +67,13 @@ public class Bus_Refuel : MonoBehaviourPunCallbacks
         if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
         {
             PlayerEquip_Repair playerEquip = other.GetComponent<PlayerEquip_Repair>();
-            MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
-            if (mission!=null &&playerEquip != null && playerEquip.hasPickUp && Input.GetKeyDown(KeyCode.E))
+            if (playerEquip != null && playerEquip.hasPickUp && Input.GetKeyDown(KeyCode.E))
             {
                 if (!isBeingRefuel && playerEquip.hasPickUp)
                 {
                     bool isSpecificPlayer = other.GetComponent<PhotonView>().IsMine;
                     if (isSpecificPlayer)
                     {
-                        mission.isPlayerPressingE = true;
                         photonView.RPC("StartRefuel", RpcTarget.All, other.GetComponent<PhotonView>().ViewID);
                     }
                 }
@@ -90,8 +88,7 @@ public class Bus_Refuel : MonoBehaviourPunCallbacks
     {
         PhotonView playerPhotonView = PhotonView.Find(playerViewID);
         PlayerEquip_Repair playerEquip = playerPhotonView.GetComponent<PlayerEquip_Repair>();
-        MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
-        if (!isBeingRefuel && mission.isPlayerPressingE && playerEquip.hasPickUp)
+        if (!isBeingRefuel && playerEquip.hasPickUp)
         {
             isBeingRefuel = true;
             paneltxtRefuel.SetActive(false);

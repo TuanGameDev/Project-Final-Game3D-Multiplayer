@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Repair_Ship_Equip : MonoBehaviourPunCallbacks
+public class Repair_Ship_Equip : MonoBehaviourPun
 {
     public GameObject paneEquip;
     public GameObject isPickUp;
