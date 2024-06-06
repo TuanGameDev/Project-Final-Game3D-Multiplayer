@@ -65,11 +65,8 @@ public class MissionDeadCity : MonoBehaviourPun
         while (elapsedTime < duration)
         {
             float progress = elapsedTime / duration;
-            progressSlider.value = progress;
-
             missionText.text = string.Format("Starting up... {0}%", Mathf.RoundToInt(progress * 100f));
             missionText.color = Color.yellow;
-            progressSlider.gameObject.SetActive(true);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
