@@ -53,13 +53,13 @@ public class Bus_Refuel : MonoBehaviourPunCallbacks
             {
                 ResetRefuel();
             }
-/*            MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
+            MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
             {
                 if (mission != null)
                 {
                     mission.isPlayerPressingE = false;
                 }
-            }*/
+            }
         }
     }
     private void OnTriggerStay(Collider other)
@@ -67,29 +67,29 @@ public class Bus_Refuel : MonoBehaviourPunCallbacks
         if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
         {
             PlayerEquip_Repair playerEquip = other.GetComponent<PlayerEquip_Repair>();
-            if (playerEquip != null && playerEquip.hasPickUp && Input.GetKeyDown(KeyCode.E))
+            MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
+            if (mission != null && playerEquip != null && playerEquip.hasPickUp && Input.GetKeyDown(KeyCode.E))
             {
                 if (!isBeingRefuel && playerEquip.hasPickUp)
                 {
                     bool isSpecificPlayer = other.GetComponent<PhotonView>().IsMine;
                     if (isSpecificPlayer)
                     {
+                        mission.isPlayerPressingE = true;
                         photonView.RPC("StartRefuel", RpcTarget.All, other.GetComponent<PhotonView>().ViewID);
                     }
                 }
             }
         }
     }
-
-
-
     [PunRPC]
     public void StartRefuel(int playerViewID)
     {
         PhotonView playerPhotonView = PhotonView.Find(playerViewID);
         PlayerEquip_Repair playerEquip = playerPhotonView.GetComponent<PlayerEquip_Repair>();
-        if (!isBeingRefuel && playerEquip.hasPickUp)
-        {
+        MissionDeadCity mission = FindObjectOfType<MissionDeadCity>();
+        if (!isBeingRefuel && mission.isPlayerPressingE && playerEquip.hasPickUp)
+        { 
             isBeingRefuel = true;
             paneltxtRefuel.SetActive(false);
             refuelCoroutine = StartCoroutine(RefuelProcess(playerViewID));
