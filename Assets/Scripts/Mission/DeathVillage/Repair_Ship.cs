@@ -3,12 +3,14 @@ using UnityEngine.UI;
 using Photon.Pun;
 using System.Collections;
 using System.Reflection;
+using TMPro;
+using System.Collections.Generic;
 
 public class Repair_Ship : MonoBehaviourPunCallbacks
 {
     public string loadlevel;
-    public GameObject repairSliderUI;
-    public Slider repairSlider;
+    public TextMeshProUGUI repairText;
+    public TextMeshProUGUI shipText;
     public GameObject paneltxtRepair;
     public GameObject paneltxtNotRepair;
     private bool isBeingRepaired = false;
@@ -16,17 +18,36 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
     private Coroutine startShipCoroutine;
     private bool isPlayerPressingE = false;
 
-    public GameObject startShipSliderUI;
-    public GameObject paneltxtStartShip;
-    public Slider startShipSlider;
     bool isBeingStartShip = false;
     private bool isPlayerCountNotified = false;
     public GameObject panelWin;
     public GameObject panelMission;
-    [Header("AudioEnd Hospital")]
+
+    [Header("Spawn Zombie")]
+    private PlayerController targetPlayer;
+    private PlayerController[] playerInScene;
+    public GameObject[] zombie;
+    public float maxEnemies;
+    public Transform[] spawnenemyPoint;
+    public float spawnCheckTime;
+    public float spawnCollisionRadius;
+    private float lastSpawnCheckTime;
+    private List<GameObject> currentEnemies = new List<GameObject>();
+
+    [Header("AudioEnd Dead Village")]
     [SerializeField] public AudioSource footstepAudioEnd;
     [SerializeField] public AudioClip footstepEnd;
+    private void Update()
+    {
+        if (!PhotonNetwork.IsMasterClient)
+            return;
 
+        if (Time.time - lastSpawnCheckTime > spawnCheckTime)
+        {
+            lastSpawnCheckTime = Time.time;
+            SpawnCheckDarius();
+        }
+    }
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("MainCollider") && other.GetComponentInParent<PhotonView>().IsMine)
@@ -43,13 +64,11 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
                         {
                             paneltxtRepair.SetActive(true);
                             paneltxtNotRepair.SetActive(false);
-                            paneltxtStartShip.SetActive(false);
                         }
                         else
                         {
                             paneltxtRepair.SetActive(false);
                             paneltxtNotRepair.SetActive(true);
-                            paneltxtStartShip.SetActive(false);
                         }
                         mission.photonView.RPC("HideRepairShip", RpcTarget.All);
                         mission.photonView.RPC("ShowPanelFindRepairShipFirstTime", RpcTarget.All);
@@ -70,7 +89,6 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
             MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
             paneltxtNotRepair.SetActive(false);
             paneltxtRepair.SetActive(false);
-            paneltxtStartShip.SetActive(false);
             if (isBeingRepaired)
             {
                 ResetRepair();
@@ -115,7 +133,8 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
             }
             if (mission.playerCount == mission.player)
             {
-                paneltxtStartShip.SetActive(true);
+                shipText.text = "Press E to start";
+                shipText.gameObject.SetActive(true);
                 paneltxtRepair.SetActive(false);
                 paneltxtNotRepair.SetActive(false);
             }
@@ -139,28 +158,32 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
         if (!isBeingRepaired && isPlayerPressingE && playerEquip.hasPickUp)
         {
             isBeingRepaired = true;
-            repairSliderUI.SetActive(true);
             paneltxtRepair.SetActive(false);
+            shipText.gameObject.SetActive(false);
             repairCoroutine = StartCoroutine(RepairProcess(playerViewID));
         }
     }
 
     private IEnumerator RepairProcess(int playerViewID)
     {
-        float repairTime = 10f;
-        repairSlider.maxValue = repairTime;
-        repairSlider.value = 0;
-        while (repairSlider.value < repairTime)
+        float refuelTime = 10f;
+        float currentRefuelTime = 0f;
+        repairText.gameObject.SetActive(true);
+
+        while (currentRefuelTime < refuelTime)
         {
-            repairSlider.value += Time.deltaTime;
+            currentRefuelTime += Time.deltaTime;
+            float refuelPercentage = (currentRefuelTime / refuelTime) * 100f;
+            repairText.text = "Repairing: " + Mathf.RoundToInt(refuelPercentage) + "%";
             yield return null;
         }
+
+        repairText.gameObject.SetActive(false);
         FinishRepair(playerViewID);
     }
 
     private void FinishRepair(int playerViewID)
     {
-        repairSliderUI.SetActive(false);
         isBeingRepaired = false;
         PhotonView playerPhotonView = PhotonView.Find(playerViewID);
         PlayerEquip_Repair playerEquip = playerPhotonView.GetComponent<PlayerEquip_Repair>();
@@ -186,8 +209,6 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
         StopCoroutine(repairCoroutine);
         repairCoroutine = null;
         isBeingRepaired = false;
-        repairSliderUI.SetActive(false);
-        repairSlider.value = 0;
         paneltxtRepair.SetActive(false);
         paneltxtNotRepair.SetActive(false);
     }
@@ -229,28 +250,30 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
         if (mission.playerCount >= mission.player)
         {
             isBeingStartShip = true;
-            startShipSliderUI.SetActive(true);
-            paneltxtStartShip.SetActive(false);
             startShipCoroutine = StartCoroutine(StartShipProcess());
         }
     }
 
     private IEnumerator StartShipProcess()
     {
-        float startShipTime = 7f;
-        startShipSlider.maxValue = startShipTime;
-        startShipSlider.value = 0;
-        while (startShipSlider.value < startShipTime)
+        float refuelTime = 50f;
+        float currentRefuelTime = 0f;
+        shipText.gameObject.SetActive(true);
+
+        while (currentRefuelTime < refuelTime)
         {
-            startShipSlider.value += Time.deltaTime;
+            currentRefuelTime += Time.deltaTime;
+            float refuelPercentage = (currentRefuelTime / refuelTime) * 100f;
+            shipText.text = "Start the ship: " + Mathf.RoundToInt(refuelPercentage) + "%";
             yield return null;
         }
+
+        shipText.gameObject.SetActive(false);
         FinishStartShip();
     }
 
     private void FinishStartShip()
     {
-        startShipSliderUI.SetActive(false);
         isBeingStartShip = false;
         StartCoroutine(ShowWinPanel());
     }
@@ -263,9 +286,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
             startShipCoroutine = null;
         }
         isBeingStartShip = false;
-        startShipSliderUI.SetActive(false);
-        startShipSlider.value = 0;
-        paneltxtStartShip.SetActive(false);
+        shipText.gameObject.SetActive(false);
     }
 
     private IEnumerator ShowWinPanel()
@@ -287,5 +308,39 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
     {
         PhotonNetwork.LoadLevel(loadlevel);
         Time.timeScale = 1;
+    }
+    void SpawnZombie()
+    {
+        for (int x = currentEnemies.Count - 1; x >= 0; x--)
+        {
+            if (!currentEnemies[x])
+            {
+                currentEnemies.RemoveAt(x);
+            }
+        }
+
+        if (currentEnemies.Count >= maxEnemies)
+            return;
+        int randomIndex = Random.Range(0, zombie.Length);
+        GameObject enemy = PhotonNetwork.Instantiate(zombie[randomIndex].name, spawnenemyPoint[Random.Range(0, spawnenemyPoint.Length)].position, Quaternion.identity);
+        currentEnemies.Add(enemy);
+    }
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(transform.position, spawnCollisionRadius);
+    }
+    private void SpawnCheckDarius()
+    {
+        playerInScene = FindObjectsOfType<PlayerController>();
+        foreach (PlayerController player in playerInScene)
+        {
+            float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
+            if (distanceToPlayer < spawnCollisionRadius)
+            {
+                targetPlayer = player;
+                SpawnZombie();
+            }
+        }
     }
 }
