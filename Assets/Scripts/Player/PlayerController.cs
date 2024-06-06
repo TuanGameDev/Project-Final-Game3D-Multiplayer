@@ -346,7 +346,7 @@ public class PlayerController : MonoBehaviourPun
 
             if (detectedAmmo != null)
             {
-                detectedAmmo.PickUp(me);
+                detectedAmmo.PickUp(this);
                 detectedAmmo.highlight.ToggleHighlight(false);
                 detectedAmmo = null;
             }
