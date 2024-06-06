@@ -26,11 +26,12 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
     [Header("AudioEnd Hospital")]
     [SerializeField] public AudioSource footstepAudioEnd;
     [SerializeField] public AudioClip footstepEnd;
+
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
+        if (other.CompareTag("MainCollider") && other.GetComponentInParent<PhotonView>().IsMine)
         {
-            PlayerEquip_Repair playerEquip = other.GetComponent<PlayerEquip_Repair>();
+            PlayerEquip_Repair playerEquip = other.GetComponentInParent<PlayerEquip_Repair>();
             if (playerEquip != null)
             {
                 MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
@@ -64,9 +65,9 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
 
     private void OnTriggerExit(Collider other)
     {
-        MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
-        if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
+        if (other.CompareTag("MainCollider") && other.GetComponentInParent<PhotonView>().IsMine)
         {
+            MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
             paneltxtNotRepair.SetActive(false);
             paneltxtRepair.SetActive(false);
             paneltxtStartShip.SetActive(false);
@@ -91,19 +92,19 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.CompareTag("Player") && other.gameObject.GetComponent<PhotonView>().IsMine)
+        if (other.CompareTag("MainCollider") && other.GetComponentInParent<PhotonView>().IsMine)
         {
             MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
-            PlayerEquip_Repair playerEquip = other.GetComponent<PlayerEquip_Repair>();
+            PlayerEquip_Repair playerEquip = other.GetComponentInParent<PlayerEquip_Repair>();
             if (playerEquip != null && playerEquip.hasPickUp && Input.GetKeyDown(KeyCode.E))
             {
                 if (!isBeingRepaired && playerEquip.hasPickUp)
                 {
-                    bool isSpecificPlayer = other.GetComponent<PhotonView>().IsMine;
+                    bool isSpecificPlayer = other.GetComponentInParent<PhotonView>().IsMine;
                     if (isSpecificPlayer)
                     {
                         isPlayerPressingE = true;
-                        photonView.RPC("StartRepair", RpcTarget.All, other.GetComponent<PhotonView>().ViewID);
+                        photonView.RPC("StartRepair", RpcTarget.All, other.GetComponentInParent<PhotonView>().ViewID);
                     }
                 }
             }
@@ -117,20 +118,18 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
                 paneltxtStartShip.SetActive(true);
                 paneltxtRepair.SetActive(false);
                 paneltxtNotRepair.SetActive(false);
-}
+            }
             if (mission.playerCount == mission.player && Input.GetKeyDown(KeyCode.E))
             {
                 isPlayerPressingE = true;
                 photonView.RPC("StartShip", RpcTarget.All);
             }
-            else if(mission.playerCount < mission.player)
+            else if (mission.playerCount < mission.player)
             {
                 ResetStartShip();
             }
         }
     }
-
-
 
     [PunRPC]
     public void StartRepair(int playerViewID)
@@ -145,6 +144,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
             repairCoroutine = StartCoroutine(RepairProcess(playerViewID));
         }
     }
+
     private IEnumerator RepairProcess(int playerViewID)
     {
         float repairTime = 10f;
@@ -157,6 +157,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
         }
         FinishRepair(playerViewID);
     }
+
     private void FinishRepair(int playerViewID)
     {
         repairSliderUI.SetActive(false);
@@ -190,6 +191,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
         paneltxtRepair.SetActive(false);
         paneltxtNotRepair.SetActive(false);
     }
+
     [PunRPC]
     public void NotifyRepairFinished()
     {
@@ -199,6 +201,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
             mission.IncreaseRepairCount();
         }
     }
+
     [PunRPC]
     public void NotifyPlayerOnShipCountPlus()
     {
@@ -208,6 +211,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
             mission.IncreasePlayerOnShipCountPlus();
         }
     }
+
     [PunRPC]
     public void NotifyPlayerOnShipCountMinus()
     {
@@ -217,11 +221,12 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
             mission.IncreasePlayerOnShipCountMinus();
         }
     }
+
     [PunRPC]
     public void StartShip()
     {
         MissionDeathVillage mission = FindObjectOfType<MissionDeathVillage>();
-        if (mission.playerCount>=mission.player)
+        if (mission.playerCount >= mission.player)
         {
             isBeingStartShip = true;
             startShipSliderUI.SetActive(true);
@@ -229,6 +234,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
             startShipCoroutine = StartCoroutine(StartShipProcess());
         }
     }
+
     private IEnumerator StartShipProcess()
     {
         float startShipTime = 7f;
@@ -241,12 +247,14 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
         }
         FinishStartShip();
     }
+
     private void FinishStartShip()
     {
         startShipSliderUI.SetActive(false);
         isBeingStartShip = false;
         StartCoroutine(ShowWinPanel());
     }
+
     private void ResetStartShip()
     {
         if (startShipCoroutine != null)
@@ -259,7 +267,8 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
         startShipSlider.value = 0;
         paneltxtStartShip.SetActive(false);
     }
-    IEnumerator ShowWinPanel()
+
+    private IEnumerator ShowWinPanel()
     {
         if (!footstepAudioEnd.isPlaying)
         {
@@ -273,6 +282,7 @@ public class Repair_Ship : MonoBehaviourPunCallbacks
         yield return new WaitForSecondsRealtime(11f);
         Loadlevel();
     }
+
     public void Loadlevel()
     {
         PhotonNetwork.LoadLevel(loadlevel);
