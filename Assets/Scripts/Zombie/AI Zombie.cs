@@ -11,7 +11,7 @@ public class AIZombie : MonoBehaviourPun
 {
     [Header("Enemy")]
     public string enemyName;
-    public string dead = "Death";
+    public string dead = "Blood";
     [Header("Tấn công và Di chuyển")]
     public float damage;
     public float chaseRange;
