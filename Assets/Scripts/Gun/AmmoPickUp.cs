@@ -12,8 +12,8 @@ public class AmmoPickUp : MonoBehaviourPun
     public string ammoName;
     public int amount;
 
-    int maxAmount = 100;
-    int minAmount = 100;
+    int maxAmount = 150;
+    int minAmount = 150;
     public Highlight highlight;
 
     private void Awake()
