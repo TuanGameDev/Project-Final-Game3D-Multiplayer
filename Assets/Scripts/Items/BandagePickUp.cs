@@ -1,4 +1,5 @@
 ﻿using Photon.Pun;
+using Photon.Pun.Demo.PunBasics;
 using Photon.Realtime;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,52 +7,28 @@ using UnityEngine;
 
 public class BandagePickUp : MonoBehaviourPun
 {
-    PlayerController activeItems;
     public bool _canPickup = true;
     public int value;
     public Highlight highlight;
     public GameObject panelPickUp;
-    void Update()
+
+    public void PickUpBandage(PlayerController player)
     {
-        if (Input.GetKeyDown(KeyCode.F) && _canPickup)
-        {
-            photonView.RPC("PickUpItems", RpcTarget.All);
-        }
+        photonView.RPC("PickUpItems", RpcTarget.All, player.photonView.ViewID);
     }
 
     [PunRPC]
-    void PickUpItems(PhotonMessageInfo info)
+    void PickUpItems(int playerid)
     {
-        if (activeItems != null)
+        PlayerController player = PhotonView.Find(playerid).GetComponent<PlayerController>();
+        if (player != null)
         {
-            activeItems.pickupText.gameObject.SetActive(false);
-            if (info.photonView.IsMine)
+            player.pickupText.gameObject.SetActive(false);
+            if (player.photonView.IsMine)
             {
-                activeItems.photonView.RPC("GetBandage", RpcTarget.All, value);
-                PhotonNetwork.Destroy(gameObject);
+                player.photonView.RPC("GetBandage", RpcTarget.All, value);
+                Destroy(gameObject);
             }
-        }
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        activeItems = other.gameObject.GetComponent<PlayerController>();
-        if (activeItems && other.gameObject.GetComponent<PhotonView>().IsMine)
-        {
-            _canPickup = true;
-            highlight.ToggleHighlight(true);
-            panelPickUp.SetActive(true);
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        activeItems = other.gameObject.GetComponent<PlayerController>();
-        if (activeItems && other.gameObject.GetComponent<PhotonView>().IsMine)
-        {
-            _canPickup = false;
-            highlight.ToggleHighlight(false);
-            panelPickUp.SetActive(false);
         }
     }
 }
