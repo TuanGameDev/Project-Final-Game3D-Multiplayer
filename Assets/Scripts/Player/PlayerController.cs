@@ -1027,6 +1027,10 @@ public class PlayerController : MonoBehaviourPun
             {
                 _health = 100;
             }
+            if (!photonView.IsMine) return;
+            {
+                SetHashes();
+            }
         }
         _cameraBloodEffect.minBloodAmount = (1.0f - _health / 100.0f);
         _cameraBloodEffect.bloodAmount = Mathf.Min(_cameraBloodEffect.minBloodAmount + 0.05f, 0.5f);

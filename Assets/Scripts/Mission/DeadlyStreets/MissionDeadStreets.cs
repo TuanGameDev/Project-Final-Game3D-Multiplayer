@@ -15,7 +15,6 @@ public class MissionGenerator : MonoBehaviourPun
     [SerializeField] public float spawnCollisionRadius;
     [SerializeField] public float cooldownDuration = 1f;
     private float cooldownTimer = 0f;
-    [SerializeField] public Slider progressSlider;
     [SerializeField] public TextMeshProUGUI notificationText;
     [SerializeField] public TextMeshProUGUI generatorText;
     [SerializeField] public TextMeshProUGUI timerText;
@@ -34,18 +33,9 @@ public class MissionGenerator : MonoBehaviourPun
     [SerializeField] public GameObject linggreen;
     [Header("PanelGuide")]
     public GameObject panelGuide;
-    [Header("Boss Mission 3")]
-    public GameObject bossPrefabs;
-    public Transform spawnBossPoint;
-    public float maxEnemies;
-    private List<GameObject> currentEnemies = new List<GameObject>();
     private bool isInsideTrigger = false;
     private bool isGeneratorRunning = false;
     private bool isStartupSuccessful = false;
-    private void Start()
-    {
-        progressSlider.gameObject.SetActive(false);
-    }
     private void Update()
     {
         photonView.RPC("UpdatePlayerCount", RpcTarget.All, playerCount, maxPlayerCount);
@@ -74,23 +64,7 @@ public class MissionGenerator : MonoBehaviourPun
             timerText.gameObject.SetActive(false);
             generatorText.gameObject.SetActive(false);
             footstepAudioEdit.Stop();
-            SpawnBoss();
         }
-    }
-    void SpawnBoss()
-    {
-        for (int x = currentEnemies.Count - 1; x >= 0; x--)
-        {
-            if (!currentEnemies[x])
-            {
-                currentEnemies.RemoveAt(x);
-            }
-        }
-
-        if (currentEnemies.Count >= maxEnemies)
-            return;
-        GameObject enemy = PhotonNetwork.Instantiate(bossPrefabs.name, spawnBossPoint.position, Quaternion.identity);
-        currentEnemies.Add(enemy);
     }
     private void OnTriggerEnter(Collider collision)
     {
@@ -171,14 +145,12 @@ public class MissionGenerator : MonoBehaviourPun
         isGeneratorRunning = true;
         notificationText.text = "Starting up...";
         notificationText.color = Color.yellow;
-        progressSlider.gameObject.SetActive(true);
         StartCoroutine(UpdateSliderValue());
     }
     [PunRPC]
     void AudioGeneratorStop()
     {
         footstepAudioSource.Stop();
-        progressSlider.gameObject.SetActive(false);
         lingred.gameObject.SetActive(true);
         linggreen.gameObject.SetActive(false);
     }
@@ -188,8 +160,6 @@ public class MissionGenerator : MonoBehaviourPun
         while (elapsedTime < duration)
         {
             float progress = elapsedTime / duration;
-            progressSlider.value = progress;
-
             notificationText.text = string.Format("Starting up... {0}%", Mathf.RoundToInt(progress * 100f));
             notificationText.color = Color.yellow;
 
@@ -197,13 +167,8 @@ public class MissionGenerator : MonoBehaviourPun
             yield return null;
         }
 
-        progressSlider.value = 1f;
-        photonView.RPC("AudioGeneratorStop", RpcTarget.All);
         notificationText.text = "Successful launch! 100%";
         notificationText.color = Color.green;
-
-        yield return new WaitForSeconds(5f);
-
         if (!footstepAudioEnd.isPlaying)
         {
             footstepAudioEnd.clip = footstepEnd;
