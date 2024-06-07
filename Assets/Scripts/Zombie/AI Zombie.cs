@@ -41,7 +41,7 @@ public class AIZombie : MonoBehaviourPun
         if (!PhotonNetwork.IsMasterClient)
             return;
 
-        if (targetPlayer != null)
+        if (targetPlayer != null && !targetPlayer._isDead)
         {
             float dist = Vector3.Distance(transform.position, targetPlayer.transform.position);
             if (dist < attackRange && Time.time - lastAttackTime >= attackRate)
@@ -68,24 +68,27 @@ public class AIZombie : MonoBehaviourPun
         playerInScene = FindObjectsOfType<PlayerController>();
         foreach (PlayerController player in playerInScene)
         {
-            float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
-            if (distanceToPlayer < chaseRange)
+            if (player != null && !player._isDead)
             {
-                if(targetPlayer==null)
+                float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
+                if (distanceToPlayer < chaseRange)
                 {
-                    targetPlayer = player;
+                    if (targetPlayer == null || targetPlayer._isDead)
+                    {
+                        targetPlayer = player;
+                    }
+                    agent.SetDestination(targetPlayer.transform.position);
+                    anim.SetBool("Move", true);
+                    isPlayerDetected = true;
                 }
-                agent.SetDestination(targetPlayer.transform.position);
-                anim.SetBool("Move", true);
-                isPlayerDetected = true;
-            }
-            else if (player == targetPlayer)
-            {
-                if (distanceToPlayer > chaseRange)
+                else if (player == targetPlayer)
                 {
-                    targetPlayer = null;
-                    anim.SetBool("Move", false);
-                    isPlayerDetected = false;
+                    if (distanceToPlayer > chaseRange)
+                    {
+                        targetPlayer = null;
+                        anim.SetBool("Move", false);
+                        isPlayerDetected = false;
+                    }
                 }
             }
         }

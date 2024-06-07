@@ -26,6 +26,7 @@ public class PlayerController : MonoBehaviourPun
     float turnspeed = 15;
 
     [Header("HUD")]
+    public bool _isDead = false;
     public int id;
     public float _health = 100.0f;
     private float maxhealthslider;
@@ -42,7 +43,6 @@ public class PlayerController : MonoBehaviourPun
     public GameObject settingPopup;
 
     public Player photonPlayer;
-    bool _isDead = false;
     [SerializeField] private CameraBloodEffect _cameraBloodEffect = null;
     [SerializeField] private Canvas cavansHUD;
 
@@ -54,6 +54,7 @@ public class PlayerController : MonoBehaviourPun
     float _turnCalmTime = 0.1f;
     float _turnCalmVelocity;
     bool _isJumping = false;
+    Vector3 direction;
     Vector3 _velocity;
 
 
@@ -95,6 +96,7 @@ public class PlayerController : MonoBehaviourPun
     public Animator _anim;
 
     [Header("Items")]
+    [SerializeField] BandagePickUp detectedBandage;
     public int Bandage;
     private float cooldownDuration = 5f;
     public Image cooldownImage;
@@ -165,9 +167,9 @@ public class PlayerController : MonoBehaviourPun
         if (!photonView.IsMine) return;
         if (_isDead) return;
 
-        DetectWeapon();
-        UpdateWeaponState();
-        UpdateAimingState();
+        _hor = Input.GetAxisRaw("Horizontal");
+        _ver = Input.GetAxisRaw("Vertical");
+        direction = new Vector3(_hor, 0f, _ver).normalized;
 
         if (_weaponActive && !_isHolstered)
         {
@@ -208,7 +210,141 @@ public class PlayerController : MonoBehaviourPun
                 _velocity = Vector3.zero;
             }
         }
+
+        DetectObj();
+        UpdateWeaponState();
+        UpdateAimingState();
+
     }
+    public void DetectObj()
+    {
+        if (detectPos == null || crosshairTarget == null)
+        {
+            Debug.LogError("detectPos or crosshairTarget is null.");
+            return;
+        }
+
+        Vector3 direction = crosshairTarget.position - detectPos.position;
+        RaycastHit hit;
+        bool isHit = Physics.Raycast(detectPos.position, direction, out hit, detectRange);
+
+        if (isHit)
+        {
+            HandleHitObject(hit.collider);
+        }
+        else
+        {
+            ResetDetectedObjects();
+        }
+    }
+
+    private void HandleHitObject(Collider collider)
+    {
+        Gun gun = collider.GetComponent<Gun>();
+        AmmoPickUp ammoObj = collider.GetComponent<AmmoPickUp>();
+        BandagePickUp bandageOjb = collider.GetComponent<BandagePickUp>();
+        PlayerController player = collider.GetComponent<PlayerController>();
+
+        if (gun != null)                                // raycast hit weapon
+        {
+            HandleDetectedGun(gun);
+        }
+        else if (ammoObj != null)                       // raycast hit ammo
+        {
+            HandleDetectedAmmo(ammoObj);
+        }
+        else if (bandageOjb)
+        {
+            HandleDetectedBandage(bandageOjb);
+        }
+        else if (player != null && player._isDead)      // raycast hit if player dead
+        {
+            HandleDetectedPlayer(player);
+        }
+        else
+        {
+            ResetDetectedObjects();
+        }
+    }
+
+    private void HandleDetectedGun(Gun gun)
+    {
+        if (detectedGun != null && detectedGun != gun && !gun.isPickedUp)
+        {
+            detectedGun.highlight.ToggleHighlight(false);
+        }
+        detectedGun = gun;
+        detectedGun.highlight.ToggleHighlight(true);
+
+        pickupText.gameObject.SetActive(true);
+        pickupText.text = "Pick up: " + gun.weaponName;
+        detectedAmmo = null;
+    }
+
+    private void HandleDetectedAmmo(AmmoPickUp ammoObj)
+    {
+        if (detectedAmmo != null)
+        {
+            detectedAmmo.highlight.ToggleHighlight(false);
+            detectedAmmo = null;
+        }
+
+        detectedAmmo = ammoObj;
+        pickupText.gameObject.SetActive(true);
+        detectedAmmo.highlight.ToggleHighlight(true);
+        pickupText.text = "Take: " + detectedAmmo.amount + " bullets " + detectedAmmo.ammoName;
+    }
+    private void HandleDetectedBandage(BandagePickUp bandageObj)
+    {
+        if (detectedBandage != null)
+        {
+            detectedBandage.highlight.ToggleHighlight(false);
+            detectedBandage = null;
+        }
+        detectedBandage = bandageObj;
+        detectedBandage.highlight.ToggleHighlight(true);
+
+        pickupText.gameObject.SetActive(true);
+        pickupText.text = "Take bandage";
+    }
+
+    private void HandleDetectedPlayer(PlayerController player)
+    {
+        pickupText.gameObject.SetActive(true);
+        pickupText.text = "Press F to revive " + player.name;
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            Vector3 spawnPos = GameManager.gamemanager.spawnPoint[Random.Range(0, GameManager.gamemanager.spawnPoint.Length)].position;
+            player.photonView.RPC("Respawn", RpcTarget.All, spawnPos);
+            pickupText.gameObject.SetActive(false);
+        }
+    }
+
+    private void ResetDetectedObjects()
+    {
+        if (detectedGun != null)
+        {
+            detectedGun.highlight.ToggleHighlight(false);
+            detectedGun = null;
+        }
+
+        if (detectedAmmo != null)
+        {
+            detectedAmmo.highlight.ToggleHighlight(false);
+            detectedAmmo = null;
+        }
+        
+        if (detectedBandage != null)
+        {
+            detectedBandage.highlight.ToggleHighlight(false);
+            detectedBandage = null;
+        }
+
+        pickupText.gameObject.SetActive(false);
+    }
+
+
 
     #region CameraNametag
     public void CameraNameTag()
@@ -261,15 +397,39 @@ public class PlayerController : MonoBehaviourPun
     void Die()
     {
         _isDead = true;
-        Vector3 spawnPos = GameManager.gamemanager.spawnPoint[Random.Range(0, GameManager.gamemanager.spawnPoint.Length)].position;
+        photonView.RPC("Dead",RpcTarget.All);
+    }
+    [PunRPC]
+    public void Dead()
+    {
+        _anim.SetTrigger("isDead");
+        var currentWeapon = GetActiveWeapon();
+        if (currentWeapon != null)
+        {
+            DropWeapon();
+        }
+    }
+    [PunRPC]
+    public void Respawn(Vector3 spawnPos)
+    {
         StartCoroutine(Spawn(spawnPos, GameManager.gamemanager.respawnTime));
     }
-    IEnumerator Spawn(Vector3 spawnPos, float timeToSpawn)
+
+    public IEnumerator Spawn(Vector3 spawnPos, float timeToSpawn)
     {
         yield return new WaitForSeconds(timeToSpawn);
         _isDead = false;
+
+        _anim.Play("Move");
+        _controller.enabled = false;
         transform.position = spawnPos;
-        _health = 100.0f;
+        _controller.enabled = true;
+
+
+        _health = Mathf.Min(_health + 25f, 100f);
+        UpdateValue(_health);
+        _cameraBloodEffect.minBloodAmount = (1.0f - _health / 100.0f);
+        _cameraBloodEffect.bloodAmount = Mathf.Min(_cameraBloodEffect.minBloodAmount + 0.05f, 0.5f);
     }
     void UpdateNameTag(string name)
     {
@@ -350,6 +510,13 @@ public class PlayerController : MonoBehaviourPun
                 detectedAmmo.highlight.ToggleHighlight(false);
                 detectedAmmo = null;
             }
+
+            if (detectedBandage != null)
+            {
+                detectedBandage.PickUpBandage(this);
+                detectedBandage.highlight.ToggleHighlight(false);
+                detectedBandage = null;
+            }
         }                                       // pick up item if detected
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
@@ -397,10 +564,6 @@ public class PlayerController : MonoBehaviourPun
     #region MOVEMENT
     void MovementWithWeapon()
     {
-        _hor = Input.GetAxis("Horizontal");
-        _ver = Input.GetAxis("Vertical");
-        Vector3 direction = new Vector3(_hor, 0f, _ver).normalized;
-
         if (direction.magnitude >= 0.1)
         {
             _anim.SetFloat("xValue", _hor);
@@ -423,10 +586,6 @@ public class PlayerController : MonoBehaviourPun
     }
     void MovementWithoutWeapon()
     {
-        _hor = Input.GetAxisRaw("Horizontal");
-        _ver = Input.GetAxisRaw("Vertical");
-        Vector3 direction = new Vector3(_hor, 0f, _ver).normalized;
-
         if (direction.magnitude >= 0.1)
         {
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + playerCam.eulerAngles.y;
@@ -514,68 +673,6 @@ public class PlayerController : MonoBehaviourPun
         else
         {
             CMfreelook.m_Lens.FieldOfView = Mathf.Lerp(CMfreelook.m_Lens.FieldOfView, defaultZoomDistance, Time.deltaTime * zoomSpeed);
-        }
-    }
-    public void DetectWeapon()
-    {
-        Vector3 direction = crosshairTarget.position - detectPos.position;
-        RaycastHit hit;
-        if (Physics.Raycast(detectPos.position, direction, out hit, detectRange))
-        {
-            Gun gun = hit.collider.GetComponent<Gun>();
-            AmmoPickUp ammoObj = hit.collider.GetComponent<AmmoPickUp>();
-
-            if (gun != null)
-            {
-                if (detectedGun != gun)
-                {
-                    if (detectedGun != null && !gun.isPickedUp)
-                    {
-                        detectedGun.highlight.ToggleHighlight(false);
-                    }
-                    detectedGun = gun;
-                    detectedGun.highlight.ToggleHighlight(true);
-                }
-
-                pickupText.gameObject.SetActive(true);
-                pickupText.text = "Pick up: " + gun.weaponName;
-                detectedAmmo = null;
-            }
-            else if (ammoObj != null)
-            {
-                if (detectedAmmo != null)
-                {
-                    detectedAmmo.highlight.ToggleHighlight(false);
-                    detectedAmmo = null;
-                }
-
-                detectedAmmo = ammoObj;
-                pickupText.gameObject.SetActive(true);
-                detectedAmmo.highlight.ToggleHighlight(true);
-                pickupText.text = "Take: " + detectedAmmo.amount + " bullets " + detectedAmmo.ammoName;
-            }
-            else
-            {
-                if (detectedGun != null)
-                {
-                    detectedGun.highlight.ToggleHighlight(false);
-                    detectedGun = null;
-                }
-
-                detectedGun = null;
-                pickupText.gameObject.SetActive(false);
-            }
-        }
-        else
-        {
-            if (detectedAmmo != null)
-            {
-                detectedAmmo.highlight.ToggleHighlight(false);
-                detectedAmmo = null;
-            }
-
-            detectedAmmo = null;
-            pickupText.gameObject.SetActive(false);
         }
     }
     Gun GetWeapon(int index)
@@ -932,6 +1029,8 @@ public class PlayerController : MonoBehaviourPun
                 _health = 100;
             }
         }
+        _cameraBloodEffect.minBloodAmount = (1.0f - _health / 100.0f);
+        _cameraBloodEffect.bloodAmount = Mathf.Min(_cameraBloodEffect.minBloodAmount + 0.05f, 0.5f);
         addbandageText.text = "+50Hp";
         addbandageText.color = Color.green;
         StartCoroutine(HideAndShowText(3));
