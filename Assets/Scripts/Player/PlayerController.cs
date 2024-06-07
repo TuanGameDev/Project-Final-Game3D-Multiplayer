@@ -468,20 +468,18 @@ public class PlayerController : MonoBehaviourPun
             }
             if (Input.GetKeyDown(KeyCode.G))
             {
-                /*if (_weapon.flashActive == false)
+                if (_weapon.flashActive == false)
                 {
-                    bool flashed = _weapon.flashActive;
                     _weapon.flashActive = true;
-                    _weapon.photonView.RPC("ToggleFlashlight", RpcTarget.All, flashed);
+                    _weapon.photonView.RPC("TurnOnFlashlight", RpcTarget.All);
                     flashlightIcon.color = Color.white;
                 }
-                else
+                else if (_weapon.flashActive == true)
                 {
-                    bool flashed = _weapon.flashActive;
                     _weapon.flashActive = false;
-                    _weapon.photonView.RPC("ToggleFlashlight", RpcTarget.All, flashed);
+                    _weapon.photonView.RPC("TurnOffFlashlight", RpcTarget.All);
                     flashlightIcon.color = new Color(0.42f, 0.42f, 0.42f); // = 6B6B6B
-                }*/
+                }
             }
             if (Input.GetKeyDown(KeyCode.R) && _weapon.ammoCount < _weapon.magSize && !_isReloading)
             {
@@ -702,7 +700,6 @@ public class PlayerController : MonoBehaviourPun
         {
             _weapon.StopFiring();
         }
-
     }
     void PickUpWeapon(Gun gun)
     {
@@ -842,11 +839,14 @@ public class PlayerController : MonoBehaviourPun
     IEnumerator HolsterWeapon(int index)
     {
         _isHolstered = true;
+
         var weapon = GetWeapon(index);
         if (weapon != null)
         {
+            flashlightIcon.color = new Color(0.42f, 0.42f, 0.42f); // = 6B6B6B
             weapon.flashlight.SetActive(false);
             weapon.flashActive = false;
+            weapon.photonView.RPC("TurnOffFlashlight", RpcTarget.All);
             rigController.SetBool("holster_weapon", true);
             do
             {

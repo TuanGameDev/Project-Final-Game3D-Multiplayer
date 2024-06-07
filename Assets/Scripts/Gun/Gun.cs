@@ -154,10 +154,16 @@ public class Gun : MonoBehaviourPun
         AudioManager._audioManager.PlaySFX(9);
     }
     [PunRPC]
-    public void ToggleFlashlight(bool isActive)
+    public void TurnOnFlashlight()
     {
-        flashActive = isActive;
-        flashlight.gameObject.SetActive(isActive);
+        flashActive = true;
+        flashlight.gameObject.SetActive(true);
+    }
+    [PunRPC]
+    public void TurnOffFlashlight()
+    {
+        flashActive = false;
+        flashlight.gameObject.SetActive(false);
     }
 
     public void Initialized(int attackId, bool isMine)
