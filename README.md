@@ -30,4 +30,6 @@ SOME PICTURES
 ![z5431024840795_46495a761023414459272c78a4cdd8c6](https://github.com/TuanGameDev/Project-Final-Game3D-Multiplayer/assets/117886749/444ce985-4ef2-49cb-b530-18e39100ae0d)
 
 https://github.com/TuanGameDev/Project-Final-Game3D-Multiplayer/assets/117886749/d7a5c4d7-c57d-4553-9be4-784e9a8e4797
-
+git add output_video.mp4
+git commit -m "Add video file"
+git push
