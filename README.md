@@ -12,8 +12,11 @@ Real-time action and multiplayer: The game takes place in a 3D environment and r
 Create rooms and join: Players can create rooms or join rooms created by other players to start the game.
 
 -Hopital Mission: Kill Zombies, find potions, and the key to open the manhole cover to escape from there.
+
 -Dead Village Mission: Destroy Zombies, find the Milk Tank, and find the ship to repair it to escape the village.
+
 -Dead Streets Mission: Kill Zombies and repair the generator.
+
 -Dead City Mission: Kill Zombies, find gas tanks, to refuel the bus and escape that city.
 
 SOME PICTURES
